@@ -1184,29 +1184,64 @@ function showNxCustomAlert(message, isSuccess = true) {
   };
 }
 
-function simpanTokenDariPanel() {
-  const inputToken = document.getElementById('inputPanelNxToken');
-  if (!inputToken || !inputToken.value.trim()) {
-    window.shouldReloadAfterAlert = false;
-    showNxCustomAlert("Harap masukkan token lisensi NX yang valid!", false);
-    return;
+// --- FUNGSI GANTI ALERT JADI CUSTOM TOAST ---
+function showNxToast(message, icon = "🛡️") {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
   }
 
-  const valToken = inputToken.value.trim();
+  const toast = document.createElement("div");
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid #38bdf8;
+    color: #f8fafc;
+    padding: 14px 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    font-family: monospace;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 2147483647;
+    backdrop-filter: blur(10px);
+    animation: fadeInUp 0.3s ease;
+  `;
+  
+  toast.innerHTML = `<span style="font-size: 16px;">${icon}</span> <span>${message}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.transition = "opacity 0.4s ease";
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 400);
+  }, 3500);
+}
+
+// --- UPDATE FUNGSI SIMPAN TOKEN DARI PANEL ---
+function simpanTokenDariPanel() {
+  const valToken = document.getElementById('inputPanelNxToken').value;
   const decodedDate = decodeTokenToDate(valToken);
 
   if (decodedDate && decodedDate > new Date()) {
     localStorage.setItem('gudang_token_expiry', decodedDate.toISOString());
-    localStorage.removeItem('gudang_status_terkunci');
-    window.shouldReloadAfterAlert = true;
-    tutupModalNxAdmin();
-    showNxCustomAlert("Token Lisensi NX Berhasil Diperbarui!", true);
+    
+    // GANTI ALERT BAWAAN DENGAN CUSTOM TOAST KITA
+    showNxToast('Token Lisensi NX Berhasil Diperbarui!', '🟢');
+    
+    setTimeout(() => {
+      location.reload(true);
+    }, 1200);
   } else {
-    window.shouldReloadAfterAlert = false;
-    showNxCustomAlert("Token tidak valid atau sudah kedaluwarsa!", false);
+    showNxToast('Token tidak valid atau format salah!', '❌');
   }
 }
-
 function simulasiKunciSistem() {
   const kemarin = new Date();
   kemarin.setDate(kemarin.getDate() - 1);
