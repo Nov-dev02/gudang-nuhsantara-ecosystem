@@ -29,6 +29,7 @@ function toggleDarkLightMode() {
 
 function updateThemeButtonUI(theme) {
     const thumbEl = document.getElementById('themeSwitchThumb');
+    
     if (theme === 'light') {
         if (thumbEl) {
             thumbEl.style.transform = 'translateX(26px)';
@@ -51,12 +52,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 🛡️ DATABASE & VERIFIKASI OPERATOR SHIFT
+// 🛡️ DATABASE & VERIFIKASI OPERATOR SHIFT (MURNI 3 OPERATOR)
 // ==========================================
 const operatorsProfile = {
-  "IRGI": { id: "GDN-001", name: "IRGI", photo: "https://raw.githubusercontent.com/Nov-dev02/Gudang-Web-App/main/img/IRGI.jpg" },
-  "DWI": { id: "GDN-003", name: "DWI", photo: "" },
-  "ERIKA": { id: "GDN-004", name: "ERIKA", photo: "" }
+  "IRGI": { 
+    id: "GDN-001", 
+    name: "IRGI", 
+    photo: "https://raw.githubusercontent.com/Nov-dev02/Gudang-Web-App/main/img/IRGI.jpg" 
+  },
+  "DWI": { 
+    id: "GDN-003", 
+    name: "DWI", 
+    photo: "" 
+  },
+  "ERIKA": { 
+    id: "GDN-004", 
+    name: "ERIKA", 
+    photo: "" 
+  }
 };
 
 function setOperatorProfile(namaOperator) {
@@ -73,6 +86,7 @@ function setOperatorProfile(namaOperator) {
             elAvatarBox.style.background = 'rgba(239, 68, 68, 0.2)';
             elAvatarBox.style.color = '#ef4444';
         }
+        
         if (settingBtn) {
             settingBtn.disabled = true;
             settingBtn.style.opacity = '0.5';
@@ -99,7 +113,8 @@ function setOperatorProfile(namaOperator) {
             elAvatarBox.innerHTML = `<img src="${profile.photo}" alt="${profile.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 3px;">`;
             elAvatarBox.style.background = 'transparent';
         } else {
-            elAvatarBox.innerHTML = profile.name.slice(0, 2).toUpperCase();
+            const initials = profile.name.slice(0, 2).toUpperCase();
+            elAvatarBox.innerHTML = initials;
             elAvatarBox.style.background = 'rgba(56, 189, 248, 0.3)';
         }
     }
@@ -116,10 +131,14 @@ function verifyOperatorLogin() {
 
   const activeShiftOperator = typeof getActiveOperator === 'function' ? getActiveOperator() : "DWI";
   const activeProfile = operatorsProfile[activeShiftOperator];
+
   const isInputValid = (inputVal === activeShiftOperator) || (activeProfile && inputVal === activeProfile.id);
 
   if (isInputValid) {
-    const sessionData = { name: activeShiftOperator, loginTime: new Date().getTime() };
+    const sessionData = {
+      name: activeShiftOperator,
+      loginTime: new Date().getTime()
+    };
     localStorage.setItem('gudang_active_operator', JSON.stringify(sessionData));
     
     if (errorMsg) errorMsg.style.display = 'none';
@@ -134,12 +153,15 @@ function verifyOperatorLogin() {
         modal.style.opacity = '0';
         setTimeout(() => { 
           modal.style.display = 'none'; 
+          
           const welcomeAudio = new Audio(`https://raw.githubusercontent.com/Nov-dev02/Gudang-Web-App/main/audio/${activeShiftOperator}.mp3?v=99`);
           welcomeAudio.volume = 0.9;
           welcomeAudio.play().catch(err => console.log("Audio play blocked/error:", err));
+
         }, 300);
       }
     }, 1000);
+
   } else {
     if (errorMsg) {
       errorMsg.innerHTML = `<i class="fa-solid fa-circle-xmark" style="margin-right: 4px;"></i> Access Denied! Harap masukkan operator yang valid`;
@@ -153,7 +175,8 @@ function updateRowCounter() {
   const rowCounter = document.getElementById('rowCounter');
   if (!textarea || !rowCounter) return;
 
-  let lines = textarea.value.split('\n').filter(line => line.trim() !== '');
+  let text = textarea.value;
+  let lines = text.split('\n').filter(line => line.trim() !== '');
   let totalLines = lines.length;
 
   if (totalLines === 0) {
@@ -161,13 +184,22 @@ function updateRowCounter() {
     return;
   }
 
-  let shopeeCount = 0, tiktokCount = 0;
+  let shopeeCount = 0;
+  let tiktokCount = 0;
+
   lines.forEach(rawLine => {
     let line = rawLine.trim();
     let upperLine = line.toUpperCase();
-    if (/^\d{6}[A-Z0-9]{8}$/i.test(line)) {
+
+    const shopeePattern = /^\d{6}[A-Z0-9]{8}$/i;
+    const isTiktok = upperLine.startsWith('JY') || 
+                     upperLine.startsWith('TG') || 
+                     upperLine.startsWith('GTL') || 
+                     upperLine.includes('TIKTOK');
+
+    if (shopeePattern.test(line)) {
       shopeeCount++;
-    } else if (upperLine.startsWith('JY') || upperLine.startsWith('TG') || upperLine.startsWith('GTL') || upperLine.includes('TIKTOK')) {
+    } else if (isTiktok) {
       tiktokCount++;
     }
   });
@@ -184,7 +216,9 @@ function initAppListeners() {
   if (textarea) {
     textarea.addEventListener('input', updateRowCounter);
     textarea.addEventListener('keyup', updateRowCounter);
-    textarea.addEventListener('paste', () => setTimeout(updateRowCounter, 100));
+    textarea.addEventListener('paste', () => {
+      setTimeout(updateRowCounter, 100);
+    });
   }
 }
 
@@ -197,6 +231,7 @@ if (document.readyState === 'loading') {
 async function processData() {
   const textarea = document.getElementById('shopeeData');
   const rowCounter = document.getElementById('rowCounter');
+  
   if (!textarea) return;
   const shopeeData = textarea.value.trim();
   
@@ -212,44 +247,95 @@ async function processData() {
   }
 
   if (btn) btn.disabled = true;
+  
   if (btnSpinner) btnSpinner.style.setProperty('display', 'inline-block', 'important');
   if (btnText) btnText.style.setProperty('display', 'none', 'important');
 
   if (logDiv) logDiv.style.display = 'block';
   if (logTextSpan) logTextSpan.innerHTML = '[' + new Date().toLocaleTimeString() + '] <i class="fa-solid fa-network-wired" style="color: #22c55e; margin-right: 6px;"></i>Menghubungkan ke Cloud Database Google Drive...';
+  if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
   
   await new Promise(resolve => setTimeout(resolve, 600));
   
+  if (logTextSpan) logTextSpan.innerHTML += '<br>[' + new Date().toLocaleTimeString() + '] <i class="fa-solid fa-magnifying-glass" style="color: #22c55e; margin-right: 6px;"></i>Memvalidasi format data Shopee & TikTok Shop...';
+  if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
+  
   try {
+    await new Promise(resolve => setTimeout(resolve, 700));
+    if (logTextSpan) logTextSpan.innerHTML += '<br>[' + new Date().toLocaleTimeString() + '] <i class="fa-solid fa-bolt" style="color: #22c55e; margin-right: 6px;"></i>Mengirim payload ke database... (Mohon tunggu sebentar)';
+    if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
+
     const response = await fetch(WEB_APP_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ shopeeData: shopeeData })
+      body: JSON.stringify({ shopeeData: shopeeData }),
+      signal: controller.signal
     });
     
-    if (!response.ok) throw new Error(`Server error HTTP: ${response.status}`);
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Server merespons dengan status error HTTP: ${response.status}`);
+    }
 
     const result = await response.text();
     let res = JSON.parse(result);
 
     if (res.status === 'success') {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      if (logTextSpan) logTextSpan.innerHTML += '<br>[' + new Date().toLocaleTimeString() + '] <i class="fa-solid fa-circle-check" style="color: #22c55e; margin-right: 6px;"></i>Menerima respon sukses dari server pusat.';
+      if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
+
+      const now = new Date();
+      const formattedSyncTime = `${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} -${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })} WIB`;
+      
+      localStorage.setItem('gudang_last_sync', formattedSyncTime);
+      updateLastSyncDisplay(formattedSyncTime);
+      
+      const messageLines = res.message ? res.message.split('\n') : [];
+      for (let i = 0; i < messageLines.length; i++) {
+        if (messageLines[i].trim() !== '') {
+          await new Promise(resolve => setTimeout(resolve, 200));
+          if (logTextSpan) logTextSpan.innerHTML += '<br>[' + new Date().toLocaleTimeString() + '] <i class="fa-solid fa-angle-right" style="color: #22c55e; margin-right: 6px;"></i>' + messageLines[i];
+          if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
+        }
+      }
+      
       textarea.value = '';
       if (rowCounter) rowCounter.innerHTML = `<i class="fa-solid fa-chart-bar" style="margin-right: 5px; color: #38bdf8;"></i> 0 baris data`;
+
       playSuccessSound();
+      addCumulativeTotal(messageLines.length);
       
       currentDownloadUrl = res.downloadUrl || res.fileUrl || res.spreadsheetUrl || "";
       window.globalServerResponse = res;
       
       setTimeout(() => {
         const modalKonfirmasi = document.getElementById('modalKonfirmasi');
-        if (modalKonfirmasi) modalKonfirmasi.style.display = 'flex';
-        else showCustomAlert(res.message || "Transaksi selesai.", currentDownloadUrl);
+        if (modalKonfirmasi) {
+          modalKonfirmasi.style.display = 'flex';
+        } else {
+          showCustomAlert(res.message || "Transaksi selesai.", currentDownloadUrl);
+        }
       }, 1200);
+
     } else {
+      if (logTextSpan) logTextSpan.innerHTML += '<br>[' + new Date().toLocaleTimeString() + '] <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444; margin-right: 6px;"></i>Error: ' + res.message;
+      if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
       setTimeout(() => { showCustomAlert('Terjadi Kesalahan: ' + res.message, ''); }, 800);
     }
+
   } catch (error) {
-    setTimeout(() => { showCustomAlert('Terjadi Kesalahan: ' + error.message, ''); }, 800);
+    let errorMessage = error.message;
+    if (error.name === 'AbortError') {
+      errorMessage = "Batas waktu tunggu habis (> 2 menit). Proses server terlalu lama atau koneksi terputus.";
+    }
+    if (logTextSpan) logTextSpan.innerHTML += '<br>[' + new Date().toLocaleTimeString() + '] <i class="fa-solid fa-circle-xmark" style="color: #ef4444; margin-right: 6px;"></i>System Error: ' + errorMessage;
+    if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
+    setTimeout(() => { showCustomAlert('Terjadi Kesalahan: ' + errorMessage, ''); }, 800);
   }
   
   if (btn) btn.disabled = false;
@@ -265,40 +351,94 @@ function showCustomAlert(message, downloadUrl) {
   const msgEl = document.getElementById('customAlertMessage');
   if (msgEl) msgEl.innerText = message;
   const downloadBtn = document.getElementById('downloadBtn');
+  const progressBar = document.getElementById('downloadProgressBar');
+  const downloadBtnText = document.getElementById('downloadBtnText');
+  
+  if (progressBar) progressBar.style.width = '0%';
+  if (downloadBtnText) downloadBtnText.innerHTML = '<i class="fa-solid fa-download" style="margin-right: 6px;"></i> Download Laporan Excel';
+  if (downloadBtn) downloadBtn.disabled = false;
+  
   if (downloadBtn) {
     downloadBtn.style.display = (downloadUrl && downloadUrl.trim() !== "") ? 'flex' : 'none';
   }
+  
   const modal = document.getElementById('customAlertModal');
   if (modal) modal.style.display = 'flex';
 }
 
-async function downloadExcelWithProgress() {
+async function downloadExcelWithProgress(serverResponse) {
+  if (serverResponse) {
+    window.globalServerResponse = serverResponse;
+  }
+
   const targetUrl = currentDownloadUrl || (window.globalServerResponse && window.globalServerResponse.downloadUrl) || "";
   if (!targetUrl) {
     showNxCustomAlert("URL download belum tersedia dari server.", false);
     closeCustomAlert();
     return;
   }
+
+  const downloadBtn = document.getElementById('downloadBtn');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  const progressBar = document.getElementById('downloadProgressBar');
+  const downloadBtnText = document.getElementById('downloadBtnText');
+
+  if (downloadBtn) downloadBtn.disabled = true;
+  if (closeModalBtn) {
+    closeModalBtn.style.opacity = '0.5';
+    closeModalBtn.style.pointerEvents = 'none';
+  }
+
+  let progress = 10;
+  if (progressBar) progressBar.style.width = progress + '%';
+  if (downloadBtnText) downloadBtnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Menyiapkan Unduhan... (${progress}%)`;
+
   try {
+    progress = 40;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (downloadBtnText) downloadBtnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Mengambil Berkas... (${progress}%)`;
+
     const response = await fetch(targetUrl);
     const blobData = await response.blob();
+
+    progress = 80;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (downloadBtnText) downloadBtnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Merakit Berkas... (${progress}%)`;
+
     const months = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
     const now = new Date();
-    const dynamicFileName = "TRANSAKSI GUDANG " + ("0" + now.getDate()).slice(-2) + " " + months[now.getMonth()] + " " + now.getFullYear() + ".xlsx";
+    const day = ("0" + now.getDate()).slice(-2);
+    const dynamicFileName = "TRANSAKSI GUDANG " + day + " " + months[now.getMonth()] + " " + now.getFullYear() + ".xlsx";
 
     const blobUrl = window.URL.createObjectURL(blobData);
     const a = document.createElement('a');
     a.href = blobUrl;
     a.download = dynamicFileName;
+    a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
+    progress = 100;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (downloadBtnText) downloadBtnText.innerHTML = `<i class="fa-solid fa-circle-check" style="margin-right: 6px; color: #22c55e;"></i> Berhasil Diunduh!`;
+
     setTimeout(() => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(blobUrl);
+      if (closeModalBtn) {
+        closeModalBtn.style.opacity = '1';
+        closeModalBtn.style.pointerEvents = 'auto';
+      }
       closeCustomAlert();
     }, 600);
+
   } catch (err) {
+    console.error("Gagal mendownload file:", err);
     showNxCustomAlert("Terjadi kesalahan saat mengunduh file Excel.", false);
+    if (downloadBtn) downloadBtn.disabled = false;
+    if (closeModalBtn) {
+      closeModalBtn.style.opacity = '1';
+      closeModalBtn.style.pointerEvents = 'auto';
+    }
   }
 }
 
@@ -312,15 +452,19 @@ const fadeTexts = [
   "📑 Scan Resi atau No Transaksi dengan Cepat & Akurat",
   "⚡ Fitur Auto-Expand Baris & Konversi TikTok Aktif",
   "⚡ Pemrosesan & Sinkronisasi Transaksi Super Cepat",
-  "🔥 Operasional Gudang Siap Berjalan Maksimal!"
+  "🔥 Operasional Gudang Siap Berjalan Maksimal!",
+  "💻 Database Cloud Teroptimasi & Aman",
 ];
 
-let fadeIndex = 0, rotatorInterval = null;
+let fadeIndex = 0;
+let rotatorInterval = null;
 function initTextFadeRotator() {
   const textEl = document.getElementById('rotating-text');
   if (!textEl) return;
+
   if (rotatorInterval) clearInterval(rotatorInterval);
   textEl.innerText = fadeTexts[fadeIndex];
+
   rotatorInterval = setInterval(() => {
     textEl.style.opacity = 0;
     setTimeout(() => {
@@ -334,31 +478,96 @@ function initTextFadeRotator() {
 function updateLastSyncDisplay(timeString) {
   const lastSyncEl = document.getElementById('last-sync-text');
   if (lastSyncEl) {
-    lastSyncEl.innerText = timeString || "Belum ada";
-    lastSyncEl.style.color = timeString ? "#38bdf8" : "#e2e8f0";
+    if (timeString) { lastSyncEl.innerText = timeString; lastSyncEl.style.color = "#38bdf8"; }
+    else { lastSyncEl.innerText = "Belum ada"; lastSyncEl.style.color = "#e2e8f0"; }
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initLastSync() {
   const savedLastSync = localStorage.getItem('gudang_last_sync');
   if (savedLastSync) updateLastSyncDisplay(savedLastSync);
-});
+}
 
-function openDeveloperModal() { const modal = document.getElementById('developerModal'); if (modal) modal.style.setProperty('display', 'flex', 'important'); }
-function closeDeveloperModal() { const modal = document.getElementById('developerModal'); if (modal) modal.style.setProperty('display', 'none', 'important'); }
+document.addEventListener('DOMContentLoaded', initLastSync);
+
+function openDeveloperModal() { 
+  const modal = document.getElementById('developerModal'); 
+  if (modal) modal.style.setProperty('display', 'flex', 'important'); 
+}
+
+function closeDeveloperModal() { 
+  const modal = document.getElementById('developerModal'); 
+  if (modal) modal.style.setProperty('display', 'none', 'important'); 
+}
 
 function playSuccessSound() {
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+    oscillator.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.1);
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.3);
   } catch (e) {}
 }
+
+function getCumulativeTotal() { return parseInt(localStorage.getItem('gudang_total_alltime') || '0', 10); }
+function addCumulativeTotal(amount) {
+  let newTotal = getCumulativeTotal() + amount;
+  localStorage.setItem('gudang_total_alltime', newTotal);
+  renderCumulativeCounter();
+}
+
+function renderCumulativeCounter() {
+  const badge = document.getElementById('dailyCounterBadge');
+  if (badge) badge.innerHTML = `<i class="fa-solid fa-box-archive" style="margin-right: 5px; color: #38bdf8;"></i> Total: ${getCumulativeTotal().toLocaleString()} paket`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderCumulativeCounter();
+  
+  const savedSession = localStorage.getItem('gudang_active_operator');
+  const modal = document.getElementById('loginModal');
+  
+  if (savedSession) {
+    try {
+      let operatorName = "", loginTime = 0;
+      if (savedSession.startsWith('{')) {
+        const session = JSON.parse(savedSession);
+        operatorName = session.name ? session.name.toUpperCase() : "";
+        loginTime = session.loginTime || 0;
+      } else {
+        operatorName = savedSession.toUpperCase();
+        loginTime = new Date().getTime();
+      }
+      
+      const currentTime = new Date().getTime();
+      const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
+      
+      if ((currentTime - loginTime) < oneWeekMilliseconds && operatorsProfile[operatorName]) {
+        setOperatorProfile(operatorName);
+        if (modal) modal.style.display = 'none';
+      } else {
+        localStorage.removeItem('gudang_active_operator');
+        if (modal) modal.style.display = 'flex';
+        setOperatorProfile();
+      }
+    } catch (e) {
+      localStorage.removeItem('gudang_active_operator');
+      if (modal) modal.style.display = 'flex';
+      setOperatorProfile();
+    }
+  } else {
+    if (modal) modal.style.display = 'flex';
+    setOperatorProfile();
+  }
+});
 
 function pilihYaPending() {
   document.getElementById('modalKonfirmasi').style.display = 'none';
@@ -368,123 +577,449 @@ function pilihYaPending() {
 }
 
 function selesaiDanDownload() {
-  document.getElementById('modalInputPending').style.display = 'none';
-  showCustomAlert(window.globalServerResponse?.message || "Transaksi selesai dan laporan berhasil diproses!", currentDownloadUrl);
+  const modalInput = document.getElementById('modalInputPending');
+  if (modalInput) modalInput.style.display = 'none';
+  
+  const msg = (window.globalServerResponse && window.globalServerResponse.message) 
+    ? window.globalServerResponse.message 
+    : "Transaksi selesai dan laporan berhasil diproses!";
+    
+  const url = currentDownloadUrl || (window.globalServerResponse && (window.globalServerResponse.downloadUrl || window.globalServerResponse.fileUrl || window.globalServerResponse.spreadsheetUrl)) || "";
+  
+  showCustomAlert(msg, url);
 }
 
 async function kirimAksiPendingCancel(actionType) {
   const inputEl = document.getElementById('inputNoTrx');
   const noTransaksi = inputEl ? inputEl.value.trim() : '';
+  
   if (!noTransaksi) {
     showNxCustomAlert("Harap masukkan atau scan Nomor Transaksi terlebih dahulu!", false);
     return;
   }
+
+  const btnId = actionType === 'pending' ? 'btnSetPending' : 'btnSetCancel';
+  const btn = document.getElementById(btnId);
+  const actionLabel = actionType === 'pending' ? 'Pending' : 'Cancel';
+
+  const toast = document.getElementById('glassToast');
+  const spinnerContainer = document.getElementById('toastIconContainer');
+  const toastTitle = document.getElementById('toastTitle');
+  const toastDesc = document.getElementById('toastDesc');
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `Memproses<span class="bouncing-dots"><span>.</span><span>.</span><span>.</span></span>`;
+  }
+
+  if (spinnerContainer) {
+    spinnerContainer.innerHTML = '<div class="gradient-spinner"></div>';
+    spinnerContainer.className = 'toast-icon-wrapper';
+  }
+  if (toastTitle) toastTitle.textContent = `Memproses data (${actionLabel})...`;
+  if (toastDesc) toastDesc.innerHTML = `Sabar ya gais, lagi proses ${actionLabel.toLowerCase()} data gudang<span class="bouncing-dots"><span>.</span><span>.</span><span>.</span></span>`;
+  if (toast) toast.classList.add('show');
+
   try {
     const response = await fetch(WEB_APP_URL, {
       method: "POST",
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: actionType, noTransaksi: noTransaksi })
+      body: JSON.stringify({
+        action: actionType,
+        noTransaksi: noTransaksi
+      })
     });
-    const res = await response.json();
+
+    const text = await response.text();
+    const res = JSON.parse(text);
+
     if (res.status === 'success') {
       window.globalServerResponse = res;
-      currentDownloadUrl = res.downloadUrl || res.fileUrl || res.spreadsheetUrl || currentDownloadUrl;
-      inputEl.value = '';
-      inputEl.focus();
-      showCustomAlert(res.message || `Transaksi berhasil diproses.`, currentDownloadUrl);
-    } else {
+      const foundUrl = res.downloadUrl || res.fileUrl || res.spreadsheetUrl;
+      if (foundUrl) {
+        currentDownloadUrl = foundUrl;
+      }
+
+      const listLog = document.getElementById('listLogPending');
+      if (listLog) {
+        if (listLog.children.length === 1 && listLog.children[0].style.color === 'rgb(100, 116, 139)') {
+          listLog.innerHTML = ''; 
+        }
+        const badgeColor = actionType === 'pending' ? '#f59e0b' : '#ef4444';
+        listLog.innerHTML += `<li><b style="color:${badgeColor}">[${actionType.toUpperCase()}]</b> TRX: ${noTransaksi}</li>`;
+      }
+
+      if (inputEl) {
+        inputEl.value = '';
+        inputEl.focus();
+      }
+
+      if (spinnerContainer) {
+        spinnerContainer.innerHTML = '<span class="checkmark">✓</span>';
+        spinnerContainer.className = 'toast-icon-wrapper success';
+      }
+      if (toastTitle) toastTitle.textContent = 'Berhasil diproses!';
+      if (toastDesc) toastDesc.textContent = res.message || `Status gudang berhasil di-${actionLabel.toLowerCase()}.`;
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `Set ${actionLabel}`;
+      }
+
+      setTimeout(() => {
+        if (toast) toast.classList.remove('show');
+        showCustomAlert(res.message || `Transaksi ${noTransaksi} berhasil diproses.`, foundUrl);
+      }, 1500);
+
+    } else { 
       throw new Error(res.message || "Gagal memproses data.");
     }
-  } catch (error) {
+
+  } catch (error) { 
     showNxCustomAlert("Terjadi kesalahan: " + error.message, false);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `Set ${actionLabel}`;
+    }
+    if (toast) toast.classList.remove('show');
   }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  const inputTrx = document.getElementById('inputNoTrx');
+  if (inputTrx) {
+    inputTrx.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        kirimAksiPendingCancel('pending');
+      }
+    });
+  }
+
+  const inputLogin = document.getElementById('inputOperatorKey');
+  if (inputLogin) {
+    inputLogin.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        verifyOperatorLogin();
+      }
+    });
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const gate = document.getElementById('tap-to-enter-gate');
+    
+    if (gate) {
+        const childContainer = gate.firstElementChild;
+        if (childContainer) {
+            childContainer.style.pointerEvents = 'none';
+        }
+
+        gate.addEventListener('click', () => {
+            const welcomeAudio = new Audio(`https://raw.githubusercontent.com/Nov-dev02/Gudang-Web-App/main/audio/Welcome.mp3?v=${new Date().getTime()}`);
+            welcomeAudio.volume = 0.9;
+            welcomeAudio.play().catch(err => console.log("Audio welcome error:", err));
+
+            gate.style.opacity = '0';
+            setTimeout(() => {
+                gate.style.display = 'none';
+            }, 500);
+        }, { once: true });
+    }
+});
+
 async function ambilDanPasteRekapan(btn) {
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> Loading...'; }
+  const originalText = '<i class="fa-solid fa-rotate"></i> Sync';
+  
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> Loading...';
+  }
+
   try {
     const response = await fetch(SCRIPT_URL_REKAPAN);
     const res = await response.json();
-    if (res.error) { showNxCustomAlert("Error: " + res.error, false); return; }
-    if (!res.transactions || res.transactions.length === 0) {
-      showNxCustomAlert("Tidak ada No Transaksi ditemukan!", false);
+    
+    if (res.error) {
+      showNxCustomAlert("Error: " + res.error, false);
       return;
     }
+    
+    if (!res.transactions || res.transactions.length === 0) {
+      showNxCustomAlert("Tidak ada No Transaksi yang ditemukan di Kolom H sheet 'ALL' spreadsheet TRANSAKSI JUNI!", false);
+      return;
+    }
+    
+    const teksGabungan = res.transactions.join('\n');
     const textarea = document.querySelector('textarea'); 
     if (textarea) {
-      textarea.value = res.transactions.join('\n');
+      textarea.value = teksGabungan;
       textarea.dispatchEvent(new Event('input'));
+    } else {
+      showNxCustomAlert("Kotak teks (textarea) tidak ditemukan di halaman ini!", false);
     }
+    
   } catch (err) {
     showNxCustomAlert("Gagal mengambil data rekapan: " + err, false);
   } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Sync'; }
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
   }
 }
 
-function refreshAplikasi() { window.location.reload(); }
+async function refreshAplikasi() {
+  const btnRefresh = document.getElementById('btn-refresh');
+  const iconRefresh = document.getElementById('icon-refresh');
+  const textRefresh = document.getElementById('text-refresh');
+  
+  if (textRefresh) textRefresh.innerText = "Memuat...";
+  if (iconRefresh) iconRefresh.classList.add('glitch-spin');
+  if (btnRefresh) btnRefresh.style.pointerEvents = "none";
+
+  try {
+    if (typeof loadDataGudang === 'function') {
+      await loadDataGudang();
+    } else {
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      window.location.reload();
+      return;
+    }
+    
+    if (textRefresh) textRefresh.innerText = "Berhasil!";
+    setTimeout(() => { if (textRefresh) textRefresh.innerText = "Refresh"; }, 1500);
+
+  } catch (error) {
+    console.error("Gagal memuat data:", error);
+    if (textRefresh) textRefresh.innerText = "Gagal!";
+    setTimeout(() => { if (textRefresh) textRefresh.innerText = "Refresh"; }, 2000);
+  } finally {
+    if (iconRefresh) iconRefresh.classList.remove('glitch-spin');
+    if (btnRefresh) btnRefresh.style.pointerEvents = "auto";
+  }
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => console.log(err));
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+  }
+}
+
+function tutupAplikasi() {
+  showNxCustomAlert("Tutup halaman lewat navigasi tab browser kamu ya, Bro!", false);
+}
+
 function bukaModalGas() {
   const modal = document.getElementById('modal-gas-config');
   const input = document.getElementById('input-gas-url');
-  if (modal && input) { input.value = getGasUrl(); modal.style.display = 'flex'; }
+  if (modal && input) {
+    input.value = getGasUrl();
+    modal.style.display = 'flex';
+  }
 }
-function tutupModalGas() { document.getElementById('modal-gas-config').style.display = 'none'; }
+
+function tutupModalGas() {
+  const modal = document.getElementById('modal-gas-config');
+  if (modal) modal.style.display = 'none';
+}
+
 function simpanGasUrl() {
   const input = document.getElementById('input-gas-url');
   if (input && input.value.trim() !== '') {
-    localStorage.setItem('GUDANG_GAS_URL', input.value.trim());
+    const newUrl = input.value.trim();
+    localStorage.setItem('GUDANG_GAS_URL', newUrl);
     localStorage.setItem('GUDANG_REFRESH_BYPASS', 'true');
     tutupModalGas();
-    setTimeout(() => window.location.reload(), 1000);
+    showCustomToastNotification("Menyimpan URL GAS & Memuat Ulang...", "#38bdf8");
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+
+  } else {
+    showCustomToastNotification("Harap masukkan URL GAS yang valid!", "#f43f5e");
   }
 }
-function clearGasInput() { const input = document.getElementById('input-gas-url'); if (input) { input.value = ''; input.focus(); } }
 
-// =========================================================================
-// 🔒 CONTROL PANEL LISENSI NX & EGG TRIGGER (SUPER ADMIN)
-// =========================================================================
-const ADMIN_NX_PIN = "2026";
-let secretClickCount = 0, secretClickTimer = null;
+function showCustomToastNotification(message, borderColor) {
+  let container = document.getElementById('global-toast-wrapper');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'global-toast-wrapper';
+    container.style.cssText = `
+      position: fixed;
+      top: 25px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2147483647;
+      pointer-events: none;
+    `;
+    document.body.appendChild(container);
+  }
+
+  container.innerHTML = '';
+
+  const notif = document.createElement('div');
+  notif.style.cssText = `
+    background: rgba(15, 23, 42, 0.98);
+    border: 2px solid ${borderColor};
+    color: #f8fafc;
+    padding: 12px 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    font-family: monospace;
+    font-size: 13.5px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(8px);
+    white-space: nowrap;
+    animation: fadeInDown 0.3s ease;
+    pointer-events: auto;
+  `;
+
+  notif.innerHTML = `
+    <div class="modern-spinner"></div>
+    <span><i class="fa-solid fa-circle-info" style="margin-right: 6px; color: ${borderColor};"></i>${message}</span>
+  `;
+
+  container.appendChild(notif);
+
+  setTimeout(() => {
+    if (notif) notif.remove();
+  }, 3000);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('img[src*="favicon"], header img, div img, h2').forEach(el => {
-    if (el.closest('.container')) {
+  const isBypass = localStorage.getItem('GUDANG_REFRESH_BYPASS');
+  if (isBypass === 'true') {
+    localStorage.removeItem('GUDANG_REFRESH_BYPASS');
+
+    const gate = document.getElementById('tap-to-enter-gate');
+    const boot = document.getElementById('boot-screen');
+    
+    if (gate) gate.style.display = 'none';
+    if (boot) boot.style.display = 'none';
+
+    const mainContainer = document.querySelector('.container');
+    if (mainContainer) mainContainer.classList.add('run-animation');
+    if (typeof initTextFadeRotator === 'function') initTextFadeRotator();
+
+    setTimeout(() => {
+      if (typeof showToast === 'function') {
+        showToast("Sistem Siap! Database GAS Berhasil Diperbarui.", "✅");
+      }
+    }, 400);
+  }
+});
+
+function clearGasInput() {
+  const input = document.getElementById('input-gas-url');
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
+}
+
+// =========================================================================
+// 🔒 LOGIKA CONTROL PANEL LISENSI NX & EGG TRIGGER (SUPER ADMIN ONLY)
+// =========================================================================
+const ADMIN_NX_PIN = "2026";
+
+let secretClickCount = 0;
+let secretClickTimer = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const logoElements = document.querySelectorAll('img[src*="favicon"], header img, div img');
+  const titleElements = document.querySelectorAll('h2');
+  
+  const clickTargets = [...logoElements, ...titleElements];
+
+  clickTargets.forEach(el => {
+    if (el.closest('.container') && el.closest('.container') === document.querySelector('.container')) {
       el.style.cursor = 'pointer';
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        secretClickCount++;
-        if (secretClickCount === 1) secretClickTimer = setTimeout(() => secretClickCount = 0, 2000);
-        if (secretClickCount >= 5) { clearTimeout(secretClickTimer); secretClickCount = 0; bukaModalNxAdmin(); }
-      });
+      el.addEventListener('click', handleSecretTriggerClick);
     }
   });
 });
 
-function bukaModalNxAdmin() {
-  const modal = document.getElementById('modal-nx-admin');
-  document.getElementById('nx-pin-step').style.display = 'block';
-  document.getElementById('nx-panel-step').style.display = 'none';
-  document.getElementById('nxPinError').style.display = 'none';
-  const inputPin = document.getElementById('inputNxPin');
-  inputPin.value = '';
-  modal.style.display = 'flex';
-  setTimeout(() => inputPin.focus(), 100);
+function handleSecretTriggerClick(e) {
+  e.stopPropagation();
+  secretClickCount++;
+  
+  if (secretClickCount === 1) {
+    secretClickTimer = setTimeout(() => {
+      secretClickCount = 0;
+    }, 2000);
+  }
+
+  if (secretClickCount >= 5) {
+    clearTimeout(secretClickTimer);
+    secretClickCount = 0;
+    bukaModalNxAdmin();
+  }
 }
 
-function tutupModalNxAdmin() { document.getElementById('modal-nx-admin').style.display = 'none'; }
+function bukaModalNxAdmin() {
+  const modal = document.getElementById('modal-nx-admin');
+  const pinStep = document.getElementById('nx-pin-step');
+  const panelStep = document.getElementById('nx-panel-step');
+  const inputPin = document.getElementById('inputNxPin');
+  const errPin = document.getElementById('nxPinError');
+
+  if (modal && pinStep && panelStep) {
+    pinStep.style.display = 'block';
+    panelStep.style.display = 'none';
+    if (errPin) errPin.style.display = 'none';
+    if (inputPin) {
+      inputPin.value = '';
+      setTimeout(() => inputPin.focus(), 100);
+    }
+    modal.style.display = 'flex';
+  }
+}
+
+function tutupModalNxAdmin() {
+  const modal = document.getElementById('modal-nx-admin');
+  if (modal) modal.style.display = 'none';
+}
 
 function verifikasiNxPin() {
   const inputPin = document.getElementById('inputNxPin');
+  const errPin = document.getElementById('nxPinError');
+  const pinStep = document.getElementById('nx-pin-step');
+  const panelStep = document.getElementById('nx-panel-step');
+
   if (inputPin && inputPin.value.trim() === ADMIN_NX_PIN) {
-    document.getElementById('nx-pin-step').style.display = 'none';
-    document.getElementById('nx-panel-step').style.display = 'block';
+    if (errPin) errPin.style.display = 'none';
+    pinStep.style.display = 'none';
+    panelStep.style.display = 'block';
     muatDataPanelNx();
   } else {
-    document.getElementById('nxPinError').style.display = 'block';
-    inputPin.value = '';
-    inputPin.focus();
+    if (errPin) errPin.style.display = 'block';
+    if (inputPin) {
+      inputPin.style.border = '1px solid #ef4444';
+      inputPin.value = '';
+      inputPin.focus();
+    }
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const inputPin = document.getElementById('inputNxPin');
+  if (inputPin) {
+    inputPin.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') verifikasiNxPin();
+    });
+  }
+});
 
 function muatDataPanelNx() {
   const savedExpiry = localStorage.getItem('gudang_token_expiry');
@@ -493,53 +1028,121 @@ function muatDataPanelNx() {
   const textCountdown = document.getElementById('nxCountdownText');
 
   if (!savedExpiry) {
-    badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> TIDAK TERPASANG';
-    badge.style.color = '#f59e0b';
-    textExpiry.innerText = 'Bebas / Tanpa Batas';
-    textCountdown.innerText = '-';
+    if (badge) {
+      badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> TIDAK TERPASANG';
+      badge.style.color = '#f59e0b';
+      badge.style.background = 'rgba(245, 158, 11, 0.15)';
+    }
+    if (textExpiry) textExpiry.innerText = 'Token Bawaan / Bebas';
+    if (textCountdown) textCountdown.innerText = 'Tanpa Batasan';
     return;
   }
 
   const expiryDate = new Date(savedExpiry);
   const now = new Date();
+
   if (now > expiryDate) {
-    badge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> EXPIRED';
-    badge.style.color = '#ef4444';
+    if (badge) {
+      badge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> EXPIRED';
+      badge.style.color = '#ef4444';
+      badge.style.background = 'rgba(239, 68, 68, 0.15)';
+    }
   } else {
-    badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> AKTIF';
-    badge.style.color = '#22c55e';
+    if (badge) {
+      badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> AKTIF';
+      badge.style.color = '#22c55e';
+      badge.style.background = 'rgba(34, 197, 94, 0.15)';
+    }
   }
-  textExpiry.innerText = expiryDate.toLocaleString('id-ID') + ' WIB';
+
+  if (textExpiry) {
+    textExpiry.innerText = expiryDate.toLocaleString('id-ID', {
+      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) + ' WIB';
+  }
+
   const diffTime = expiryDate - now;
   if (diffTime > 0) {
-    textCountdown.innerText = `${Math.floor(diffTime / (1000 * 60 * 60 * 24))} Hari Lagi`;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    if (textCountdown) textCountdown.innerText = `${diffDays} Hari ${diffHours} Jam Lagi`;
   } else {
-    textCountdown.innerText = 'Kedaluwarsa!';
+    if (textCountdown) textCountdown.innerText = 'Sudah Kedaluwarsa!';
   }
 }
 
 function decodeTokenToDate(token) {
   try {
-    if (!token || token.length < 15) return null;
-    let cleanToken = token.trim();
-    if (!cleanToken.includes('NX')) return null;
-    let parts = cleanToken.split('NX');
-    let hexPart = parts[1].match(/^[0-9a-fA-F]+/);
-    if (!hexPart) return null;
-    let timestamp = parseInt(hexPart[0], 16);
-    return isNaN(timestamp) ? null : new Date(timestamp);
+    if (!token || !token.includes("NX")) return null;
+
+    let afterNx = token.split("NX")[1];
+    if (!afterNx || afterNx.length <= 18) return null;
+
+    let hexString = afterNx.slice(0, -18);
+    let timestamp = parseInt(hexString, 16);
+    
+    if (isNaN(timestamp)) return null;
+
+    return new Date(timestamp);
   } catch (e) {
+    console.error("Gagal mendecode token NX:", e);
     return null;
   }
 }
 
 function showNxCustomAlert(message, isSuccess = true) {
   let alertModal = document.getElementById('nxCustomAlertModal');
+  
   if (!alertModal) {
     alertModal = document.createElement('div');
     alertModal.id = 'nxCustomAlertModal';
-    alertModal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 11, 20, 0.85); backdrop-filter: blur(6px); display: flex; justify-content: center; align-items: center; z-index: 2147483647; opacity: 0; transition: opacity 0.3s ease;`;
-    alertModal.innerHTML = `<div style="background: rgba(15, 23, 42, 0.95); border: 1px solid #334155; padding: 24px; border-radius: 16px; width: 85%; max-width: 340px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); text-align: center; font-family: monospace;" id="nxAlertBoxContent"><div id="nxAlertIcon" style="font-size: 36px; margin-bottom: 12px;"></div><div id="nxAlertTitle" style="font-size: 15px; font-weight: bold; color: #f8fafc; margin-bottom: 8px;"></div><div id="nxAlertMessage" style="font-size: 12.5px; color: #94a3b8; margin-bottom: 20px; line-height: 1.4;"></div><button id="nxAlertCloseBtn" style="background: #0284c7; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-family: monospace; cursor: pointer; width: 100%; font-size: 13px;">OK</button></div>`;
+    alertModal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(7, 11, 20, 0.85);
+      backdrop-filter: blur(6px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2147483647;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    `;
+    
+    alertModal.innerHTML = `
+      <div style="
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid #334155;
+        padding: 24px;
+        border-radius: 16px;
+        width: 85%;
+        max-width: 340px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+        text-align: center;
+        font-family: monospace;
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+      " id="nxAlertBoxContent">
+        <div id="nxAlertIcon" style="font-size: 36px; margin-bottom: 12px;"></div>
+        <div id="nxAlertTitle" style="font-size: 15px; font-weight: bold; color: #f8fafc; margin-bottom: 8px;"></div>
+        <div id="nxAlertMessage" style="font-size: 12.5px; color: #94a3b8; margin-bottom: 20px; line-height: 1.4;"></div>
+        <button id="nxAlertCloseBtn" style="
+          background: #0284c7;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-weight: bold;
+          font-family: monospace;
+          cursor: pointer;
+          width: 100%;
+          font-size: 13px;
+        ">OK</button>
+      </div>
+    `;
     document.body.appendChild(alertModal);
   }
 
@@ -547,33 +1150,81 @@ function showNxCustomAlert(message, isSuccess = true) {
   const titleEl = document.getElementById('nxAlertTitle');
   const msgEl = document.getElementById('nxAlertMessage');
   const closeBtn = document.getElementById('nxAlertCloseBtn');
+  const boxContent = document.getElementById('nxAlertBoxContent');
 
   if (isSuccess) {
     iconEl.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #22c55e;"></i>';
     titleEl.innerText = "BERHASIL";
     closeBtn.style.background = '#22c55e';
+    closeBtn.style.color = '#070b14';
   } else {
     iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i>';
     titleEl.innerText = "PERHATIAN";
     closeBtn.style.background = '#ef4444';
+    closeBtn.style.color = '#ffffff';
   }
 
   msgEl.innerText = message;
+  
   alertModal.style.display = 'flex';
-  setTimeout(() => alertModal.style.opacity = '1', 10);
+  setTimeout(() => {
+    alertModal.style.opacity = '1';
+    boxContent.style.transform = 'scale(1)';
+  }, 10);
 
   closeBtn.onclick = () => {
     alertModal.style.opacity = '0';
+    boxContent.style.transform = 'scale(0.9)';
     setTimeout(() => {
       alertModal.style.display = 'none';
       if (isSuccess && window.shouldReloadAfterAlert) {
-        window.location.reload(true);
+        window.location.reload();
       }
     }, 300);
   };
 }
 
-// --- FUNGSI SIMPAN TOKEN DARI PANEL (MODAL CYBERPUNK) ---
+// --- FUNGSI GANTI ALERT JADI CUSTOM TOAST ---
+function showNxToast(message, icon = "🛡️") {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement("div");
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid #38bdf8;
+    color: #f8fafc;
+    padding: 14px 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    font-family: monospace;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 2147483647;
+    backdrop-filter: blur(10px);
+    animation: fadeInUp 0.3s ease;
+  `;
+  
+  toast.innerHTML = `<span style="font-size: 16px;">${icon}</span> <span>${message}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.transition = "opacity 0.4s ease";
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 400);
+  }, 3500);
+}
+
+// --- UPDATE FUNGSI SIMPAN TOKEN DARI PANEL KE CUSTOM MODAL ---
 function simpanTokenDariPanel() {
   const inputToken = document.getElementById('inputPanelNxToken');
   if (!inputToken || !inputToken.value.trim()) {
@@ -582,7 +1233,9 @@ function simpanTokenDariPanel() {
     return;
   }
 
-  const decodedDate = decodeTokenToDate(inputToken.value.trim());
+  const valToken = inputToken.value.trim();
+  const decodedDate = decodeTokenToDate(valToken);
+
   if (decodedDate && decodedDate > new Date()) {
     localStorage.setItem('gudang_token_expiry', decodedDate.toISOString());
     localStorage.removeItem('gudang_status_terkunci');
@@ -594,9 +1247,8 @@ function simpanTokenDariPanel() {
     showNxCustomAlert("Token tidak valid atau sudah kedaluwarsa!", false);
   }
 }
-
-// --- FUNGSI SIMULASI KUNCI SISTEM (MODAL CYBERPUNK) ---
 function simulasiKunciSistem() {
+  // Atur masa kedaluwarsa ke masa lalu (misal kemarin) supaya sistem langsung terkunci
   const pastDate = new Date();
   pastDate.setDate(pastDate.getDate() - 1);
   
@@ -604,6 +1256,11 @@ function simulasiKunciSistem() {
   localStorage.setItem('gudang_status_terkunci', 'true');
   
   tutupModalNxAdmin();
-  window.shouldReloadAfterAlert = true;
+  
+  // Ganti alert bawaan browser dengan custom alert/toast kita
   showNxCustomAlert("Simulasi Kunci Sistem Berhasil Diterapkan! Halaman akan terkunci.", true);
+  
+  setTimeout(() => {
+    location.reload(true);
+  }, 1500);
 }
