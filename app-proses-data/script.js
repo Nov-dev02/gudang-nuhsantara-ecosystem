@@ -1224,22 +1224,27 @@ function showNxToast(message, icon = "🛡️") {
   }, 3500);
 }
 
-// --- UPDATE FUNGSI SIMPAN TOKEN DARI PANEL ---
+// --- UPDATE FUNGSI SIMPAN TOKEN DARI PANEL KE CUSTOM MODAL ---
 function simpanTokenDariPanel() {
-  const valToken = document.getElementById('inputPanelNxToken').value;
+  const inputToken = document.getElementById('inputPanelNxToken');
+  if (!inputToken || !inputToken.value.trim()) {
+    window.shouldReloadAfterAlert = false;
+    showNxCustomAlert("Harap masukkan token lisensi NX yang valid!", false);
+    return;
+  }
+
+  const valToken = inputToken.value.trim();
   const decodedDate = decodeTokenToDate(valToken);
 
   if (decodedDate && decodedDate > new Date()) {
     localStorage.setItem('gudang_token_expiry', decodedDate.toISOString());
-    
-    // GANTI ALERT BAWAAN DENGAN CUSTOM TOAST KITA
-    showNxToast('Token Lisensi NX Berhasil Diperbarui!', '🟢');
-    
-    setTimeout(() => {
-      location.reload(true);
-    }, 1200);
+    localStorage.removeItem('gudang_status_terkunci');
+    window.shouldReloadAfterAlert = true;
+    tutupModalNxAdmin();
+    showNxCustomAlert("Token Lisensi NX Berhasil Diperbarui!", true);
   } else {
-    showNxToast('Token tidak valid atau format salah!', '❌');
+    window.shouldReloadAfterAlert = false;
+    showNxCustomAlert("Token tidak valid atau sudah kedaluwarsa!", false);
   }
 }
 function simulasiKunciSistem() {
