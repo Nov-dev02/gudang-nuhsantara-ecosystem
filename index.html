@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <link rel="icon" href="logo-gudang.png">
+ <link rel="icon" type="image/png" href="logo-gudang-512.png">
+<link rel="apple-touch-icon" href="logo-gudang-192.png">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f172a">
   <title>Gudang Nuhsantara - Enterprise Dashboard Hub</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="manifest" href="manifest.json">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('Dashboard Service Worker Registered'));
+  }
+</script>
   <style>
     :root {
       --bg-gradient: linear-gradient(135deg, #070b14 0%, #0f172a 50%, #1e1b4b 100%);
