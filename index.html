@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>Gudang Nuhsantara - Enterprise Dashboard Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #070b14 0%, #0f172a 50%, #1e1b4b 100%);
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(56, 189, 248, 0.2);
+      --text-main: #f8fafc;
+      --text-desc: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-green: #22c55e;
+    }
+    *, *::before, *::after { box-sizing: border-box; transition: all 0.3s ease; }
+    body {
+      margin: 0; padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .portal-container {
+      width: 100%; max-width: 850px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 24px;
+      padding: 35px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(56, 189, 248, 0.15);
+      animation: fadeInPortal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeInPortal {
+      0% { opacity: 0; transform: translateY(30px) scale(0.97); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .portal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 20px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;
+    }
+    .brand-box { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 45px; height: 45px; background: rgba(56, 189, 248, 0.1);
+      border: 1px solid var(--accent-blue); border-radius: 12px;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 22px; color: var(--accent-blue);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+    }
+    .brand-title h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px; color: #fff; }
+    .brand-title p { margin: 3px 0 0 0; font-size: 11.5px; color: var(--text-desc); font-family: monospace; }
+    
+    .owner-badge {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3);
+      padding: 6px 14px; border-radius: 20px; font-size: 11.5px; color: #d8b4fe; font-family: monospace;
+    }
+    
+    .section-title { font-size: 14px; color: var(--accent-blue); font-family: monospace; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    
+    .apps-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px; margin-bottom: 25px;
+    }
+    .app-card {
+      background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px; padding: 22px; text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; justify-content: space-between;
+      position: relative; overflow: hidden;
+    }
+    .app-card:hover {
+      transform: translateY(-4px); border-color: var(--accent-blue);
+      background: rgba(30, 41, 59, 0.9); box-shadow: 0 10px 30px rgba(56, 189, 248, 0.2);
+    }
+    .app-card i.icon-main { font-size: 28px; color: var(--accent-blue); margin-bottom: 12px; }
+    .app-card h3 { margin: 0 0 6px 0; font-size: 16px; color: #fff; }
+    .app-card p { margin: 0 0 16px 0; font-size: 12px; color: var(--text-desc); line-height: 1.4; }
+    .app-link-btn {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+      color: var(--accent-blue); font-family: monospace;
+    }
+
+    /* Owner Control Panel Section */
+    .admin-panel-box {
+      background: rgba(2, 6, 23, 0.6); border: 1px dashed rgba(56, 189, 248, 0.3);
+      border-radius: 16px; padding: 20px; margin-top: 20px;
+    }
+    .admin-controls { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-admin {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: white; border: 1px solid var(--accent-blue); padding: 10px 18px;
+      border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer;
+      font-family: monospace; display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+    }
+    .btn-admin:hover { opacity: 0.9; transform: translateY(-2px); }
+
+    /* Modal Super Admin PIN */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(7, 11, 20, 0.9); backdrop-filter: blur(14px);
+      display: none; justify-content: center; align-items: center; z-index: 99999; padding: 20px;
+    }
+    .modal-box {
+      background: #0f172a; border: 1px solid var(--accent-blue); padding: 30px;
+      border-radius: 20px; width: 100%; max-width: 380px; text-align: center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.2); font-family: monospace;
+    }
+    .modal-box input {
+      width: 100%; padding: 12px; background: #020617; border: 1px solid #334155;
+      color: var(--accent-blue); font-size: 18px; border-radius: 10px; outline: none;
+      text-align: center; letter-spacing: 6px; margin: 15px 0 10px 0; box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="portal-container">
+    <!-- HEADER -->
+    <div class="portal-header">
+      <div class="brand-box">
+        <div class="brand-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+        <div class="brand-title">
+          <h1>GUDANG NUHSANTARA</h1>
+          <p>CENTRAL APP LAUNCHER & GATEWAY HUB</p>
+        </div>
+      </div>
+      <div class="owner-badge">
+        <i class="fa-solid fa-shield-halved" style="color: #a855f7;"></i> SYSTEM OWNER: NOVAN
+      </div>
+    </div>
+
+    <!-- MAIN APPS LAUNCHER -->
+    <div class="section-title"><i class="fa-solid fa-rocket"></i> PILIH MODUL APLIKASI OPERASIONAL</div>
+    <div class="apps-grid">
+      <!-- Modul 1: Proses Data -->
+      <a href="./app-proses-data/index.html" class="app-card">
+        <div>
+          <i class="fa-solid fa-bolt-lightning icon-main"></i>
+          <h3>Proses Data Gudang</h3>
+          <p>Sinkronisasi marketplace Shopee & TikTok, pencocokan admin, status Clear, hingga ekspor laporan Excel.</p>
+        </div>
+        <div class="app-link-btn">Buka Modul <i class="fa-solid fa-arrow-right"></i></div>
+      </a>
+
+      <!-- Modul 2: Aplikasi PO -->
+      <a href="./app-po/index.html" class="app-card">
+        <div>
+          <i class="fa-solid fa-file-invoice-dollar icon-main" style="color: #34d399;"></i>
+          <h3>Aplikasi Purchase Order</h3>
+          <p>Pusat pencatatan, manajemen, dan pengelolaan data pre-order serta pembelian barang gudang.</p>
+        </div>
+        <div class="app-link-btn" style="color: #34d399;">Buka Modul <i class="fa-solid fa-arrow-right"></i></div>
+      </a>
+    </div>
+
+    <!-- OWNER CONTROL PANEL (KHUSUS NOVAN) -->
+    <div class="admin-panel-box">
+      <div class="section-title" style="margin-bottom: 10px; color: #a855f7;"><i class="fa-solid fa-user-gear"></i> OWNER / SUPER ADMIN CONTROLS</div>
+      <p style="font-size: 11.5px; color: var(--text-desc); margin: 0 0 15px 0; line-height: 1.4;">
+        Akses cepat bagi pengembang untuk mengelola token lisensi NX pusat atau membuka generator token tanpa harus masuk ke aplikasi operasional.
+      </p>
+      <div class="admin-controls">
+        <button class="btn-admin" onclick="bukaModalAdmin()" style="background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%); border-color: #c084fc;">
+          <i class="fa-solid fa-key"></i> Panel Lisensi NX
+        </button>
+        <a href="./nx-generator/index.html" target="_blank" style="text-decoration: none;">
+          <button class="btn-admin" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399;">
+            <i class="fa-solid fa-code"></i> Buka Token Generator
+          </button>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PIN SUPER ADMIN -->
+  <div id="adminModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="font-size: 28px; color: var(--accent-blue); margin-bottom: 8px;"><i class="fa-solid fa-fingerprint"></i></div>
+      <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 15px;">SUPER ADMIN ACCESS</h3>
+      <p style="font-size: 11px; color: var(--text-desc); margin-bottom: 10px;">Masukkan PIN Rahasia Owner (2026)</p>
+      
+      <input type="password" id="adminPinInput" maxlength="6" placeholder="••••">
+      <div id="pinError" style="color: #ef4444; font-size: 10.5px; margin-bottom: 10px; display: none;">PIN Salah! Akses ditolak.</div>
+      
+      <div style="display: flex; gap: 8px;">
+        <button onclick="tutupModalAdmin()" style="flex: 1; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 10px; border-radius: 8px; cursor: pointer; font-family: monospace;">Batal</button>
+        <button onclick="verifikasiPinAdmin()" style="flex: 1; background: #0284c7; border: 1px solid var(--accent-blue); color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold;">Masuk</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function bukaModalAdmin() {
+      document.getElementById('adminModal').style.display = 'flex';
+      document.getElementById('adminPinInput').value = '';
+      document.getElementById('pinError').style.display = 'none';
+      setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
+    }
+    function tutupModalAdmin() {
+      document.getElementById('adminModal').style.display = 'none';
+    }
+    function verifikasiPinAdmin() {
+      const pin = document.getElementById('adminPinInput').value.trim();
+      if (pin === "2026") {
+        alert("Akses Owner Diterima! Control Panel Aktif.");
+        tutupModalAdmin();
+      } else {
+        document.getElementById('pinError').style.display = 'block';
+        document.getElementById('adminPinInput').value = '';
+        document.getElementById('adminPinInput').focus();
+      }
+    }
+    document.getElementById('adminPinInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') verifikasiPinAdmin();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "Nuhsantara Merchandise PO",
+  "short_name": "System PO NM",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "Favicon/Logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "Favicon/Logo.png",
+      "sizes": "192x192 512x512 3264x3264",
+      "type": "image/png"
+    }
+  ]
+}

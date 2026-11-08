@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Nuhsantara Secure Token Generator</title>
+  <style>
+    body { background: #070b14; color: #f8fafc; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .card { background: #0f172a; border: 1px solid #334155; padding: 30px; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
+    h2 { color: #38bdf8; font-size: 18px; margin-top: 0; text-align: center; }
+    label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 10px; background: #020617; border: 1px solid #475569; color: white; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-family: monospace; }
+    button { background: #0284c7; color: white; border: none; padding: 12px; width: 100%; font-weight: bold; border-radius: 8px; cursor: pointer; font-family: monospace; }
+    button:hover { background: #0369a1; }
+    
+    .result-wrapper { position: relative; margin-top: 20px; }
+    .result { background: #020617; padding: 12px 42px 12px 12px; border: 1px dashed #38bdf8; border-radius: 8px; word-break: break-all; color: #38bdf8; font-size: 11.5px; text-align: left; min-height: 20px; box-sizing: border-box; }
+    
+    /* Tombol Salin dengan Ikon SVG Modern */
+    .btn-copy { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: #1e293b; border: 1px solid #475569; color: #38bdf8; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+    .btn-copy:hover { background: #334155; border-color: #38bdf8; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>🔐 Secure Token Generator</h2>
+    <label>Pilih Tanggal Kedaluwarsa Lisensi:</label>
+    <input type="date" id="inputTanggal">
+    
+    <button onclick="generateSecureToken()">GENERATE SECURE TOKEN</button>
+
+    <div class="result-wrapper">
+      <div class="result" id="outputToken">Token aman akan muncul di sini...</div>
+      <button type="button" class="btn-copy" id="btnCopyToken" title="Salin Token" onclick="copyTokenText()">
+        <svg id="copyIconSvg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function generateSecureToken() {
+      const tglVal = document.getElementById('inputTanggal').value;
+      if (!tglVal) {
+        alert('Pilih tanggal dulu bro!');
+        return;
+      }
+
+      // Enkripsi tanggal ke Hexadecimal timestamp
+      let targetDate = new Date(tglVal);
+      let timeHex = targetDate.getTime().toString(16);
+      
+      let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let randomPrefix = '';
+      for (let i = 0; i < 18; i++) randomPrefix += chars.charAt(Math.floor(Math.random() * chars.length));
+      
+      let randomSuffix = '';
+      for (let i = 0; i < 18; i++) randomSuffix += chars.charAt(Math.floor(Math.random() * chars.length));
+
+      let finalToken = randomPrefix + "NX" + timeHex + randomSuffix;
+      
+      document.getElementById('outputToken').innerText = finalToken;
+    }
+
+    function copyTokenText() {
+      const tokenText = document.getElementById('outputToken').innerText;
+      const copyBtnSvg = document.getElementById('copyIconSvg');
+      
+      if (!tokenText || tokenText.includes('Token aman akan muncul')) {
+        alert('Generate tokennya dulu, Bro!');
+        return;
+      }
+      
+      navigator.clipboard.writeText(tokenText).then(() => {
+        // Berubah jadi ikon centang sukses hijau modern
+        copyBtnSvg.innerHTML = '<polyline points="20 6 9 17 4 12" stroke="#22c55e" stroke-width="2.5"></polyline>';
+        setTimeout(() => {
+          // Kembali ke ikon salin semula
+          copyBtnSvg.innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>';
+        }, 1500);
+      }).catch(err => {
+        console.error("Gagal menyalin text: ", err);
+      });
+    }
+  </script>
+</body>
+</html>
