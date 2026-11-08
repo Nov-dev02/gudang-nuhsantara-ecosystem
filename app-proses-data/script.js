@@ -1243,9 +1243,19 @@ function simpanTokenDariPanel() {
   }
 }
 function simulasiKunciSistem() {
-  const kemarin = new Date();
-  kemarin.setDate(kemarin.getDate() - 1);
-  localStorage.setItem('gudang_token_expiry', kemarin.toISOString());
-  window.shouldReloadAfterAlert = true;
-  showNxCustomAlert("Simulasi Kunci Sistem Berhasil Diterapkan!", true);
+  // Atur masa kedaluwarsa ke masa lalu (misal kemarin) supaya sistem langsung terkunci
+  const pastDate = new Date();
+  pastDate.setDate(pastDate.getDate() - 1);
+  
+  localStorage.setItem('gudang_token_expiry', pastDate.toISOString());
+  localStorage.setItem('gudang_status_terkunci', 'true');
+  
+  tutupModalNxAdmin();
+  
+  // Ganti alert bawaan browser dengan custom alert/toast kita
+  showNxCustomAlert("Simulasi Kunci Sistem Berhasil Diterapkan! Halaman akan terkunci.", true);
+  
+  setTimeout(() => {
+    location.reload(true);
+  }, 1500);
 }
