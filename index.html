@@ -103,7 +103,7 @@
     }
     .btn-admin:hover { opacity: 0.9; transform: translateY(-2px); }
 
-    /* Modal Super Admin PIN */
+    /* Modal Overlay Umum */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(7, 11, 20, 0.9); backdrop-filter: blur(14px);
@@ -111,7 +111,7 @@
     }
     .modal-box {
       background: #0f172a; border: 1px solid var(--accent-blue); padding: 30px;
-      border-radius: 20px; width: 100%; max-width: 380px; text-align: center;
+      border-radius: 20px; width: 100%; max-width: 420px; text-align: center;
       box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.2); font-family: monospace;
     }
     .modal-box input {
@@ -169,19 +169,17 @@
         Akses cepat bagi pengembang untuk mengelola token lisensi NX pusat atau membuka generator token tanpa harus masuk ke aplikasi operasional.
       </p>
       <div class="admin-controls">
-        <button class="btn-admin" onclick="bukaModalAdmin()" style="background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%); border-color: #c084fc;">
+        <button class="btn-admin" onclick="bukaModalAdmin('lisensi')" style="background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%); border-color: #c084fc;">
           <i class="fa-solid fa-key"></i> Panel Lisensi NX
         </button>
-        <a href="./nx-generator/index.html" target="_blank" style="text-decoration: none;">
-          <button class="btn-admin" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399;">
-            <i class="fa-solid fa-code"></i> Buka Token Generator
-          </button>
-        </a>
+        <button class="btn-admin" onclick="bukaModalAdmin('generator')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399;">
+          <i class="fa-solid fa-code"></i> Buka Token Generator
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL PIN SUPER ADMIN -->
+  <!-- MODAL 1: INPUT PIN SUPER ADMIN -->
   <div id="adminModal" class="modal-overlay">
     <div class="modal-box">
       <div style="font-size: 28px; color: var(--accent-blue); margin-bottom: 8px;"><i class="fa-solid fa-fingerprint"></i></div>
@@ -198,27 +196,183 @@
     </div>
   </div>
 
+  <!-- MODAL 2: PANEL KONTROL LISENSI NX (MUNCUL SETELAH PIN BENAR) -->
+  <div id="nxPanelModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 440px; text-align: left;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+        <h3 style="color: #38bdf8; margin: 0; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-shield-halved" style="color: #22c55e;"></i> PANEL CONTROL LISENSI NX
+        </h3>
+        <button onclick="tutupPanelNx()" style="background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; padding: 0;">&times;</button>
+      </div>
+
+      <!-- Card Status Lisensi -->
+      <div style="background: #020617; border: 1px solid #1e293b; padding: 14px; border-radius: 12px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 11px; color: #94a3b8;"><i class="fa-solid fa-satellite-dish"></i> Status Lisensi:</span>
+          <span id="nxStatusBadge" style="padding: 3px 8px; border-radius: 6px; font-size: 10.5px; font-weight: bold; background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);">AKTIF</span>
+        </div>
+        <div style="font-size: 11.5px; color: #f8fafc; margin-bottom: 4px;">
+          <i class="fa-solid fa-clock"></i> Kedaluwarsa: <span id="nxExpiryText" style="color: #38bdf8; font-weight: bold;">-</span>
+        </div>
+        <div style="font-size: 10px; color: #64748b;">
+          <i class="fa-solid fa-hourglass-half"></i> Sisa Waktu: <span id="nxCountdownText" style="color: #f59e0b;">-</span>
+        </div>
+      </div>
+
+      <!-- Form Input Token Baru -->
+      <div style="margin-bottom: 16px;">
+        <label style="color: #c084fc; font-size: 11px; display: block; margin-bottom: 6px;"><i class="fa-solid fa-code"></i> PERBARUI TOKEN LISENSI NX:</label>
+        <input type="text" id="inputPanelNxToken" placeholder="Tempel token baru di sini (mis: ...NX...)..." style="width: 100%; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 11px; border-radius: 8px; outline: none; font-family: monospace; box-sizing: border-box; text-align: center; margin-bottom: 8px;" />
+        <button onclick="simpanTokenDariPanelDashboard()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1px solid #34d399; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: monospace; font-size: 12px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+          <i class="fa-solid fa-floppy-disk"></i> SIMPAN TOKEN BARU
+        </button>
+      </div>
+
+      <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 14px; display: flex; justify-content: space-between; gap: 8px;">
+        <button onclick="simulasiKunciSistemDashboard()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 10.5px; font-family: monospace;">
+          <i class="fa-solid fa-lock"></i> Lock System
+        </button>
+        <button onclick="tutupPanelNx()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace;">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    function bukaModalAdmin() {
+    let targetAksiAdmin = ""; // Menyimpan tujuan: 'lisensi' atau 'generator'
+
+    function bukaModalAdmin(aksi) {
+      targetAksiAdmin = aksi;
       document.getElementById('adminModal').style.display = 'flex';
       document.getElementById('adminPinInput').value = '';
       document.getElementById('pinError').style.display = 'none';
       setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
     }
+    
     function tutupModalAdmin() {
       document.getElementById('adminModal').style.display = 'none';
     }
+
     function verifikasiPinAdmin() {
       const pin = document.getElementById('adminPinInput').value.trim();
       if (pin === "2026") {
-        alert("Akses Owner Diterima! Control Panel Aktif.");
         tutupModalAdmin();
+        
+        if (targetAksiAdmin === 'lisensi') {
+          bukaPanelNx();
+        } else if (targetAksiAdmin === 'generator') {
+          window.open('./nx-generator/index.html', '_blank');
+        }
       } else {
         document.getElementById('pinError').style.display = 'block';
         document.getElementById('adminPinInput').value = '';
         document.getElementById('adminPinInput').focus();
       }
     }
+
+    function bukaPanelNx() {
+      document.getElementById('nxPanelModal').style.display = 'flex';
+      muatDataPanelDashboard();
+    }
+
+    function tutupPanelNx() {
+      document.getElementById('nxPanelModal').style.display = 'none';
+    }
+
+    function decodeTokenToDate(token) {
+      try {
+        if (!token || !token.includes("NX")) return null;
+        let afterNx = token.split("NX")[1];
+        if (!afterNx || afterNx.length <= 18) return null;
+        let hexString = afterNx.slice(0, -18);
+        let timestamp = parseInt(hexString, 16);
+        if (isNaN(timestamp)) return null;
+        return new Date(timestamp);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function muatDataPanelDashboard() {
+      const savedExpiry = localStorage.getItem('gudang_token_expiry');
+      const badge = document.getElementById('nxStatusBadge');
+      const textExpiry = document.getElementById('nxExpiryText');
+      const textCountdown = document.getElementById('nxCountdownText');
+
+      if (!savedExpiry) {
+        if (badge) {
+          badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> TIDAK TERPASANG';
+          badge.style.color = '#f59e0b';
+          badge.style.background = 'rgba(245, 158, 11, 0.15)';
+        }
+        if (textExpiry) textExpiry.innerText = 'Token Bawaan / Bebas';
+        if (textCountdown) textCountdown.innerText = 'Tanpa Batasan';
+        return;
+      }
+
+      const expiryDate = new Date(savedExpiry);
+      const now = new Date();
+
+      if (now > expiryDate) {
+        if (badge) {
+          badge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> EXPIRED';
+          badge.style.color = '#ef4444';
+          badge.style.background = 'rgba(239, 68, 68, 0.15)';
+        }
+      } else {
+        if (badge) {
+          badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> AKTIF';
+          badge.style.color = '#22c55e';
+          badge.style.background = 'rgba(34, 197, 94, 0.15)';
+        }
+      }
+
+      if (textExpiry) {
+        textExpiry.innerText = expiryDate.toLocaleString('id-ID', {
+          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        }) + ' WIB';
+      }
+
+      const diffTime = expiryDate - now;
+      if (diffTime > 0) {
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        if (textCountdown) textCountdown.innerText = `${diffDays} Hari ${diffHours} Jam Lagi`;
+      } else {
+        if (textCountdown) textCountdown.innerText = 'Sudah Kedaluwarsa!';
+      }
+    }
+
+    function simpanTokenDariPanelDashboard() {
+      const inputToken = document.getElementById('inputPanelNxToken');
+      if (!inputToken || !inputToken.value.trim()) {
+        alert("Harap masukkan token lisensi NX yang valid!");
+        return;
+      }
+
+      const valToken = inputToken.value.trim();
+      const decodedDate = decodeTokenToDate(valToken);
+
+      if (decodedDate && decodedDate > new Date()) {
+        localStorage.setItem('gudang_token_expiry', decodedDate.toISOString());
+        localStorage.removeItem('gudang_status_terkunci');
+        alert("Token Lisensi NX Berhasil Diperbarui!");
+        tutupPanelNx();
+      } else {
+        alert("Token tidak valid atau sudah kedaluwarsa!");
+      }
+    }
+
+    function simulasiKunciSistemDashboard() {
+      const kemarin = new Date();
+      kemarin.setDate(kemarin.getDate() - 1);
+      localStorage.setItem('gudang_token_expiry', kemarin.toISOString());
+      alert("Simulasi Kunci Sistem Berhasil Diterapkan!");
+      tutupPanelNx();
+    }
+
     document.getElementById('adminPinInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') verifikasiPinAdmin();
     });
