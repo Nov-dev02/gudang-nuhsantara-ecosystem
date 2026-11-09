@@ -1,3 +1,10 @@
+// 🛑 MATIKAN TOTAL ALERT BAWAAN BROWSER
+window.alert = function(msg) {
+  console.log("Alert dicegah:", msg);
+  if (typeof showDashboardToast === 'function') {
+    showDashboardToast(msg, true);
+  }
+};
 // =========================================================================
 // 🛡️ GUDANG NUHSANTARA - SECURITY CORE & LICENSING GUARD (NX-GUARD v2.1)
 // =========================================================================
