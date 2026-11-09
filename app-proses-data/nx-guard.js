@@ -1,5 +1,5 @@
 // =========================================================================
-// 🛡️ GUDANG NUHSANTARA - SECURITY CORE & LICENSING GUARD (NX-GUARD v2.0)
+// 🛡️ GUDANG NUHSANTARA - SECURITY CORE & LICENSING GUARD (NX-GUARD v2.1)
 // =========================================================================
 
 const ADMIN_NX_PIN = "2026";
@@ -42,75 +42,40 @@ function cekStatusLisensi() {
   return today > expiryDate;
 }
 
-// --- CUSTOM MODAL ALERT UNTUK MODUL LISENSI ---
-function showNxCustomAlert(message, isSuccess = true) {
-  let alertModal = document.getElementById('nxCustomAlertModal');
+// --- CUSTOM TOAST CYBERPUNK (ANTI ALERT BAWAAN BROWSER) ---
+function showNxToastMessage(message, isSuccess = true) {
+  let existingToast = document.getElementById('nx-cyber-toast');
+  if (existingToast) existingToast.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'nx-cyber-toast';
   
-  if (!alertModal) {
-    alertModal = document.createElement('div');
-    alertModal.id = 'nxCustomAlertModal';
-    alertModal.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(7, 11, 20, 0.85); backdrop-filter: blur(6px);
-      display: flex; justify-content: center; align-items: center;
-      z-index: 2147483647; opacity: 0; transition: opacity 0.3s ease;
-    `;
-    
-    alertModal.innerHTML = `
-      <div style="
-        background: rgba(15, 23, 42, 0.95); border: 1px solid #334155;
-        padding: 24px; border-radius: 16px; width: 85%; max-width: 340px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.8); text-align: center;
-        font-family: monospace; transform: scale(0.9); transition: transform 0.3s ease;
-      " id="nxAlertBoxContent">
-        <div id="nxAlertIcon" style="font-size: 36px; margin-bottom: 12px;"></div>
-        <div id="nxAlertTitle" style="font-size: 15px; font-weight: bold; color: #f8fafc; margin-bottom: 8px;"></div>
-        <div id="nxAlertMessage" style="font-size: 12.5px; color: #94a3b8; margin-bottom: 20px; line-height: 1.4;"></div>
-        <button id="nxAlertCloseBtn" style="
-          background: #0284c7; color: white; border: none; padding: 10px 20px;
-          border-radius: 8px; font-weight: bold; font-family: monospace;
-          cursor: pointer; width: 100%; font-size: 13px;
-        ">OK</button>
-      </div>
-    `;
-    document.body.appendChild(alertModal);
-  }
+  const borderColor = isSuccess ? '#22c55e' : '#ef4444';
+  const iconSymbol = isSuccess ? '✅' : '⚠️';
 
-  const iconEl = document.getElementById('nxAlertIcon');
-  const titleEl = document.getElementById('nxAlertTitle');
-  const msgEl = document.getElementById('nxAlertMessage');
-  const closeBtn = document.getElementById('nxAlertCloseBtn');
-  const boxContent = document.getElementById('nxAlertBoxContent');
+  toast.style.cssText = `
+    position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px);
+    background: rgba(15, 23, 42, 0.98); border: 1.5px solid ${borderColor};
+    color: #f8fafc; padding: 14px 24px; border-radius: 14px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 25px ${isSuccess ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'};
+    font-family: monospace; font-size: 13px; z-index: 2147483647;
+    display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px);
+    opacity: 0; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  `;
 
-  if (isSuccess) {
-    iconEl.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #22c55e;"></i>';
-    titleEl.innerText = "BERHASIL";
-    closeBtn.style.background = '#22c55e';
-    closeBtn.style.color = '#070b14';
-  } else {
-    iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i>';
-    titleEl.innerText = "PERHATIAN";
-    closeBtn.style.background = '#ef4444';
-    closeBtn.style.color = '#ffffff';
-  }
+  toast.innerHTML = `<span style="font-size: 18px;">${iconSymbol}</span> <span style="font-weight: bold; letter-spacing: 0.5px;">${message}</span>`;
+  document.body.appendChild(toast);
 
-  msgEl.innerText = message;
-  alertModal.style.display = 'flex';
   setTimeout(() => {
-    alertModal.style.opacity = '1';
-    boxContent.style.transform = 'scale(1)';
-  }, 10);
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  }, 20);
 
-  closeBtn.onclick = () => {
-    alertModal.style.opacity = '0';
-    boxContent.style.transform = 'scale(0.9)';
-    setTimeout(() => {
-      alertModal.style.display = 'none';
-      if (isSuccess && window.shouldReloadAfterAlert) {
-        window.location.reload();
-      }
-    }, 300);
-  };
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(-20px)';
+    setTimeout(() => toast.remove(), 400);
+  }, 3200);
 }
 
 // --- INISIALISASI KEAMANAN & EASTER EGG OPERATOR ---
@@ -351,8 +316,7 @@ function muatDataPanelNx() {
 function simpanTokenDariPanel() {
   const inputToken = document.getElementById('inputPanelNxToken');
   if (!inputToken || !inputToken.value.trim()) {
-    window.shouldReloadAfterAlert = false;
-    showNxCustomAlert("Harap masukkan token lisensi NX yang valid!", false);
+    showNxToastMessage("Harap masukkan token lisensi NX yang valid!", false);
     return;
   }
 
@@ -362,12 +326,11 @@ function simpanTokenDariPanel() {
   if (decodedDate && decodedDate > new Date()) {
     localStorage.setItem('gudang_token_expiry', decodedDate.toISOString());
     localStorage.removeItem('gudang_status_terkunci');
-    window.shouldReloadAfterAlert = true;
     tutupModalNxAdmin();
-    showNxCustomAlert("Token Lisensi NX Berhasil Diperbarui!", true);
+    showNxToastMessage("Token Lisensi NX Berhasil Diperbarui!", true);
+    setTimeout(() => { location.reload(true); }, 1500);
   } else {
-    window.shouldReloadAfterAlert = false;
-    showNxCustomAlert("Token tidak valid atau sudah kedaluwarsa!", false);
+    showNxToastMessage("Token tidak valid atau sudah kedaluwarsa!", false);
   }
 }
 
@@ -379,10 +342,9 @@ function simulasiKunciSistem() {
   localStorage.setItem('gudang_status_terkunci', 'true');
   
   tutupModalNxAdmin();
-  showNxCustomAlert("Simulasi Kunci Sistem Berhasil Diterapkan! Halaman akan terkunci.", true);
+  showNxToastMessage("Simulasi Kunci Sistem Berhasil Diterapkan!", true);
   
   setTimeout(() => {
     location.reload(true);
   }, 1500);
 }
-a
