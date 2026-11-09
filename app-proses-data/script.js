@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 🛡️ DATABASE & VERIFIKASI OPERATOR SHIFT (MURNI 3 OPERATOR)
+// 🛡️ DATABASE & VERIFIKASI OPERATOR SHIFT
 // ==========================================
 const operatorsProfile = {
   "IRGI": { 
@@ -242,12 +242,15 @@ async function processData() {
   const logTextSpan = document.getElementById('logText');
   
   if (!shopeeData) {
-    showNxCustomAlert("Silakan paste data Shopee & TikTok terlebih dahulu ya!", false);
+    if (typeof showNxCustomAlert === 'function') {
+      showNxCustomAlert("Silakan paste data Shopee & TikTok terlebih dahulu ya!", false);
+    } else {
+      showCustomAlert("Silakan paste data Shopee & TikTok terlebih dahulu ya!", "");
+    }
     return;
   }
 
   if (btn) btn.disabled = true;
-  
   if (btnSpinner) btnSpinner.style.setProperty('display', 'inline-block', 'important');
   if (btnText) btnText.style.setProperty('display', 'none', 'important');
 
@@ -290,7 +293,7 @@ async function processData() {
       if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
 
       const now = new Date();
-      const formattedSyncTime = `${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} -${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })} WIB`;
+      const formattedSyncTime = `${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} - ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })} WIB`;
       
       localStorage.setItem('gudang_last_sync', formattedSyncTime);
       updateLastSyncDisplay(formattedSyncTime);
@@ -373,7 +376,9 @@ async function downloadExcelWithProgress(serverResponse) {
 
   const targetUrl = currentDownloadUrl || (window.globalServerResponse && window.globalServerResponse.downloadUrl) || "";
   if (!targetUrl) {
-    showNxCustomAlert("URL download belum tersedia dari server.", false);
+    if (typeof showNxCustomAlert === 'function') {
+      showNxCustomAlert("URL download belum tersedia dari server.", false);
+    }
     closeCustomAlert();
     return;
   }
@@ -433,7 +438,9 @@ async function downloadExcelWithProgress(serverResponse) {
 
   } catch (err) {
     console.error("Gagal mendownload file:", err);
-    showNxCustomAlert("Terjadi kesalahan saat mengunduh file Excel.", false);
+    if (typeof showNxCustomAlert === 'function') {
+      showNxCustomAlert("Terjadi kesalahan saat mengunduh file Excel.", false);
+    }
     if (downloadBtn) downloadBtn.disabled = false;
     if (closeModalBtn) {
       closeModalBtn.style.opacity = '1';
@@ -594,7 +601,9 @@ async function kirimAksiPendingCancel(actionType) {
   const noTransaksi = inputEl ? inputEl.value.trim() : '';
   
   if (!noTransaksi) {
-    showNxCustomAlert("Harap masukkan atau scan Nomor Transaksi terlebih dahulu!", false);
+    if (typeof showNxCustomAlert === 'function') {
+      showNxCustomAlert("Harap masukkan atau scan Nomor Transaksi terlebih dahulu!", false);
+    }
     return;
   }
 
@@ -676,7 +685,9 @@ async function kirimAksiPendingCancel(actionType) {
     }
 
   } catch (error) { 
-    showNxCustomAlert("Terjadi kesalahan: " + error.message, false);
+    if (typeof showNxCustomAlert === 'function') {
+      showNxCustomAlert("Terjadi kesalahan: " + error.message, false);
+    }
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = `Set ${actionLabel}`;
@@ -707,15 +718,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// Event Listener Tap-To-Enter Gate tanpa pointer-events bug
 document.addEventListener('DOMContentLoaded', () => {
     const gate = document.getElementById('tap-to-enter-gate');
     
     if (gate) {
-        const childContainer = gate.firstElementChild;
-        if (childContainer) {
-            childContainer.style.pointerEvents = 'none';
-        }
-
         gate.addEventListener('click', () => {
             const welcomeAudio = new Audio(`https://raw.githubusercontent.com/Nov-dev02/Gudang-Web-App/main/audio/Welcome.mp3?v=${new Date().getTime()}`);
             welcomeAudio.volume = 0.9;
@@ -742,12 +749,12 @@ async function ambilDanPasteRekapan(btn) {
     const res = await response.json();
     
     if (res.error) {
-      showNxCustomAlert("Error: " + res.error, false);
+      if (typeof showNxCustomAlert === 'function') showNxCustomAlert("Error: " + res.error, false);
       return;
     }
     
     if (!res.transactions || res.transactions.length === 0) {
-      showNxCustomAlert("Tidak ada No Transaksi yang ditemukan di Kolom H sheet 'ALL' spreadsheet TRANSAKSI JUNI!", false);
+      if (typeof showNxCustomAlert === 'function') showNxCustomAlert("Tidak ada No Transaksi yang ditemukan di Kolom H sheet 'ALL'!", false);
       return;
     }
     
@@ -757,11 +764,11 @@ async function ambilDanPasteRekapan(btn) {
       textarea.value = teksGabungan;
       textarea.dispatchEvent(new Event('input'));
     } else {
-      showNxCustomAlert("Kotak teks (textarea) tidak ditemukan di halaman ini!", false);
+      if (typeof showNxCustomAlert === 'function') showNxCustomAlert("Kotak teks (textarea) tidak ditemukan!", false);
     }
     
   } catch (err) {
-    showNxCustomAlert("Gagal mengambil data rekapan: " + err, false);
+    if (typeof showNxCustomAlert === 'function') showNxCustomAlert("Gagal mengambil data rekapan: " + err, false);
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -810,7 +817,9 @@ function toggleFullscreen() {
 }
 
 function tutupAplikasi() {
-  showNxCustomAlert("Tutup halaman lewat navigasi tab browser kamu ya, Bro!", false);
+  if (typeof showNxCustomAlert === 'function') {
+    showNxCustomAlert("Tutup halaman lewat navigasi tab browser kamu ya, Bro!", false);
+  }
 }
 
 function bukaModalGas() {
@@ -851,15 +860,9 @@ function showCustomToastNotification(message, borderColor) {
     container = document.createElement('div');
     container.id = 'global-toast-wrapper';
     container.style.cssText = `
-      position: fixed;
-      top: 25px;
-      left: 0;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 2147483647;
-      pointer-events: none;
+      position: fixed; top: 25px; left: 0; width: 100%;
+      display: flex; justify-content: center; align-items: center;
+      z-index: 2147483647; pointer-events: none;
     `;
     document.body.appendChild(container);
   }
@@ -868,21 +871,12 @@ function showCustomToastNotification(message, borderColor) {
 
   const notif = document.createElement('div');
   notif.style.cssText = `
-    background: rgba(15, 23, 42, 0.98);
-    border: 2px solid ${borderColor};
-    color: #f8fafc;
-    padding: 12px 24px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    font-family: monospace;
-    font-size: 13.5px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    backdrop-filter: blur(8px);
-    white-space: nowrap;
-    animation: fadeInDown 0.3s ease;
-    pointer-events: auto;
+    background: rgba(15, 23, 42, 0.98); border: 2px solid ${borderColor};
+    color: #f8fafc; padding: 12px 24px; border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8); font-family: monospace;
+    font-size: 13.5px; display: flex; align-items: center; gap: 12px;
+    backdrop-filter: blur(8px); white-space: nowrap;
+    animation: fadeInDown 0.3s ease; pointer-events: auto;
   `;
 
   notif.innerHTML = `
@@ -913,8 +907,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof initTextFadeRotator === 'function') initTextFadeRotator();
 
     setTimeout(() => {
-      if (typeof showToast === 'function') {
-        showToast("Sistem Siap! Database GAS Berhasil Diperbarui.", "✅");
+      if (typeof showNxToast === 'function') {
+        showNxToast("Sistem Siap! Database GAS Berhasil Diperbarui.", "✅");
       }
     }, 400);
   }
@@ -926,341 +920,4 @@ function clearGasInput() {
     input.value = '';
     input.focus();
   }
-}
-
-// =========================================================================
-// 🔒 LOGIKA CONTROL PANEL LISENSI NX & EGG TRIGGER (SUPER ADMIN ONLY)
-// =========================================================================
-const ADMIN_NX_PIN = "2026";
-
-let secretClickCount = 0;
-let secretClickTimer = null;
-
-document.addEventListener('DOMContentLoaded', () => {
-  const logoElements = document.querySelectorAll('img[src*="favicon"], header img, div img');
-  const titleElements = document.querySelectorAll('h2');
-  
-  const clickTargets = [...logoElements, ...titleElements];
-
-  clickTargets.forEach(el => {
-    if (el.closest('.container') && el.closest('.container') === document.querySelector('.container')) {
-      el.style.cursor = 'pointer';
-      el.addEventListener('click', handleSecretTriggerClick);
-    }
-  });
-});
-
-function handleSecretTriggerClick(e) {
-  e.stopPropagation();
-  secretClickCount++;
-  
-  if (secretClickCount === 1) {
-    secretClickTimer = setTimeout(() => {
-      secretClickCount = 0;
-    }, 2000);
-  }
-
-  if (secretClickCount >= 5) {
-    clearTimeout(secretClickTimer);
-    secretClickCount = 0;
-    bukaModalNxAdmin();
-  }
-}
-
-function bukaModalNxAdmin() {
-  const modal = document.getElementById('modal-nx-admin');
-  const pinStep = document.getElementById('nx-pin-step');
-  const panelStep = document.getElementById('nx-panel-step');
-  const inputPin = document.getElementById('inputNxPin');
-  const errPin = document.getElementById('nxPinError');
-
-  if (modal && pinStep && panelStep) {
-    pinStep.style.display = 'block';
-    panelStep.style.display = 'none';
-    if (errPin) errPin.style.display = 'none';
-    if (inputPin) {
-      inputPin.value = '';
-      setTimeout(() => inputPin.focus(), 100);
-    }
-    modal.style.display = 'flex';
-  }
-}
-
-function tutupModalNxAdmin() {
-  const modal = document.getElementById('modal-nx-admin');
-  if (modal) modal.style.display = 'none';
-}
-
-function verifikasiNxPin() {
-  const inputPin = document.getElementById('inputNxPin');
-  const errPin = document.getElementById('nxPinError');
-  const pinStep = document.getElementById('nx-pin-step');
-  const panelStep = document.getElementById('nx-panel-step');
-
-  if (inputPin && inputPin.value.trim() === ADMIN_NX_PIN) {
-    if (errPin) errPin.style.display = 'none';
-    pinStep.style.display = 'none';
-    panelStep.style.display = 'block';
-    muatDataPanelNx();
-  } else {
-    if (errPin) errPin.style.display = 'block';
-    if (inputPin) {
-      inputPin.style.border = '1px solid #ef4444';
-      inputPin.value = '';
-      inputPin.focus();
-    }
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const inputPin = document.getElementById('inputNxPin');
-  if (inputPin) {
-    inputPin.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') verifikasiNxPin();
-    });
-  }
-});
-
-function muatDataPanelNx() {
-  const savedExpiry = localStorage.getItem('gudang_token_expiry');
-  const badge = document.getElementById('nxStatusBadge');
-  const textExpiry = document.getElementById('nxExpiryText');
-  const textCountdown = document.getElementById('nxCountdownText');
-
-  if (!savedExpiry) {
-    if (badge) {
-      badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> TIDAK TERPASANG';
-      badge.style.color = '#f59e0b';
-      badge.style.background = 'rgba(245, 158, 11, 0.15)';
-    }
-    if (textExpiry) textExpiry.innerText = 'Token Bawaan / Bebas';
-    if (textCountdown) textCountdown.innerText = 'Tanpa Batasan';
-    return;
-  }
-
-  const expiryDate = new Date(savedExpiry);
-  const now = new Date();
-
-  if (now > expiryDate) {
-    if (badge) {
-      badge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> EXPIRED';
-      badge.style.color = '#ef4444';
-      badge.style.background = 'rgba(239, 68, 68, 0.15)';
-    }
-  } else {
-    if (badge) {
-      badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> AKTIF';
-      badge.style.color = '#22c55e';
-      badge.style.background = 'rgba(34, 197, 94, 0.15)';
-    }
-  }
-
-  if (textExpiry) {
-    textExpiry.innerText = expiryDate.toLocaleString('id-ID', {
-      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    }) + ' WIB';
-  }
-
-  const diffTime = expiryDate - now;
-  if (diffTime > 0) {
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    if (textCountdown) textCountdown.innerText = `${diffDays} Hari ${diffHours} Jam Lagi`;
-  } else {
-    if (textCountdown) textCountdown.innerText = 'Sudah Kedaluwarsa!';
-  }
-}
-
-function decodeTokenToDate(token) {
-  try {
-    if (!token || !token.includes("NX")) return null;
-
-    let afterNx = token.split("NX")[1];
-    if (!afterNx || afterNx.length <= 18) return null;
-
-    let hexString = afterNx.slice(0, -18);
-    let timestamp = parseInt(hexString, 16);
-    
-    if (isNaN(timestamp)) return null;
-
-    return new Date(timestamp);
-  } catch (e) {
-    console.error("Gagal mendecode token NX:", e);
-    return null;
-  }
-}
-
-function showNxCustomAlert(message, isSuccess = true) {
-  let alertModal = document.getElementById('nxCustomAlertModal');
-  
-  if (!alertModal) {
-    alertModal = document.createElement('div');
-    alertModal.id = 'nxCustomAlertModal';
-    alertModal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(7, 11, 20, 0.85);
-      backdrop-filter: blur(6px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 2147483647;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    `;
-    
-    alertModal.innerHTML = `
-      <div style="
-        background: rgba(15, 23, 42, 0.95);
-        border: 1px solid #334155;
-        padding: 24px;
-        border-radius: 16px;
-        width: 85%;
-        max-width: 340px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-        text-align: center;
-        font-family: monospace;
-        transform: scale(0.9);
-        transition: transform 0.3s ease;
-      " id="nxAlertBoxContent">
-        <div id="nxAlertIcon" style="font-size: 36px; margin-bottom: 12px;"></div>
-        <div id="nxAlertTitle" style="font-size: 15px; font-weight: bold; color: #f8fafc; margin-bottom: 8px;"></div>
-        <div id="nxAlertMessage" style="font-size: 12.5px; color: #94a3b8; margin-bottom: 20px; line-height: 1.4;"></div>
-        <button id="nxAlertCloseBtn" style="
-          background: #0284c7;
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 8px;
-          font-weight: bold;
-          font-family: monospace;
-          cursor: pointer;
-          width: 100%;
-          font-size: 13px;
-        ">OK</button>
-      </div>
-    `;
-    document.body.appendChild(alertModal);
-  }
-
-  const iconEl = document.getElementById('nxAlertIcon');
-  const titleEl = document.getElementById('nxAlertTitle');
-  const msgEl = document.getElementById('nxAlertMessage');
-  const closeBtn = document.getElementById('nxAlertCloseBtn');
-  const boxContent = document.getElementById('nxAlertBoxContent');
-
-  if (isSuccess) {
-    iconEl.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #22c55e;"></i>';
-    titleEl.innerText = "BERHASIL";
-    closeBtn.style.background = '#22c55e';
-    closeBtn.style.color = '#070b14';
-  } else {
-    iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i>';
-    titleEl.innerText = "PERHATIAN";
-    closeBtn.style.background = '#ef4444';
-    closeBtn.style.color = '#ffffff';
-  }
-
-  msgEl.innerText = message;
-  
-  alertModal.style.display = 'flex';
-  setTimeout(() => {
-    alertModal.style.opacity = '1';
-    boxContent.style.transform = 'scale(1)';
-  }, 10);
-
-  closeBtn.onclick = () => {
-    alertModal.style.opacity = '0';
-    boxContent.style.transform = 'scale(0.9)';
-    setTimeout(() => {
-      alertModal.style.display = 'none';
-      if (isSuccess && window.shouldReloadAfterAlert) {
-        window.location.reload();
-      }
-    }, 300);
-  };
-}
-
-// --- FUNGSI GANTI ALERT JADI CUSTOM TOAST ---
-function showNxToast(message, icon = "🛡️") {
-  let container = document.getElementById('toast-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'toast-container';
-    document.body.appendChild(container);
-  }
-
-  const toast = document.createElement("div");
-  toast.style.cssText = `
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: rgba(15, 23, 42, 0.95);
-    border: 1px solid #38bdf8;
-    color: #f8fafc;
-    padding: 14px 24px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-    font-family: monospace;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    z-index: 2147483647;
-    backdrop-filter: blur(10px);
-    animation: fadeInUp 0.3s ease;
-  `;
-  
-  toast.innerHTML = `<span style="font-size: 16px;">${icon}</span> <span>${message}</span>`;
-  container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.transition = "opacity 0.4s ease";
-    toast.style.opacity = "0";
-    setTimeout(() => toast.remove(), 400);
-  }, 3500);
-}
-
-// --- UPDATE FUNGSI SIMPAN TOKEN DARI PANEL KE CUSTOM MODAL ---
-function simpanTokenDariPanel() {
-  const inputToken = document.getElementById('inputPanelNxToken');
-  if (!inputToken || !inputToken.value.trim()) {
-    window.shouldReloadAfterAlert = false;
-    showNxCustomAlert("Harap masukkan token lisensi NX yang valid!", false);
-    return;
-  }
-
-  const valToken = inputToken.value.trim();
-  const decodedDate = decodeTokenToDate(valToken);
-
-  if (decodedDate && decodedDate > new Date()) {
-    localStorage.setItem('gudang_token_expiry', decodedDate.toISOString());
-    localStorage.removeItem('gudang_status_terkunci');
-    window.shouldReloadAfterAlert = true;
-    tutupModalNxAdmin();
-    showNxCustomAlert("Token Lisensi NX Berhasil Diperbarui!", true);
-  } else {
-    window.shouldReloadAfterAlert = false;
-    showNxCustomAlert("Token tidak valid atau sudah kedaluwarsa!", false);
-  }
-}
-function simulasiKunciSistem() {
-  // Atur masa kedaluwarsa ke masa lalu (misal kemarin) supaya sistem langsung terkunci
-  const pastDate = new Date();
-  pastDate.setDate(pastDate.getDate() - 1);
-  
-  localStorage.setItem('gudang_token_expiry', pastDate.toISOString());
-  localStorage.setItem('gudang_status_terkunci', 'true');
-  
-  tutupModalNxAdmin();
-  
-  // Ganti alert bawaan browser dengan custom alert/toast kita
-  showNxCustomAlert("Simulasi Kunci Sistem Berhasil Diterapkan! Halaman akan terkunci.", true);
-  
-  setTimeout(() => {
-    location.reload(true);
-  }, 1500);
 }
