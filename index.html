@@ -252,6 +252,42 @@
   <script>
     let targetAksiAdmin = ""; // Menyimpan tujuan: 'lisensi' atau 'generator'
 
+    // --- CUSTOM NOTIFIKASI CYBERPUNK (PENGGANTI ALERT BROWSER) ---
+    function showDashboardToast(message, isSuccess = true) {
+      let existingToast = document.getElementById('dashboard-cyber-toast');
+      if (existingToast) existingToast.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'dashboard-cyber-toast';
+      
+      const borderColor = isSuccess ? '#22c55e' : '#ef4444';
+      const iconSymbol = isSuccess ? '✅' : '⚠️';
+
+      toast.style.cssText = `
+        position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px);
+        background: rgba(15, 23, 42, 0.98); border: 1.5px solid ${borderColor};
+        color: #f8fafc; padding: 14px 24px; border-radius: 14px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 25px ${isSuccess ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'};
+        font-family: monospace; font-size: 13px; z-index: 2147483647;
+        display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px);
+        opacity: 0; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      `;
+
+      toast.innerHTML = `<span style="font-size: 18px;">${iconSymbol}</span> <span style="font-weight: bold; letter-spacing: 0.5px;">${message}</span>`;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+      }, 20);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-20px)';
+        setTimeout(() => toast.remove(), 400);
+      }, 3200);
+    }
+
     function bukaModalAdmin(aksi) {
       targetAksiAdmin = aksi;
       document.getElementById('adminModal').style.display = 'flex';
@@ -357,7 +393,7 @@
     function simpanTokenDariPanelDashboard() {
       const inputToken = document.getElementById('inputPanelNxToken');
       if (!inputToken || !inputToken.value.trim()) {
-        alert("Harap masukkan token lisensi NX yang valid!");
+        showDashboardToast("Harap masukkan token lisensi NX yang valid!", false);
         return;
       }
 
@@ -367,10 +403,10 @@
       if (decodedDate && decodedDate > new Date()) {
         localStorage.setItem('gudang_token_expiry', decodedDate.toISOString());
         localStorage.removeItem('gudang_status_terkunci');
-        alert("Token Lisensi NX Berhasil Diperbarui!");
+        showDashboardToast("Token Lisensi NX Berhasil Diperbarui!", true);
         tutupPanelNx();
       } else {
-        alert("Token tidak valid atau sudah kedaluwarsa!");
+        showDashboardToast("Token tidak valid atau sudah kedaluwarsa!", false);
       }
     }
 
@@ -378,7 +414,7 @@
       const kemarin = new Date();
       kemarin.setDate(kemarin.getDate() - 1);
       localStorage.setItem('gudang_token_expiry', kemarin.toISOString());
-      alert("Simulasi Kunci Sistem Berhasil Diterapkan!");
+      showDashboardToast("Simulasi Kunci Sistem Berhasil Diterapkan!", true);
       tutupPanelNx();
     }
 
