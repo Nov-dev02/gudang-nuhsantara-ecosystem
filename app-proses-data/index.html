@@ -503,16 +503,16 @@
     document.getElementById('nxCustomSecurityModal').style.display = 'none';
   }
 
-    function verifikasiKodeAksesCustom() {
+      function verifikasiKodeAksesCustom() {
     const inputCode = document.getElementById('inputCustomAccessCode').value.trim();
     const KODE_RAHASIA_ADMIN = "NX-ROOT@ECOSYSTEM-2026#SECURE";
 
     if (inputCode === KODE_RAHASIA_ADMIN) {
-      // 1. Sembunyikan modal input kodenya dulu
-      tutupModalKeamanan();
-
-      // 2. Munculkan Toast Notifikasi Sukses ala Cyberpunk
+      // 1. Munculkan Toast Notifikasi Sukses ala Cyberpunk DULU
       tampilkanToastCyberpunkSukses("AKSES DITERIMA // WELCOME, SYSTEM OWNER");
+
+      // 2. Baru tutup modal input kodenya
+      tutupModalKeamanan();
 
       // 3. Beri jeda 1.5 detik untuk transisi smooth, baru pindah ke dashboard
       setTimeout(() => {
@@ -525,6 +525,7 @@
       document.getElementById('inputCustomAccessCode').focus();
     }
   }
+
 
   // Fungsi pembuat Toast Cyberpunk yang smooth & modern
   function tampilkanToastCyberpunkSukses(pesan) {
