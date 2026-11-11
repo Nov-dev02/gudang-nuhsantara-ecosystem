@@ -460,5 +460,32 @@
       </div>
     </div>
   </div>
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Menangkap tombol "Menu Dashboard" di pojok kiri atas berdasarkan href-nya
+    const btnDashboard = document.querySelector('a[href="../index.html"]');
+    
+    if (btnDashboard) {
+      btnDashboard.addEventListener("click", function(e) {
+        e.preventDefault(); // Cegah langsung pindah halaman
+        
+        // Munculkan kotak dialog keamanan sistem
+        const kodeAkses = prompt("🛡️ [SYSTEM SECURITY ACCESS]\nAkses ke Menu Dashboard Utama dibatasi.\nMasukkan Kode Akses Administrator:");
+        
+        // Kode rahasia eksklusif super admin (hanya kamu yang tahu)
+        const KODE_RAHASIA_ADMIN = "NX-ROOT@ECOSYSTEM-2026#SECURE";
+        
+        if (kodeAkses === KODE_RAHASIA_ADMIN) {
+          // Jika benar, izinkan kembali ke dashboard utama
+          window.location.href = btnDashboard.href;
+        } else if (kodeAkses !== null) {
+          // Jika salah memasukkan kode
+          alert("❌ Akses Ditolak! Kode Akses Administrator salah.");
+        }
+      });
+    }
+  });
+</script>
+
 </body>
 </html>
