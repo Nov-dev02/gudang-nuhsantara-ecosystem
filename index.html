@@ -252,6 +252,38 @@
   <script>
     let targetAksiAdmin = ""; // Menyimpan tujuan: 'lisensi' atau 'generator'
 
+    // --- MODUL PENGAMAN KODE AKSES DASHBOARD ---
+    document.addEventListener("DOMContentLoaded", function() {
+      // Menangkap semua link atau tombol navigasi yang mengarah ke dashboard utama
+      const links = document.querySelectorAll('a, button');
+      
+      links.forEach(el => {
+        // Deteksi tombol / teks menu dashboard di pojok kiri atas aplikasi operasional
+        const textContent = el.textContent || "";
+        const hrefValue = el.getAttribute('href') || "";
+        
+        if (textContent.includes("Dashboard") || textContent.includes("Menu Dashboard") || hrefValue.includes("gudang-nuhsantara-ecosystem/index.html") || hrefValue === "../index.html") {
+          el.addEventListener("click", function(e) {
+            e.preventDefault(); // Cegah langsung berpindah halaman
+            
+            // Munculkan prompt dialog keamanan sistem
+            const kodeAkses = prompt("🛡️ [SYSTEM SECURITY ACCESS]\nAkses ke Menu Dashboard Utama dibatasi.\nMasukkan Kode Akses Administrator:");
+            
+            // Kode rahasia eksklusif super admin
+            const KODE_RAHASIA_ADMIN = "NX-ROOT@ECOSYSTEM-2026#SECURE";
+            
+            if (kodeAkses === KODE_RAHASIA_ADMIN) {
+              // Jika benar, izinkan navigasi halaman dashboard
+              window.location.href = el.href || "https://nov-dev02.github.io/gudang-nuhsantara-ecosystem/";
+            } else if (kodeAkses !== null) {
+              // Jika salah memasukkan kode
+              showDashboardToast("Akses Ditolak! Kode Akses Administrator salah.", false);
+            }
+          });
+        }
+      });
+    });
+
     // --- CUSTOM NOTIFIKASI CYBERPUNK (PENGGANTI ALERT BROWSER) ---
     function showDashboardToast(message, isSuccess = true) {
       let existingToast = document.getElementById('dashboard-cyber-toast');
