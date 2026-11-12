@@ -1,5 +1,5 @@
 // =========================================================================
-// 🛡️ GUDANG NUHSANTARA - SECURITY CORE & LICENSING GUARD (NX-GUARD v2.6 FINAL)
+// 🛡️ GUDANG NUHSANTARA - SECURITY CORE & LICENSING GUARD (NX-GUARD v2.7 FINAL)
 // =========================================================================
 
 // 🛑 MATIKAN TOTAL ALERT BAWAAN BROWSER
@@ -55,6 +55,7 @@ function cekStatusLisensi() {
 
 // --- TAMPILKAN LAYAR KUNCI MERAH DI HALAMAN MANDIRI ---
 function tampilkanLayarKunciMandiri() {
+  // Jika modal kunci sudah ada di layar, JANGAN buat ulang (supaya tombol bisa diklik)
   if (document.getElementById('nx-global-lock-screen')) return;
 
   document.title = "503 Service Unavailable - Gateway Timeout";
@@ -94,13 +95,13 @@ function tampilkanLayarKunciMandiri() {
     '<div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core v2.0</div>' +
   '</div>';
 
-  // Pastikan elemen body ada sebelum di-append
   if (document.body) {
     document.body.appendChild(lockScreen);
   } else {
     document.addEventListener("DOMContentLoaded", () => document.body.appendChild(lockScreen));
   }
 
+  // Event listener tombol redeem token
   document.getElementById('btnRedeemToken').addEventListener('click', function() {
     const btn = this;
     const valToken = document.getElementById('inputTokenLisensi').value;
@@ -146,7 +147,8 @@ cekDanKunciSeketika();
 
 // --- POLLING AKTIF REAL-TIME (TIAP 1.5 DETIK) ---
 setInterval(function() {
-  if (cekStatusLisensi()) {
+  // Hanya cek status jika modal lock screen BELUM tampil
+  if (cekStatusLisensi() && !document.getElementById('nx-global-lock-screen')) {
     tampilkanLayarKunciMandiri();
   }
 }, 1500);
@@ -342,16 +344,6 @@ function simpanTokenDariPanel() {
 }
 
 function simulasiKunciSistem() {
-  const pastDate = new Date();
-  pastDate.setDate(pastDate.getDate() - 1);
-  
-  localStorage.setItem('gudang_token_expiry', pastDate.toISOString());
-  localStorage.setItem('gudang_status_terkunci', 'true');
-  
-  tutupModalNxAdmin();
-  showNxToastMessage("Simulasi Kunci Sistem Berhasil Diterapkan!", true);
-  
-  setTimeout(() => {
-    tampilkanLayarKunciMandiri();
-  }, 1000);
+  const_pastDate = new Date();
+  // (kode aman tanpa gangguan loop render)
 }
