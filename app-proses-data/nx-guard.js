@@ -355,3 +355,14 @@ function simulasiKunciSistem() {
     location.reload(true);
   }, 1500);
 }
+// --- SINKRONISASI KUNCI REAL-TIME ANTAR TAB/HALAMAN ---
+window.addEventListener('storage', function(e) {
+  if (e.key === 'gudang_token_expiry') {
+    const newExpiry = new Date(e.newValue);
+    const today = new Date();
+    if (today > newExpiry) {
+      // Jika dari tab lain sistem dikunci, langsung muat ulang halaman untuk memicu layar Lock Screen
+      location.reload(true);
+    }
+  }
+});
