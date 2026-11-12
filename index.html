@@ -445,7 +445,11 @@
     function simulasiKunciSistemDashboard() {
       const kemarin = new Date();
       kemarin.setDate(kemarin.getDate() - 1);
+      
+      // ✅ SUDAH DIPERBAIKI DI SINI: Menyimpan dua key sekaligus agar modul mandiri langsung ikut terkunci
       localStorage.setItem('gudang_token_expiry', kemarin.toISOString());
+      localStorage.setItem('gudang_status_terkunci', 'true');
+      
       showDashboardToast("Simulasi Kunci Sistem Berhasil Diterapkan!", true);
       tutupPanelNx();
     }
