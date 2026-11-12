@@ -1,6 +1,14 @@
 // =========================================================================
-// 🛡️ GUDANG NUHSANTARA - SECURITY CORE & LICENSING GUARD (NX-GUARD v2.4)
+// 🛡️ GUDANG NUHSANTARA - SECURITY CORE & LICENSING GUARD (NX-GUARD v2.6 FINAL)
 // =========================================================================
+
+// 🛑 MATIKAN TOTAL ALERT BAWAAN BROWSER
+window.alert = function(msg) {
+  console.log("Alert dicegah:", msg);
+  if (typeof showDashboardToast === 'function') {
+    showDashboardToast(msg, true);
+  }
+};
 
 const ADMIN_NX_PIN = "2026";
 let secretClickCount = 0;
@@ -47,7 +55,6 @@ function cekStatusLisensi() {
 
 // --- TAMPILKAN LAYAR KUNCI MERAH DI HALAMAN MANDIRI ---
 function tampilkanLayarKunciMandiri() {
-  // Cegah penumpukan elemen berulang jika layar sudah muncul
   if (document.getElementById('nx-global-lock-screen')) return;
 
   document.title = "503 Service Unavailable - Gateway Timeout";
@@ -87,7 +94,12 @@ function tampilkanLayarKunciMandiri() {
     '<div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core v2.0</div>' +
   '</div>';
 
-  document.body.appendChild(lockScreen);
+  // Pastikan elemen body ada sebelum di-append
+  if (document.body) {
+    document.body.appendChild(lockScreen);
+  } else {
+    document.addEventListener("DOMContentLoaded", () => document.body.appendChild(lockScreen));
+  }
 
   document.getElementById('btnRedeemToken').addEventListener('click', function() {
     const btn = this;
@@ -124,12 +136,13 @@ function tampilkanLayarKunciMandiri() {
   });
 }
 
-// --- CEK SAAT PERTAMA KALI DIBUKA ---
-if (cekStatusLisensi()) {
-  document.addEventListener("DOMContentLoaded", function() {
+// --- EKSEKUSI CEK & KUNCI SECARA INSTAN ---
+function cekDanKunciSeketika() {
+  if (cekStatusLisensi()) {
     tampilkanLayarKunciMandiri();
-  });
+  }
 }
+cekDanKunciSeketika();
 
 // --- POLLING AKTIF REAL-TIME (TIAP 1.5 DETIK) ---
 setInterval(function() {
