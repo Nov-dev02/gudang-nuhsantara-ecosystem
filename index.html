@@ -218,29 +218,29 @@
       <!-- Card Status Lisensi -->
       <div style="background: #020617; border: 1px solid #1e293b; padding: 14px; border-radius: 12px; margin-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-size: 11px; color: #94a3b8;"><i class="fa-solid fa-satellite-dish"></i> Status Lisensi:</span>
-          <span id="nxStatusBadge" style="padding: 3px 8px; border-radius: 6px; font-size: 10.5px; font-weight: bold; background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);">AKTIF</span>
+          <span style="font-size: 11px; color: #94a3b8;"><i class="fa-solid fa-satellite-dish"></i> Status Lisensi Cloud:</span>
+          <span id="nxStatusBadge" style="padding: 3px 8px; border-radius: 6px; font-size: 10.5px; font-weight: bold; background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);">TERHUBUNG</span>
         </div>
         <div style="font-size: 11.5px; color: #f8fafc; margin-bottom: 4px;">
           <i class="fa-solid fa-clock"></i> Kedaluwarsa: <span id="nxExpiryText" style="color: #38bdf8; font-weight: bold;">-</span>
         </div>
         <div style="font-size: 10px; color: #64748b;">
-          <i class="fa-solid fa-hourglass-half"></i> Sisa Waktu: <span id="nxCountdownText" style="color: #f59e0b;">-</span>
+          <i class="fa-solid fa-cloud"></i> Sinkronisasi Cloud Real-Time
         </div>
       </div>
 
       <!-- Form Input Token Baru -->
       <div style="margin-bottom: 16px;">
-        <label style="color: #c084fc; font-size: 11px; display: block; margin-bottom: 6px;"><i class="fa-solid fa-code"></i> PERBARUI TOKEN LISENSI NX:</label>
+        <label style="color: #c084fc; font-size: 11px; display: block; margin-bottom: 6px;"><i class="fa-solid fa-code"></i> PERBARUI TOKEN LISENSI CLOUD:</label>
         <input type="text" id="inputPanelNxToken" placeholder="Tempel token baru di sini (mis: ...NX...)..." style="width: 100%; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 11px; border-radius: 8px; outline: none; font-family: monospace; box-sizing: border-box; text-align: center; margin-bottom: 8px;" />
         <button onclick="simpanTokenDariPanelDashboard()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1px solid #34d399; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: monospace; font-size: 12px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-          <i class="fa-solid fa-floppy-disk"></i> SIMPAN TOKEN BARU
+          <i class="fa-solid fa-floppy-disk"></i> SIMPAN & BUKA SEMUA PERANGKAT
         </button>
       </div>
 
       <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 14px; display: flex; justify-content: space-between; gap: 8px;">
         <button onclick="simulasiKunciSistemDashboard()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 10.5px; font-family: monospace;">
-          <i class="fa-solid fa-lock"></i> Lock System
+          <i class="fa-solid fa-lock"></i> Lock System (Global)
         </button>
         <button onclick="tutupPanelNx()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace;">
           Tutup
@@ -250,33 +250,29 @@
   </div>
 
   <script>
+    // 🌐 URL FIREBASE REALTIME DATABASE MILIKMU
+    const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
+    const CLOUD_LICENSE_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/license.json`;
+
     let targetAksiAdmin = ""; // Menyimpan tujuan: 'lisensi' atau 'generator'
 
     // --- MODUL PENGAMAN KODE AKSES DASHBOARD ---
     document.addEventListener("DOMContentLoaded", function() {
-      // Menangkap semua link atau tombol navigasi yang mengarah ke dashboard utama
       const links = document.querySelectorAll('a, button');
       
       links.forEach(el => {
-        // Deteksi tombol / teks menu dashboard di pojok kiri atas aplikasi operasional
         const textContent = el.textContent || "";
         const hrefValue = el.getAttribute('href') || "";
         
         if (textContent.includes("Dashboard") || textContent.includes("Menu Dashboard") || hrefValue.includes("gudang-nuhsantara-ecosystem/index.html") || hrefValue === "../index.html") {
           el.addEventListener("click", function(e) {
-            e.preventDefault(); // Cegah langsung berpindah halaman
-            
-            // Munculkan prompt dialog keamanan sistem
+            e.preventDefault();
             const kodeAkses = prompt("🛡️ [SYSTEM SECURITY ACCESS]\nAkses ke Menu Dashboard Utama dibatasi.\nMasukkan Kode Akses Administrator:");
-            
-            // Kode rahasia eksklusif super admin
             const KODE_RAHASIA_ADMIN = "NX-ROOT@ECOSYSTEM-2026#SECURE";
             
             if (kodeAkses === KODE_RAHASIA_ADMIN) {
-              // Jika benar, izinkan navigasi halaman dashboard
               window.location.href = el.href || "https://nov-dev02.github.io/gudang-nuhsantara-ecosystem/";
             } else if (kodeAkses !== null) {
-              // Jika salah memasukkan kode
               showDashboardToast("Akses Ditolak! Kode Akses Administrator salah.", false);
             }
           });
@@ -284,7 +280,7 @@
       });
     });
 
-    // --- CUSTOM NOTIFIKASI CYBERPUNK (PENGGANTI ALERT BROWSER) ---
+    // --- CUSTOM NOTIFIKASI CYBERPUNK ---
     function showDashboardToast(message, isSuccess = true) {
       let existingToast = document.getElementById('dashboard-cyber-toast');
       if (existingToast) existingToast.remove();
@@ -372,57 +368,31 @@
       }
     }
 
-    function muatDataPanelDashboard() {
-      const savedExpiry = localStorage.getItem('gudang_token_expiry');
-      const badge = document.getElementById('nxStatusBadge');
+    // Ambil data status lisensi langsung dari Firebase Cloud saat panel dibuka
+    async function muatDataPanelDashboard() {
       const textExpiry = document.getElementById('nxExpiryText');
-      const textCountdown = document.getElementById('nxCountdownText');
+      if (textExpiry) textExpiry.innerText = "Memuat dari Cloud...";
 
-      if (!savedExpiry) {
-        if (badge) {
-          badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> TIDAK TERPASANG';
-          badge.style.color = '#f59e0b';
-          badge.style.background = 'rgba(245, 158, 11, 0.15)';
+      try {
+        const response = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
+        const data = await response.json();
+
+        if (!data || !data.expiry) {
+          if (textExpiry) textExpiry.innerText = 'Tidak Ada Data / Bebas';
+          return;
         }
-        if (textExpiry) textExpiry.innerText = 'Token Bawaan / Bebas';
-        if (textCountdown) textCountdown.innerText = 'Tanpa Batasan';
-        return;
-      }
 
-      const expiryDate = new Date(savedExpiry);
-      const now = new Date();
-
-      if (now > expiryDate) {
-        if (badge) {
-          badge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> EXPIRED';
-          badge.style.color = '#ef4444';
-          badge.style.background = 'rgba(239, 68, 68, 0.15)';
-        }
-      } else {
-        if (badge) {
-          badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> AKTIF';
-          badge.style.color = '#22c55e';
-          badge.style.background = 'rgba(34, 197, 94, 0.15)';
-        }
-      }
-
-      if (textExpiry) {
+        const expiryDate = new Date(data.expiry);
         textExpiry.innerText = expiryDate.toLocaleString('id-ID', {
           day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
         }) + ' WIB';
-      }
-
-      const diffTime = expiryDate - now;
-      if (diffTime > 0) {
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        if (textCountdown) textCountdown.innerText = `${diffDays} Hari ${diffHours} Jam Lagi`;
-      } else {
-        if (textCountdown) textCountdown.innerText = 'Sudah Kedaluwarsa!';
+      } catch (e) {
+        if (textExpiry) textExpiry.innerText = 'Gagal memuat dari Cloud';
       }
     }
 
-    function simpanTokenDariPanelDashboard() {
+    // SIMPAN TOKEN BARU KE CLOUD (Membuka kunci semua perangkat sekaligus)
+    async function simpanTokenDariPanelDashboard() {
       const inputToken = document.getElementById('inputPanelNxToken');
       if (!inputToken || !inputToken.value.trim()) {
         showDashboardToast("Harap masukkan token lisensi NX yang valid!", false);
@@ -433,25 +403,48 @@
       const decodedDate = decodeTokenToDate(valToken);
 
       if (decodedDate && decodedDate > new Date()) {
-        localStorage.setItem('gudang_token_expiry', decodedDate.toISOString());
-        localStorage.removeItem('gudang_status_terkunci');
-        showDashboardToast("Token Lisensi NX Berhasil Diperbarui!", true);
-        tutupPanelNx();
+        try {
+          await fetch(CLOUD_LICENSE_ENDPOINT, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              locked: false,
+              expiry: decodedDate.toISOString(),
+              updatedAt: new Date().toISOString()
+            })
+          });
+
+          showDashboardToast("Token Cloud Diperbarui & Semua Perangkat Terbuka!", true);
+          tutupPanelNx();
+        } catch (e) {
+          showDashboardToast("Gagal menyimpan ke Cloud Firebase!", false);
+        }
       } else {
         showDashboardToast("Token tidak valid atau sudah kedaluwarsa!", false);
       }
     }
 
-    function simulasiKunciSistemDashboard() {
+    // SIMULASI KUNCI SISTEM DARI HP (Mengunci semua perangkat secara global dalam 2 detik)
+    async function simulasiKunciSistemDashboard() {
       const kemarin = new Date();
       kemarin.setDate(kemarin.getDate() - 1);
       
-      // ✅ SUDAH DIPERBAIKI DI SINI: Menyimpan dua key sekaligus agar modul mandiri langsung ikut terkunci
-      localStorage.setItem('gudang_token_expiry', kemarin.toISOString());
-      localStorage.setItem('gudang_status_terkunci', 'true');
-      
-      showDashboardToast("Simulasi Kunci Sistem Berhasil Diterapkan!", true);
-      tutupPanelNx();
+      try {
+        await fetch(CLOUD_LICENSE_ENDPOINT, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            locked: true,
+            expiry: kemarin.toISOString(),
+            updatedAt: new Date().toISOString()
+          })
+        });
+        
+        showDashboardToast("🚨 SISTEM BERHASIL DIKUNCI DI SEMUA PERANGKAT!", true);
+        tutupPanelNx();
+      } catch (e) {
+        showDashboardToast("Gagal mengirim sinyal kunci ke Cloud!", false);
+      }
     }
 
     document.getElementById('adminPinInput').addEventListener('keypress', function(e) {
