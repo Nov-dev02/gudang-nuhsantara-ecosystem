@@ -85,84 +85,103 @@ function showNxToastMessage(message, isSuccess = true) {
   }, 3200);
 }
 
+// --- PEMERIKSAAN KUNCI UTAMA (DIJALANKAN LANGSUNG & BERKALA) ---
+function eksekusiProteksiMutlak() {
+  if (cekStatusLisensi()) {
+    // Hindari infinite loop reload jika layar lock screen sudah terpasang
+    if (!document.getElementById('nx-global-lock-screen')) {
+      tampilkanLayarKunciTotal();
+    }
+  }
+}
+
+function tampilkanLayarKunciTotal() {
+  document.title = "503 Service Unavailable - Gateway Timeout";
+  localStorage.setItem('gudang_status_terkunci', 'true');
+
+  const nomorWA = "6287762756779"; 
+  const pesanWA = encodeURIComponent("Halo Admin, token akses Gudang Nuhsantara saya telah kedaluwarsa (ERR_EXPIRED_TOKEN). Mohon bantuannya untuk perpanjangan token baru.");
+  const linkWA = "https://wa.me/" + nomorWA + "?text=" + pesanWA;
+
+  // Hapus elemen lock screen lama jika ada biar tidak menumpuk
+  const existingLock = document.getElementById('nx-global-lock-screen');
+  if (existingLock) existingLock.remove();
+
+  const styleAnimation = document.createElement('style');
+  styleAnimation.innerHTML = "@keyframes titikKedip { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } } .status-live-dot { animation: titikKedip 1.5s ease-in-out infinite; }";
+  document.head.appendChild(styleAnimation);
+
+  const lockScreen = document.createElement('div');
+  lockScreen.id = 'nx-global-lock-screen';
+  lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.98); backdrop-filter: blur(16px); z-index: 2147483647; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
+
+  lockScreen.innerHTML = '<div style="position: relative; background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.4); padding: 32px 24px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(239, 68, 68, 0.15); font-family: monospace;">' +
+    '<div style="position: absolute; top: 16px; left: 18px; display: flex; align-items: center; gap: 6px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 3px 8px; border-radius: 20px;">' +
+      '<span class="status-live-dot" style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%; display: inline-block;"></span>' +
+      '<span style="font-size: 9.5px; color: #ef4444; font-weight: bold; letter-spacing: 0.5px;">SYSTEM_DOWN</span>' +
+    '</div>' +
+    '<div style="width: 50px; height: 50px; background: rgba(239, 68, 68, 0.12); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 12px auto; box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);">' +
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>' +
+    '</div>' +
+    '<h3 style="color: #ef4444; margin: 0 0 6px 0; font-size: 15px; font-weight: 700; letter-spacing: 1px;">GATEWAY TOKEN EXPIRED</h3>' +
+    '<div style="font-size: 10.5px; color: #94a3b8; margin-bottom: 12px; background: rgba(239, 68, 68, 0.08); padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2);">ERR_CLOUD_AUTH_TIMEOUT [ID: 503-GW]</div>' +
+    '<p style="color: #cbd5e1; font-size: 12px; margin-bottom: 16px; line-height: 1.4; text-align: left;">Sesi token otorisasi cloud telah berakhir. Masukkan token lisensi baru dari administrator atau hubungi via WhatsApp.</p>' +
+    '<div style="margin-bottom: 12px;">' +
+      '<input type="text" id="inputTokenLisensi" placeholder="Masukkan token lisensi..." style="width: 100%; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 11.5px; border-radius: 8px; outline: none; font-family: monospace; text-align: center; box-sizing: border-box;" />' +
+      '<div id="tokenErrorMsg" style="color: #ef4444; font-size: 10px; margin-top: 4px; display: none;">Token tidak valid atau format salah!</div>' +
+    '</div>' +
+    '<button id="btnRedeemToken" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border: 1px solid #38bdf8; padding: 10px 16px; font-size: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3); font-family: monospace; letter-spacing: 0.5px; margin-bottom: 8px;">AKTIFKAN TOKEN</button>' +
+    '<a href="' + linkWA + '" target="_blank" style="text-decoration: none; display: block; margin-bottom: 8px;">' +
+      '<button style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace;">💬 HUBUNGI ADMINISTRATOR</button>' +
+    '</a>' +
+    '<div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core v2.0</div>' +
+  '</div>';
+
+  document.body.appendChild(lockScreen);
+
+  document.getElementById('btnRedeemToken').addEventListener('click', function() {
+    const btn = this;
+    const valToken = document.getElementById('inputTokenLisensi').value;
+    const decodedDate = decodeTokenToDate(valToken);
+    const errorMsg = document.getElementById('tokenErrorMsg');
+
+    if (decodedDate && decodedDate > new Date()) {
+      btn.style.opacity = "0.8";
+      btn.style.pointerEvents = "none";
+      
+      let dotCount = 0;
+      let loadingInterval = setInterval(function() {
+        dotCount = (dotCount + 1) % 4;
+        let dots = ".".repeat(dotCount);
+        btn.innerText = "MEMVALIDASI TOKEN" + dots;
+      }, 300);
+
+      setTimeout(function() {
+        clearInterval(loadingInterval);
+        localStorage.setItem('gudang_token_expiry', decodedDate.toISOString());
+        localStorage.removeItem('gudang_status_terkunci');
+        location.reload(true);
+      }, 1200);
+
+    } else {
+      errorMsg.style.display = 'block';
+      document.getElementById('inputTokenLisensi').style.border = "1px solid #ef4444";
+      
+      btn.style.transform = "translateX(5px)";
+      setTimeout(function() { btn.style.transform = "translateX(-5px)"; }, 100);
+      setTimeout(function() { btn.style.transform = "translateX(0)"; }, 200);
+    }
+  });
+}
+
+// Jalankan pemeriksaan langsung saat file JS dibaca pertama kali
+eksekusiProteksiMutlak();
+
 // --- INISIALISASI KEAMANAN & EASTER EGG OPERATOR ---
 document.addEventListener("DOMContentLoaded", function() {
-  const SAKLAR_DARURAT_AKTIF = cekStatusLisensi();
+  eksekusiProteksiMutlak();
 
-  if (SAKLAR_DARURAT_AKTIF) {
-    document.title = "503 Service Unavailable - Gateway Timeout";
-    localStorage.setItem('gudang_status_terkunci', 'true');
-
-    const nomorWA = "6287762756779"; 
-    const pesanWA = encodeURIComponent("Halo Admin, token akses Gudang Nuhsantara saya telah kedaluwarsa (ERR_EXPIRED_TOKEN). Mohon bantuannya untuk perpanjangan token baru.");
-    const linkWA = "https://wa.me/" + nomorWA + "?text=" + pesanWA;
-
-    const styleAnimation = document.createElement('style');
-    styleAnimation.innerHTML = "@keyframes titikKedip { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } } .status-live-dot { animation: titikKedip 1.5s ease-in-out infinite; }";
-    document.head.appendChild(styleAnimation);
-
-    const lockScreen = document.createElement('div');
-    lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.96); backdrop-filter: blur(16px); z-index: 2147483647; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
-
-    lockScreen.innerHTML = '<div style="position: relative; background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.4); padding: 32px 24px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(239, 68, 68, 0.15); font-family: monospace;">' +
-      '<div style="position: absolute; top: 16px; left: 18px; display: flex; align-items: center; gap: 6px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 3px 8px; border-radius: 20px;">' +
-        '<span class="status-live-dot" style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%; display: inline-block;"></span>' +
-        '<span style="font-size: 9.5px; color: #ef4444; font-weight: bold; letter-spacing: 0.5px;">SYSTEM_DOWN</span>' +
-      '</div>' +
-      '<div style="width: 50px; height: 50px; background: rgba(239, 68, 68, 0.12); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 12px auto; box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);">' +
-        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>' +
-      '</div>' +
-      '<h3 style="color: #ef4444; margin: 0 0 6px 0; font-size: 15px; font-weight: 700; letter-spacing: 1px;">GATEWAY TOKEN EXPIRED</h3>' +
-      '<div style="font-size: 10.5px; color: #94a3b8; margin-bottom: 12px; background: rgba(239, 68, 68, 0.08); padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2);">ERR_CLOUD_AUTH_TIMEOUT [ID: 503-GW]</div>' +
-      '<p style="color: #cbd5e1; font-size: 12px; margin-bottom: 16px; line-height: 1.4; text-align: left;">Sesi token otorisasi cloud telah berakhir. Masukkan token lisensi baru dari administrator atau hubungi via WhatsApp.</p>' +
-      '<div style="margin-bottom: 12px;">' +
-        '<input type="text" id="inputTokenLisensi" placeholder="Masukkan token lisensi..." style="width: 100%; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 11.5px; border-radius: 8px; outline: none; font-family: monospace; text-align: center; box-sizing: border-box;" />' +
-        '<div id="tokenErrorMsg" style="color: #ef4444; font-size: 10px; margin-top: 4px; display: none;">Token tidak valid atau format salah!</div>' +
-      '</div>' +
-      '<button id="btnRedeemToken" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border: 1px solid #38bdf8; padding: 10px 16px; font-size: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3); font-family: monospace; letter-spacing: 0.5px; margin-bottom: 8px;">AKTIFKAN TOKEN</button>' +
-      '<a href="' + linkWA + '" target="_blank" style="text-decoration: none; display: block; margin-bottom: 8px;">' +
-        '<button style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace;">💬 HUBUNGI ADMINISTRATOR</button>' +
-      '</a>' +
-      '<div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core v2.0</div>' +
-    '</div>';
-
-    document.body.appendChild(lockScreen);
-
-    document.getElementById('btnRedeemToken').addEventListener('click', function() {
-      const btn = this;
-      const valToken = document.getElementById('inputTokenLisensi').value;
-      const decodedDate = decodeTokenToDate(valToken);
-      const errorMsg = document.getElementById('tokenErrorMsg');
-
-      if (decodedDate && decodedDate > new Date()) {
-        btn.style.opacity = "0.8";
-        btn.style.pointerEvents = "none";
-        
-        let dotCount = 0;
-        let loadingInterval = setInterval(function() {
-          dotCount = (dotCount + 1) % 4;
-          let dots = ".".repeat(dotCount);
-          btn.innerText = "MEMVALIDASI TOKEN" + dots;
-        }, 300);
-
-        setTimeout(function() {
-          clearInterval(loadingInterval);
-          localStorage.setItem('gudang_token_expiry', decodedDate.toISOString());
-          localStorage.setItem('gudang_status_terkunci', 'true');
-          location.reload(true);
-        }, 1200);
-
-      } else {
-        errorMsg.style.display = 'block';
-        document.getElementById('inputTokenLisensi').style.border = "1px solid #ef4444";
-        
-        btn.style.transform = "translateX(5px)";
-        setTimeout(function() { btn.style.transform = "translateX(-5px)"; }, 100);
-        setTimeout(function() { btn.style.transform = "translateX(0)"; }, 200);
-      }
-    });
-
-  } else {
+  if (!cekStatusLisensi()) {
     if (localStorage.getItem('gudang_status_terkunci') === 'true') {
       const successModal = document.createElement('div');
       successModal.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.85); backdrop-filter: blur(10px); z-index: 2147483647; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
@@ -355,14 +374,17 @@ function simulasiKunciSistem() {
     location.reload(true);
   }, 1500);
 }
+
+// --- PEMANTAU AKTIF REAL-TIME (POLLING TIAP 2 DETIK) ---
+setInterval(function() {
+  if (cekStatusLisensi()) {
+    tampilkanLayarKunciTotal();
+  }
+}, 2000);
+
 // --- SINKRONISASI KUNCI REAL-TIME ANTAR TAB/HALAMAN ---
 window.addEventListener('storage', function(e) {
-  if (e.key === 'gudang_token_expiry') {
-    const newExpiry = new Date(e.newValue);
-    const today = new Date();
-    if (today > newExpiry) {
-      // Jika dari tab lain sistem dikunci, langsung muat ulang halaman untuk memicu layar Lock Screen
-      location.reload(true);
-    }
+  if (e.key === 'gudang_token_expiry' || e.key === 'gudang_status_terkunci') {
+    eksekusiProteksiMutlak();
   }
 });
