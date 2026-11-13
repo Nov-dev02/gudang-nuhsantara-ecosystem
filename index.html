@@ -238,11 +238,15 @@
         </button>
       </div>
 
-      <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 14px; display: flex; justify-content: space-between; gap: 8px;">
-        <button onclick="simulasiKunciSistemDashboard()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 10.5px; font-family: monospace;">
-          <i class="fa-solid fa-lock"></i> Lock System (Global)
+      <!-- Tombol Kontrol Kunci (Sementara & Permanen) -->
+      <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 14px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+        <button onclick="simulasiKunciSistemDashboard('temporary')" style="background: rgba(217, 119, 6, 0.15); border: 1px solid rgba(217, 119, 6, 0.4); color: #fbbf24; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1;">
+          <i class="fa-solid fa-lock"></i> Lock Sementara
         </button>
-        <button onclick="tutupPanelNx()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace;">
+        <button onclick="simulasiKunciSistemDashboard('permanent')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1;">
+          <i class="fa-solid fa-ban"></i> Lock Permanen
+        </button>
+        <button onclick="tutupPanelNx()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 10.5px; font-family: monospace;">
           Tutup
         </button>
       </div>
@@ -391,7 +395,7 @@
       }
     }
 
-    // SIMPAN TOKEN BARU KE CLOUD (Membuka kunci semua perangkat sekaligus)
+    // SIMPAN TOKEN BARU KE CLOUD (Membuka kunci & mereset permanent lock)
     async function simpanTokenDariPanelDashboard() {
       const inputToken = document.getElementById('inputPanelNxToken');
       if (!inputToken || !inputToken.value.trim()) {
@@ -409,6 +413,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               locked: false,
+              permanent: false, // Reset permanent lock saat token valid diinput
               expiry: decodedDate.toISOString(),
               updatedAt: new Date().toISOString()
             })
@@ -424,10 +429,12 @@
       }
     }
 
-    // SIMULASI KUNCI SISTEM DARI HP (Mengunci semua perangkat secara global dalam 2 detik)
-    async function simulasiKunciSistemDashboard() {
+    // SIMULASI KUNCI SISTEM DARI PANEL ADMIN (Bisa 'temporary' atau 'permanent')
+    async function simulasiKunciSistemDashboard(type) {
       const kemarin = new Date();
       kemarin.setDate(kemarin.getDate() - 1);
+      
+      const isPermanent = (type === 'permanent');
       
       try {
         await fetch(CLOUD_LICENSE_ENDPOINT, {
@@ -435,12 +442,17 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             locked: true,
+            permanent: isPermanent,
             expiry: kemarin.toISOString(),
             updatedAt: new Date().toISOString()
           })
         });
         
-        showDashboardToast("🚨 SISTEM BERHASIL DIKUNCI DI SEMUA PERANGKAT!", true);
+        if (isPermanent) {
+          showDashboardToast("🚨 SISTEM DIKUNCI PERMANEN DI SEMUA PERANGKAT!", true);
+        } else {
+          showDashboardToast("⚠️ SISTEM DIKUNCI SEMENTARA DI SEMUA PERANGKAT!", true);
+        }
         tutupPanelNx();
       } catch (e) {
         showDashboardToast("Gagal mengirim sinyal kunci ke Cloud!", false);
