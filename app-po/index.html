@@ -355,5 +355,36 @@
             }
         }
     </script>
+    <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
+    const modulName = "App PO";
+    
+    let staffName = localStorage.getItem('gudang_staff_name');
+    if (!staffName || !staffName.trim()) {
+      staffName = prompt("👋 Selamat datang di Aplikasi PO!\nMasukkan Nama Anda (contoh: Budi - PO):");
+      if (staffName && staffName.trim()) {
+        staffName = staffName.trim();
+        localStorage.setItem('gudang_staff_name', staffName);
+      } else {
+        staffName = "Staf PO";
+      }
+    }
+
+    const safeKey = staffName.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+    function pingSubApp() {
+      fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: staffName, modul: modulName, time: Date.now() })
+      }).catch(e => console.error(e));
+    }
+
+    pingSubApp();
+    setInterval(pingSubApp, 30000);
+  });
+</script>
+
 </body>
 </html>
