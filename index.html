@@ -92,10 +92,17 @@
     .app-card i.icon-main { font-size: 28px; color: var(--accent-blue); margin-bottom: 12px; }
     .app-card h3 { margin: 0 0 6px 0; font-size: 16px; color: #fff; }
     .app-card p { margin: 0 0 16px 0; font-size: 12px; color: var(--text-desc); line-height: 1.4; }
+    .app-link-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
     .app-link-btn {
       display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
       color: var(--accent-blue); font-family: monospace;
     }
+    .btn-quick-copy {
+      background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8; width: 30px; height: 30px; border-radius: 8px; display: flex;
+      justify-content: center; align-items: center; cursor: pointer; font-size: 12px;
+    }
+    .btn-quick-copy:hover { background: rgba(56, 189, 248, 0.25); transform: scale(1.05); }
 
     /* Owner Control Panel Section */
     .admin-panel-box {
@@ -174,28 +181,62 @@
 
     </div>
 
+    <!-- ========================================== -->
+    <!-- 📢 FITUR 1: GLOBAL BROADCAST ANNOUNCEMENT  -->
+    <!-- ========================================== -->
+    <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 16px; padding: 16px; margin-bottom: 25px;">
+        <div style="font-size: 12px; color: #38bdf8; font-family: monospace; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-bullhorn"></i> KIRIM BROADCAST PENGUMUMAN KE STAF GUDANG
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="inputBroadcastMsg" placeholder="Ketik pengumuman penting (mis: Info maintenance server jam 5 sore)..." style="flex: 1; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: #f8fafc; font-size: 11.5px; border-radius: 8px; outline: none; font-family: monospace;" />
+            <button onclick="kirimBroadcastGlobal()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid var(--accent-blue); color: white; padding: 0 16px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: monospace; font-size: 11px;">
+                <i class="fa-solid fa-paper-plane"></i> Kirim
+            </button>
+        </div>
+    </div>
+
     <!-- MAIN APPS LAUNCHER -->
     <div class="section-title"><i class="fa-solid fa-rocket"></i> PILIH MODUL APLIKASI OPERASIONAL</div>
     <div class="apps-grid">
       <!-- Modul 1: Proses Data -->
-      <a href="./app-proses-data/index.html" class="app-card">
+      <div class="app-card">
         <div>
           <i class="fa-solid fa-bolt-lightning icon-main"></i>
           <h3>Proses Data Gudang</h3>
           <p>Sinkronisasi marketplace Shopee & TikTok, pencocokan admin, status Clear, hingga ekspor laporan Excel.</p>
         </div>
-        <div class="app-link-btn">Buka Modul <i class="fa-solid fa-arrow-right"></i></div>
-      </a>
+        <div class="app-link-row">
+          <a href="./app-proses-data/index.html" class="app-link-btn">Buka Modul <i class="fa-solid fa-arrow-right"></i></a>
+          <button type="button" class="btn-quick-copy" onclick="salinLinkModul('./app-proses-data/index.html')" title="Salin Tautan Modul"><i class="fa-solid fa-copy"></i></button>
+        </div>
+      </div>
 
       <!-- Modul 2: Aplikasi PO -->
-      <a href="./app-po/index.html" class="app-card">
+      <div class="app-card">
         <div>
           <i class="fa-solid fa-file-invoice-dollar icon-main" style="color: #34d399;"></i>
           <h3>Aplikasi Purchase Order</h3>
           <p>Pusat pencatatan, manajemen, dan pengelolaan data pre-order serta pembelian barang gudang.</p>
         </div>
-        <div class="app-link-btn" style="color: #34d399;">Buka Modul <i class="fa-solid fa-arrow-right"></i></div>
-      </a>
+        <div class="app-link-row">
+          <a href="./app-po/index.html" class="app-link-btn" style="color: #34d399;">Buka Modul <i class="fa-solid fa-arrow-right"></i></a>
+          <button type="button" class="btn-quick-copy" onclick="salinLinkModul('./app-po/index.html')" title="Salin Tautan Modul" style="border-color: rgba(52,211,153,0.3); color: #34d399; background: rgba(52,211,153,0.1);"><i class="fa-solid fa-copy"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 📜 FITUR 2: AUDIT TRAIL / ACTIVITY LOG     -->
+    <!-- ========================================== -->
+    <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
+        <div style="font-size: 12px; color: #a855f7; font-family: monospace; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+            <span><i class="fa-solid fa-clock-rotate-left"></i> LOG AKTIVITAS & AUDIT TRAIL TERAKHIR</span>
+            <span id="txtLastSyncLog" style="font-size: 10px; color: #64748b;">Sinkron: --</span>
+        </div>
+        <div id="containerAuditLog" style="font-family: monospace; font-size: 11px; color: #94a3b8; max-height: 90px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">
+            <div>Memuat catatan aktivitas sistem...</div>
+        </div>
     </div>
 
     <!-- OWNER CONTROL PANEL (KHUSUS NOVAN) -->
@@ -210,6 +251,10 @@
         </button>
         <button class="btn-admin" onclick="bukaModalAdmin('generator')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399;">
           <i class="fa-solid fa-code"></i> Buka Token Generator
+        </button>
+        <!-- FITUR 3: TOMBOL FORCE UPDATE / CLEAR CACHE JARAK JAUH -->
+        <button class="btn-admin" onclick="triggerForceUpdateUser()" style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); border-color: #f87171;">
+          <i class="fa-solid fa-rotate"></i> Paksa Update Staf
         </button>
       </div>
     </div>
@@ -284,12 +329,15 @@
     // 🌐 URL FIREBASE REALTIME DATABASE MILIKMU
     const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
     const CLOUD_LICENSE_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/license.json`;
+    const CLOUD_BROADCAST_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json`;
+    const CLOUD_LOGS_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/logs.json`;
 
     let targetAksiAdmin = ""; // Menyimpan tujuan: 'lisensi' atau 'generator'
 
     // --- MODUL PENGAMAN KODE AKSES DASHBOARD & HUD MONITOR ---
     document.addEventListener("DOMContentLoaded", function() {
       initCommandCenterHUD(); // Jalankan pemantauan HUD saat dimuat
+      muatAuditLogs(); // Muat log aktivitas
 
       const links = document.querySelectorAll('a, button');
       
@@ -313,6 +361,113 @@
       });
     });
 
+    // --- FITUR 4: QUICK COPY LINK MODUL ---
+    function salinLinkModul(pathRelative) {
+        const absoluteUrl = new URL(pathRelative, window.location.href).href;
+        navigator.clipboard.writeText(absoluteUrl).then(() => {
+            showDashboardToast("Tautan modul berhasil disalin ke clipboard!", true);
+        }).catch(err => {
+            showDashboardToast("Gagal menyalin tautan!", false);
+        });
+    }
+
+    // --- FITUR 1: KIRIM BROADCAST GLOBAL KE FIREBASE ---
+    async function kirimBroadcastGlobal() {
+        const inputMsg = document.getElementById('inputBroadcastMsg');
+        const pesan = inputMsg ? inputMsg.value.trim() : "";
+
+        if (!pesan) {
+            showDashboardToast("Masukkan teks pengumuman terlebih dahulu!", false);
+            return;
+        }
+
+        try {
+            await fetch(CLOUD_BROADCAST_ENDPOINT, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: pesan,
+                    sender: "Novan (Owner)",
+                    timestamp: new Date().toISOString()
+                })
+            });
+
+            await catatLogAktivitas(`Broadcast terkirim: "${pesan}"`);
+            showDashboardToast("Pengumuman berhasil disiarkan ke semua staf!", true);
+            inputMsg.value = "";
+            muatAuditLogs();
+        } catch (e) {
+            showDashboardToast("Gagal mengirim broadcast ke Firebase!", false);
+        }
+    }
+
+    // --- CATAT LOG AKTIVITAS KE FIREBASE ---
+    async function catatLogAktivitas(aksi) {
+        try {
+            const timeStr = new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' });
+            const logEntry = { text: `[${timeStr}] ${aksi}` };
+            
+            // Ambil log lama dulu
+            const res = await fetch(CLOUD_LOGS_ENDPOINT);
+            let logs = await res.json() || [];
+            if (!Array.isArray(logs)) logs = [];
+
+            logs.unshift(logEntry); // Taruh di urutan paling atas
+            if (logs.length > 10) logs = logs.slice(0, 10); // Batasi max 10 log
+
+            await fetch(CLOUD_LOGS_ENDPOINT, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(logs)
+            });
+        } catch (e) {
+            console.error("Gagal mencatat log", e);
+        }
+    }
+
+    // --- MUAT LOG AKTIVITAS KE DASHBOARD ---
+    async function muatAuditLogs() {
+        const container = document.getElementById('containerAuditLog');
+        const txtSync = document.getElementById('txtLastSyncLog');
+        if (!container) return;
+
+        try {
+            const res = await fetch(CLOUD_LOGS_ENDPOINT + "?t=" + Date.now());
+            const logs = await res.json();
+
+            if (Array.isArray(logs) && logs.length > 0) {
+                container.innerHTML = logs.map(l => `<div style="padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">&bull; ${l.text}</div>`).join('');
+            } else {
+                container.innerHTML = `<div>Belum ada catatan aktivitas sistem.</div>`;
+            }
+            if (txtSync) txtSync.innerText = "Sinkron: " + new Date().toLocaleTimeString('id-ID');
+        } catch (e) {
+            container.innerHTML = `<div style="color: #ef4444;">Gagal memuat log audit dari cloud.</div>`;
+        }
+    }
+
+    // --- FITUR 3: TRIGGER FORCE UPDATE / CLEAR CACHE JARAK JAUH ---
+    async function triggerForceUpdateUser() {
+        if (!confirm("⚠️ [FORCE UPDATE]\nTindakan ini akan memaksa seluruh perangkat staf memperbarui cache aplikasi ke versi terbaru. Lanjutkan?")) return;
+
+        try {
+            await fetch(FIREBASE_DB_URL + "/gudang_nuhsantara/version.json", {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    forceReloadTimestamp: Date.now(),
+                    note: "Admin triggered remote cache clear"
+                })
+            });
+
+            await catatLogAktivitas("Perintah Force Update / Clear Cache dikirim ke seluruh perangkat.");
+            showDashboardToast("Perintah pembaruan berhasil dikirim ke seluruh staf!", true);
+            muatAuditLogs();
+        } catch (e) {
+            showDashboardToast("Gagal mengirim perintah pembaruan!", false);
+        }
+    }
+
     // --- HUD LIVE MONITOR & STATS SYNC ---
     async function initCommandCenterHUD() {
         const statusText = document.getElementById('hudSystemStatusText');
@@ -325,7 +480,6 @@
             const data = await response.json();
 
             if (response.ok) {
-                // Update Health Monitor (Point 1)
                 if (data && data.locked) {
                     statusText.innerText = data.permanent ? "🚨 TERKUNCI PERMANEN" : "⚠️ TERKUNCI SEMENTARA";
                     statusText.style.color = "#ef4444";
@@ -339,7 +493,6 @@
                 }
                 statusDetail.innerText = "Koneksi Firebase Cloud Stabil";
 
-                // Update Quick Stats / Expiry (Point 2)
                 if (data && data.expiry) {
                     const expDate = new Date(data.expiry);
                     const now = new Date();
@@ -457,7 +610,6 @@
       }
     }
 
-    // Ambil data status lisensi langsung dari Firebase Cloud saat panel dibuka
     async function muatDataPanelDashboard() {
       const textExpiry = document.getElementById('nxExpiryText');
       if (textExpiry) textExpiry.innerText = "Memuat dari Cloud...";
@@ -480,7 +632,6 @@
       }
     }
 
-    // SIMPAN TOKEN BARU KE CLOUD (Membuka kunci & mereset permanent lock)
     async function simpanTokenDariPanelDashboard() {
       const inputToken = document.getElementById('inputPanelNxToken');
       if (!inputToken || !inputToken.value.trim()) {
@@ -498,15 +649,17 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               locked: false,
-              permanent: false, // Reset permanent lock saat token valid diinput
+              permanent: false,
               expiry: decodedDate.toISOString(),
               updatedAt: new Date().toISOString()
             })
           });
 
+          await catatLogAktivitas("Token lisensi cloud diperbarui via Admin Panel.");
           showDashboardToast("Token Cloud Diperbarui & Semua Perangkat Terbuka!", true);
           tutupPanelNx();
-          initCommandCenterHUD(); // Refresh HUD otomatis
+          initCommandCenterHUD();
+          muatAuditLogs();
         } catch (e) {
           showDashboardToast("Gagal menyimpan ke Cloud Firebase!", false);
         }
@@ -515,7 +668,6 @@
       }
     }
 
-    // SIMULASI KUNCI SISTEM DARI PANEL ADMIN (Bisa 'temporary' atau 'permanent')
     async function simulasiKunciSistemDashboard(type) {
       const kemarin = new Date();
       kemarin.setDate(kemarin.getDate() - 1);
@@ -534,13 +686,17 @@
           })
         });
         
+        const jenisKunci = isPermanent ? "Permanen" : "Sementara";
+        await catatLogAktivitas(`Sistem dikunci [${jenisKunci}] secara jarak jauh.`);
+
         if (isPermanent) {
           showDashboardToast("🚨 SISTEM DIKUNCI PERMANEN DI SEMUA PERANGKAT!", true);
         } else {
           showDashboardToast("⚠️ SISTEM DIKUNCI SEMENTARA DI SEMUA PERANGKAT!", true);
         }
         tutupPanelNx();
-        initCommandCenterHUD(); // Refresh HUD otomatis
+        initCommandCenterHUD();
+        muatAuditLogs();
       } catch (e) {
         showDashboardToast("Gagal mengirim sinyal kunci ke Cloud!", false);
       }
