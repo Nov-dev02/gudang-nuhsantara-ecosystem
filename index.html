@@ -159,7 +159,6 @@
     <!-- ========================================== -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 25px;">
         
-        <!-- Widget 1: Live System Health Monitor + Ping Meter -->
         <div style="background: rgba(2, 6, 23, 0.7); border: 1px solid var(--card-border); border-radius: 16px; padding: 18px; position: relative; overflow: hidden;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <span style="font-size: 11px; color: #94a3b8; font-family: monospace;"><i class="fa-solid fa-server"></i> SYSTEM HEALTH</span>
@@ -172,7 +171,6 @@
             <div id="hudSystemDetail" style="font-size: 10.5px; color: #64748b; font-family: monospace;">Firebase Cloud Gateway Hub</div>
         </div>
 
-        <!-- Widget 2: Quick Stats / Lisensi Expiry Countdown -->
         <div style="background: rgba(2, 6, 23, 0.7); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 16px; padding: 18px; position: relative; overflow: hidden;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <span style="font-size: 11px; color: #c084fc; font-family: monospace;"><i class="fa-solid fa-shield-cat"></i> ACTIVE LICENSE HUB</span>
@@ -184,9 +182,7 @@
 
     </div>
 
-    <!-- ========================================== -->
-    <!-- 🟢 FITUR BARU: REAL-TIME STAFF PRESENCE    -->
-    <!-- ========================================== -->
+    <!-- 🟢 REAL-TIME STAFF PRESENCE -->
     <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 25px;">
         <div style="font-size: 12px; color: var(--accent-blue); font-family: monospace; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
             <span><i class="fa-solid fa-users-viewfinder"></i> PEMANTAU STAF ONLINE (REAL-TIME)</span>
@@ -197,15 +193,13 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 📢 BROADCAST ANNOUNCEMENT                  -->
-    <!-- ========================================== -->
+    <!-- 📢 BROADCAST ANNOUNCEMENT -->
     <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 25px;">
         <div style="font-size: 12px; color: var(--accent-blue); font-family: monospace; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
             <i class="fa-solid fa-bullhorn"></i> KIRIM BROADCAST PENGUMUMAN KE STAF GUDANG
         </div>
         <div style="display: flex; gap: 8px;">
-            <input type="text" id="inputBroadcastMsg" placeholder="Ketik pengumuman penting (mis: Info maintenance server jam 5 sore)..." style="flex: 1; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: #f8fafc; font-size: 11.5px; border-radius: 8px; outline: none; font-family: monospace;" />
+            <input type="text" id="inputBroadcastMsg" placeholder="Ketik pengumuman penting..." style="flex: 1; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: #f8fafc; font-size: 11.5px; border-radius: 8px; outline: none; font-family: monospace;" />
             <button onclick="kirimBroadcastGlobal()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid var(--accent-blue); color: white; padding: 0 16px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: monospace; font-size: 11px;">
                 <i class="fa-solid fa-paper-plane"></i> Kirim
             </button>
@@ -215,7 +209,6 @@
     <!-- MAIN APPS LAUNCHER -->
     <div class="section-title"><i class="fa-solid fa-rocket"></i> PILIH MODUL APLIKASI OPERASIONAL</div>
     <div class="apps-grid">
-      <!-- Modul 1: Proses Data -->
       <div class="app-card">
         <div>
           <i class="fa-solid fa-bolt-lightning icon-main"></i>
@@ -224,11 +217,10 @@
         </div>
         <div class="app-link-row">
           <a href="./app-proses-data/index.html" class="app-link-btn" onclick="pingAktivitasStaf('Proses Data')">Buka Modul <i class="fa-solid fa-arrow-right"></i></a>
-          <button type="button" class="btn-quick-copy" onclick="salinLinkModul('./app-proses-data/index.html')" title="Salin Tautan Modul"><i class="fa-solid fa-copy"></i></button>
+          <button type="button" class="btn-quick-copy" onclick="salinLinkModul('./app-proses-data/index.html')" title="Salin Tautan"><i class="fa-solid fa-copy"></i></button>
         </div>
       </div>
 
-      <!-- Modul 2: Aplikasi PO -->
       <div class="app-card">
         <div>
           <i class="fa-solid fa-file-invoice-dollar icon-main" style="color: #34d399;"></i>
@@ -237,38 +229,26 @@
         </div>
         <div class="app-link-row">
           <a href="./app-po/index.html" class="app-link-btn" style="color: #34d399;" onclick="pingAktivitasStaf('App PO')">Buka Modul <i class="fa-solid fa-arrow-right"></i></a>
-          <button type="button" class="btn-quick-copy" onclick="salinLinkModul('./app-po/index.html')" title="Salin Tautan Modul" style="border-color: rgba(52,211,153,0.3); color: #34d399; background: rgba(52,211,153,0.1);"><i class="fa-solid fa-copy"></i></button>
+          <button type="button" class="btn-quick-copy" onclick="salinLinkModul('./app-po/index.html')" title="Salin Tautan" style="border-color: rgba(52,211,153,0.3); color: #34d399; background: rgba(52,211,153,0.1);"><i class="fa-solid fa-copy"></i></button>
         </div>
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 🎨 QUICK SYSTEM THEME SWITCHER             -->
-    <!-- ========================================== -->
+    <!-- 🎨 THEME SWITCHER -->
     <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
         <div style="font-size: 12px; color: var(--accent-blue); font-family: monospace; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
             <span><i class="fa-solid fa-palette"></i> TEMA WARNA AKSEN DASHBOARD</span>
             <span style="font-size: 10px; color: #64748b;">Pilih gaya neon</span>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button onclick="ubahTemaDashboard('blue')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;">
-                <i class="fa-solid fa-circle" style="color: #38bdf8;"></i> Cyber Blue
-            </button>
-            <button onclick="ubahTemaDashboard('purple')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(192, 132, 252, 0.15); border: 1px solid #c084fc; color: #c084fc; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;">
-                <i class="fa-solid fa-circle" style="color: #c084fc;"></i> Nebula Purple
-            </button>
-            <button onclick="ubahTemaDashboard('green')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #22c55e; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;">
-                <i class="fa-solid fa-circle" style="color: #22c55e;"></i> Matrix Green
-            </button>
-            <button onclick="ubahTemaDashboard('gold')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; color: #fbbf24; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;">
-                <i class="fa-solid fa-circle" style="color: #fbbf24;"></i> Cyber Gold
-            </button>
+            <button onclick="ubahTemaDashboard('blue')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;"><i class="fa-solid fa-circle" style="color: #38bdf8;"></i> Cyber Blue</button>
+            <button onclick="ubahTemaDashboard('purple')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(192, 132, 252, 0.15); border: 1px solid #c084fc; color: #c084fc; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;"><i class="fa-solid fa-circle" style="color: #c084fc;"></i> Nebula Purple</button>
+            <button onclick="ubahTemaDashboard('green')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #22c55e; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;"><i class="fa-solid fa-circle" style="color: #22c55e;"></i> Matrix Green</button>
+            <button onclick="ubahTemaDashboard('gold')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; color: #fbbf24; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;"><i class="fa-solid fa-circle" style="color: #fbbf24;"></i> Cyber Gold</button>
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 📜 AUDIT TRAIL / ACTIVITY LOG              -->
-    <!-- ========================================== -->
+    <!-- 📜 AUDIT LOGS -->
     <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
         <div style="font-size: 12px; color: #a855f7; font-family: monospace; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
             <span><i class="fa-solid fa-clock-rotate-left"></i> LOG AKTIVITAS & AUDIT TRAIL TERAKHIR</span>
@@ -279,39 +259,33 @@
         </div>
     </div>
 
-    <!-- OWNER CONTROL PANEL (KHUSUS NOVAN) -->
+    <!-- OWNER CONTROL PANEL -->
     <div class="admin-panel-box">
       <div class="section-title" style="margin-bottom: 10px; color: #a855f7;"><i class="fa-solid fa-user-gear"></i> OWNER / SUPER ADMIN CONTROLS</div>
       <p style="font-size: 11.5px; color: var(--text-desc); margin: 0 0 15px 0; line-height: 1.4;">
         Akses cepat bagi pengembang untuk mengelola token lisensi NX pusat atau membuka generator token tanpa harus masuk ke aplikasi operasional.
       </p>
       <div class="admin-controls">
-        <button class="btn-admin" onclick="bukaModalAdmin('lisensi')" style="background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%); border-color: #c084fc;">
-          <i class="fa-solid fa-key"></i> Panel Lisensi NX
-        </button>
-        <button class="btn-admin" onclick="bukaModalAdmin('generator')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399;">
-          <i class="fa-solid fa-code"></i> Buka Token Generator
-        </button>
-        <button class="btn-admin" onclick="triggerForceUpdateUser()" style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); border-color: #f87171;">
-          <i class="fa-solid fa-rotate"></i> Paksa Update Staf
-        </button>
+        <button class="btn-admin" onclick="bukaModalAdmin('lisensi')" style="background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%); border-color: #c084fc;"><i class="fa-solid fa-key"></i> Panel Lisensi NX</button>
+        <button class="btn-admin" onclick="bukaModalAdmin('generator')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399;"><i class="fa-solid fa-code"></i> Buka Token Generator</button>
+        <button class="btn-admin" onclick="triggerForceUpdateUser()" style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); border-color: #f87171;"><i class="fa-solid fa-rotate"></i> Paksa Update Staf</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL 1: INPUT PIN SUPER ADMIN + WEBAUTHN BIOMETRIC -->
+  <!-- MODAL 1: INPUT PIN + WEBAUTHN ASLI -->
   <div id="adminModal" class="modal-overlay">
     <div class="modal-box">
       <div style="font-size: 28px; color: var(--accent-blue); margin-bottom: 8px;"><i class="fa-solid fa-fingerprint"></i></div>
       <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 15px;">SUPER ADMIN ACCESS</h3>
-      <p style="font-size: 11px; color: var(--text-desc); margin-bottom: 10px;">Masukkan PIN Owner atau Gunakan Biometrik</p>
+      <p style="font-size: 11px; color: var(--text-desc); margin-bottom: 10px;">Masukkan PIN atau Scan Sidik Jari</p>
       
       <input type="password" id="adminPinInput" maxlength="6" placeholder="••••">
       <div id="pinError" style="color: #ef4444; font-size: 10.5px; margin-bottom: 10px; display: none;">PIN Salah! Akses ditolak.</div>
       
-      <!-- FITUR 3: TOMBOL LOGIN BIOMETRIK (SIDIK JARI / WAJAH) -->
-      <button onclick="loginDenganBiometrik()" style="width: 100%; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 10px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11.5px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <i class="fa-solid fa-fingerprint"></i> Masuk dengan Sidik Jari / Biometrik
+      <!-- TOMBOL BIOMETRIK ASLI (WEBAUTHN) -->
+      <button onclick="loginDenganBiometrikAsli()" style="width: 100%; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 10px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11.5px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i class="fa-solid fa-fingerprint"></i> Gunakan Sensor Sidik Jari Asli
       </button>
 
       <div style="display: flex; gap: 8px;">
@@ -353,21 +327,14 @@
       </div>
 
       <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 14px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-        <button onclick="simulasiKunciSistemDashboard('temporary')" style="background: rgba(217, 119, 6, 0.15); border: 1px solid rgba(217, 119, 6, 0.4); color: #fbbf24; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1;">
-          <i class="fa-solid fa-lock"></i> Lock Sementara
-        </button>
-        <button onclick="simulasiKunciSistemDashboard('permanent')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1;">
-          <i class="fa-solid fa-ban"></i> Lock Permanen
-        </button>
-        <button onclick="tutupPanelNx()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 10.5px; font-family: monospace;">
-          Tutup
-        </button>
+        <button onclick="simulasiKunciSistemDashboard('temporary')" style="background: rgba(217, 119, 6, 0.15); border: 1px solid rgba(217, 119, 6, 0.4); color: #fbbf24; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1;"><i class="fa-solid fa-lock"></i> Lock Sementara</button>
+        <button onclick="simulasiKunciSistemDashboard('permanent')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1;"><i class="fa-solid fa-ban"></i> Lock Permanen</button>
+        <button onclick="tutupPanelNx()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 10.5px; font-family: monospace;">Tutup</button>
       </div>
     </div>
   </div>
 
   <script>
-    // 🌐 URL FIREBASE REALTIME DATABASE MILIKMU
     const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
     const CLOUD_LICENSE_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/license.json`;
     const CLOUD_BROADCAST_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json`;
@@ -376,14 +343,11 @@
 
     let targetAksiAdmin = "";
 
-    // --- MODUL PENGAMAN & INISIALISASI ---
     document.addEventListener("DOMContentLoaded", function() {
       muatTemaDashboard();
       initCommandCenterHUD();
       muatAuditLogs();
       muatStaffPresence();
-
-      // Interval polling presence setiap 10 detik
       setInterval(muatStaffPresence, 10000);
 
       const links = document.querySelectorAll('a, button');
@@ -407,26 +371,97 @@
       });
     });
 
-    // --- FITUR 2: REAL-TIME STAFF PRESENCE TRACKER ---
+    // Helper untuk WebAuthn ArrayBuffer <-> Hex
+    function bufferToHex(buffer) {
+        return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    function hexToBuffer(hex) {
+        let matches = hex.match(/.{1,2}/g);
+        return new Uint8Array(matches.map(byte => parseInt(byte, 16))).buffer;
+    }
+
+    // --- WEBAUTHN BIOMETRIK ASLI ---
+    async function loginDenganBiometrikAsli() {
+        if (!window.PublicKeyCredential) {
+            showDashboardToast("Browser tidak mendukung WebAuthn biometrik!", false);
+            return;
+        }
+
+        try {
+            const storedCredIdHex = localStorage.getItem('nx_admin_cred_id');
+
+            if (!storedCredIdHex) {
+                showDashboardToast("Pendaftaran awal: Scan sidik jari untuk daftar...", true);
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+                const userId = new Uint8Array(16);
+                window.crypto.getRandomValues(userId);
+
+                const newCred = await navigator.credentials.create({
+                    publicKey: {
+                        challenge: challenge,
+                        rp: { name: "Gudang Nuhsantara Hub" },
+                        user: {
+                            id: userId,
+                            name: "novan@admin",
+                            displayName: "Novan Owner"
+                        },
+                        pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
+                        timeout: 60000,
+                        attestation: "direct",
+                        authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" }
+                    }
+                });
+
+                const credIdHex = bufferToHex(newCred.rawId);
+                localStorage.setItem('nx_admin_cred_id', credIdHex);
+                showDashboardToast("Sidik jari terdaftar! Tap sekali lagi untuk masuk.", true);
+                return;
+            }
+
+            showDashboardToast("Silakan scan sidik jari Anda...", true);
+            const challenge = new Uint8Array(32);
+            window.crypto.getRandomValues(challenge);
+            const credIdBuffer = hexToBuffer(storedCredIdHex);
+
+            const assertion = await navigator.credentials.get({
+                publicKey: {
+                    challenge: challenge,
+                    allowCredentials: [{
+                        id: credIdBuffer,
+                        type: "public-key",
+                        transports: ["internal"]
+                    }],
+                    userVerification: "required"
+                }
+            });
+
+            if (assertion) {
+                tutupModalAdmin();
+                showDashboardToast("Autentikasi Sidik Jari Berhasil! 🧬✨", true);
+                if (targetAksiAdmin === 'lisensi') {
+                    bukaPanelNx();
+                } else if (targetAksiAdmin === 'generator') {
+                    window.open('./nx-generator/index.html', '_blank');
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            showDashboardToast("Autentikasi sidik jari dibatalkan / gagal.", false);
+        }
+    }
+
+    // --- STAFF PRESENCE ---
     async function pingAktivitasStaf(modulName) {
         try {
             const deviceId = localStorage.getItem('gudang_device_id') || 'Dev-' + Math.floor(Math.random() * 10000);
             localStorage.setItem('gudang_device_id', deviceId);
-
-            const presenceData = {
-                device: deviceId,
-                modul: modulName,
-                time: Date.now()
-            };
-
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${deviceId}.json`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(presenceData)
+                body: JSON.stringify({ device: deviceId, modul: modulName, time: Date.now() })
             });
-        } catch (e) {
-            console.error("Gagal mengirim presence", e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     async function muatStaffPresence() {
@@ -437,7 +472,6 @@
         try {
             const res = await fetch(CLOUD_PRESENCE_ENDPOINT + "?t=" + Date.now());
             const data = await res.json();
-
             if (!data) {
                 container.innerHTML = `<span style="color: #64748b;">Belum ada staf terpantau aktif.</span>`;
                 if (countEl) countEl.innerText = "0 Aktif";
@@ -447,298 +481,113 @@
             const now = Date.now();
             let activeCount = 0;
             let htmlContent = "";
-
             Object.keys(data).forEach(id => {
                 const item = data[id];
-                // Jika aktif dalam 5 menit terakhir (300000ms)
                 if (now - item.time < 300000) {
                     activeCount++;
                     htmlContent += `<span style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 4px 10px; border-radius: 6px; color: #38bdf8;">🟢 ${item.device} (${item.modul})</span>`;
                 }
             });
-
-            if (activeCount > 0) {
-                container.innerHTML = htmlContent;
-                if (countEl) countEl.innerText = `${activeCount} Aktif`;
-            } else {
-                container.innerHTML = `<span style="color: #64748b;">Tidak ada staf online saat ini.</span>`;
-                if (countEl) countEl.innerText = "0 Aktif";
-            }
-        } catch (e) {
-            container.innerHTML = `<span style="color: #ef4444;">Gagal memuat data presence.</span>`;
-        }
-    }
-
-    // --- FITUR 3: WEBAUTHN BIOMETRIC ADMIN LOGIN ---
-    async function loginDenganBiometrik() {
-        if (!window.PublicKeyCredential) {
-            showDashboardToast("Browser tidak mendukung autentikasi biometrik!", false);
-            return;
-        }
-
-        try {
-            // Cek apakah perangkat mendukung platform authenticator (Sidik Jari / Face Unlock)
-            const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-            if (!available) {
-                showDashboardToast("Sensor biometrik tidak tersedia / belum diatur di perangkat ini.", false);
-                return;
-            }
-
-            // Simulasi tantangan WebAuthn untuk membuka akses admin
-            const challenge = new Uint8Array([21, 31, 105, 78, 18, 45, 99, 55]);
-            const publicKeyCredentialRequestOptions = {
-                challenge: challenge,
-                timeout: 60000,
-                userVerification: "required"
-            };
-
-            // Meminta verifikasi biometrik pengguna
-            showDashboardToast("Silakan scan sidik jari / wajah Anda...", true);
-            
-            // Menggunakan credential get atau membuat dummy assertion yang sukses terverifikasi secara lokal
-            // Catatan: Jika belum ada credential terdaftar, kita berikan fallback sukses langsung untuk kemudahan admin di perangkat pribadi.
-            tutupModalAdmin();
-            showDashboardToast("Autentikasi Biometrik Berhasil! Akses Diberikan.", true);
-            
-            if (targetAksiAdmin === 'lisensi') {
-                bukaPanelNx();
-            } else if (targetAksiAdmin === 'generator') {
-                window.open('./nx-generator/index.html', '_blank');
-            }
-
-        } catch (err) {
-            showDashboardToast("Autentikasi biometrik dibatalkan atau gagal.", false);
-        }
+            container.innerHTML = activeCount > 0 ? htmlContent : `<span style="color: #64748b;">Tidak ada staf online saat ini.</span>`;
+            if (countEl) countEl.innerText = `${activeCount} Aktif`;
+        } catch (e) { container.innerHTML = `<span style="color: #ef4444;">Gagal memuat presence.</span>`; }
     }
 
     // --- THEME SWITCHER ---
     function ubahTemaDashboard(warna) {
-        let hexColor = "#38bdf8";
-        let borderColor = "rgba(56, 189, 248, 0.2)";
-
-        if (warna === 'purple') {
-            hexColor = "#c084fc";
-            borderColor = "rgba(192, 132, 252, 0.25)";
-        } else if (warna === 'green') {
-            hexColor = "#22c55e";
-            borderColor = "rgba(34, 197, 94, 0.25)";
-        } else if (warna === 'gold') {
-            hexColor = "#fbbf24";
-            borderColor = "rgba(251, 191, 36, 0.25)";
-        }
+        let hexColor = "#38bdf8", borderColor = "rgba(56, 189, 248, 0.2)";
+        if (warna === 'purple') { hexColor = "#c084fc"; borderColor = "rgba(192, 132, 252, 0.25)"; }
+        else if (warna === 'green') { hexColor = "#22c55e"; borderColor = "rgba(34, 197, 94, 0.25)"; }
+        else if (warna === 'gold') { hexColor = "#fbbf24"; borderColor = "rgba(251, 191, 36, 0.25)"; }
 
         document.documentElement.style.setProperty('--accent-blue', hexColor);
         document.documentElement.style.setProperty('--card-border', borderColor);
         localStorage.setItem('gudang_admin_theme', warna);
-
-        showDashboardToast(`Tema berhasil diubah ke gaya ${warna.toUpperCase()}!`, true);
+        showDashboardToast(`Tema berhasil diubah ke ${warna.toUpperCase()}!`, true);
     }
 
     function muatTemaDashboard() {
-        const savedTheme = localStorage.getItem('gudang_admin_theme') || 'blue';
-        ubahTemaDashboard(savedTheme);
+        ubahTemaDashboard(localStorage.getItem('gudang_admin_theme') || 'blue');
     }
 
-    // --- QUICK COPY LINK MODUL ---
     function salinLinkModul(pathRelative) {
-        const absoluteUrl = new URL(pathRelative, window.location.href).href;
-        navigator.clipboard.writeText(absoluteUrl).then(() => {
-            showDashboardToast("Tautan modul berhasil disalin ke clipboard!", true);
-        }).catch(err => {
-            showDashboardToast("Gagal menyalin tautan!", false);
+        navigator.clipboard.writeText(new URL(pathRelative, window.location.href).href).then(() => {
+            showDashboardToast("Tautan modul berhasil disalin!", true);
         });
     }
 
-    // --- BROADCAST GLOBAL ---
     async function kirimBroadcastGlobal() {
-        const inputMsg = document.getElementById('inputBroadcastMsg');
-        const pesan = inputMsg ? inputMsg.value.trim() : "";
-
-        if (!pesan) {
-            showDashboardToast("Masukkan teks pengumuman terlebih dahulu!", false);
-            return;
-        }
-
-        try {
-            await fetch(CLOUD_BROADCAST_ENDPOINT, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: pesan,
-                    sender: "Novan (Owner)",
-                    timestamp: new Date().toISOString()
-                })
-            });
-
-            await catatLogAktivitas(`Broadcast terkirim: "${pesan}"`);
-            showDashboardToast("Pengumuman berhasil disiarkan ke semua staf!", true);
-            inputMsg.value = "";
-            muatAuditLogs();
-        } catch (e) {
-            showDashboardToast("Gagal mengirim broadcast ke Firebase!", false);
-        }
+        const msg = document.getElementById('inputBroadcastMsg').value.trim();
+        if (!msg) { showDashboardToast("Masukkan teks pengumuman!", false); return; }
+        await fetch(CLOUD_BROADCAST_ENDPOINT, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg, sender: "Novan", timestamp: new Date().toISOString() })
+        });
+        await catatLogAktivitas(`Broadcast: "${msg}"`);
+        showDashboardToast("Broadcast terkirim ke staf!", true);
+        document.getElementById('inputBroadcastMsg').value = "";
+        muatAuditLogs();
     }
 
-    // --- AUDIT LOGS ---
     async function catatLogAktivitas(aksi) {
         try {
             const timeStr = new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' });
-            const logEntry = { text: `[${timeStr}] ${aksi}` };
-            
-            const res = await fetch(CLOUD_LOGS_ENDPOINT);
-            let logs = await res.json() || [];
+            let logs = await (await fetch(CLOUD_LOGS_ENDPOINT)).json() || [];
             if (!Array.isArray(logs)) logs = [];
-
-            logs.unshift(logEntry);
+            logs.unshift({ text: `[${timeStr}] ${aksi}` });
             if (logs.length > 10) logs = logs.slice(0, 10);
-
-            await fetch(CLOUD_LOGS_ENDPOINT, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(logs)
-            });
-        } catch (e) {
-            console.error("Gagal mencatat log", e);
-        }
+            await fetch(CLOUD_LOGS_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logs) });
+        } catch (e) { console.error(e); }
     }
 
     async function muatAuditLogs() {
         const container = document.getElementById('containerAuditLog');
-        const txtSync = document.getElementById('txtLastSyncLog');
-        if (!container) return;
-
         try {
-            const res = await fetch(CLOUD_LOGS_ENDPOINT + "?t=" + Date.now());
-            const logs = await res.json();
-
-            if (Array.isArray(logs) && logs.length > 0) {
-                container.innerHTML = logs.map(l => `<div style="padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">&bull; ${l.text}</div>`).join('');
-            } else {
-                container.innerHTML = `<div>Belum ada catatan aktivitas sistem.</div>`;
-            }
-            if (txtSync) txtSync.innerText = "Sinkron: " + new Date().toLocaleTimeString('id-ID');
-        } catch (e) {
-            container.innerHTML = `<div style="color: #ef4444;">Gagal memuat log audit dari cloud.</div>`;
-        }
+            const logs = await (await fetch(CLOUD_LOGS_ENDPOINT + "?t=" + Date.now())).json();
+            container.innerHTML = Array.isArray(logs) && logs.length > 0 ? logs.map(l => `<div>&bull; ${l.text}</div>`).join('') : `<div>Belum ada aktivitas.</div>`;
+            document.getElementById('txtLastSyncLog').innerText = "Sinkron: " + new Date().toLocaleTimeString('id-ID');
+        } catch (e) { container.innerHTML = `<div style="color: #ef4444;">Gagal memuat log.</div>`; }
     }
 
-    // --- FORCE UPDATE / CLEAR CACHE ---
     async function triggerForceUpdateUser() {
-        if (!confirm("⚠️ [FORCE UPDATE]\nTindakan ini akan memaksa seluruh perangkat staf memperbarui cache aplikasi ke versi terbaru. Lanjutkan?")) return;
-
-        try {
-            await fetch(FIREBASE_DB_URL + "/gudang_nuhsantara/version.json", {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    forceReloadTimestamp: Date.now(),
-                    note: "Admin triggered remote cache clear"
-                })
-            });
-
-            await catatLogAktivitas("Perintah Force Update / Clear Cache dikirim ke seluruh perangkat.");
-            showDashboardToast("Perintah pembaruan berhasil dikirim ke seluruh staf!", true);
-            muatAuditLogs();
-        } catch (e) {
-            showDashboardToast("Gagal mengirim perintah pembaruan!", false);
-        }
+        if (!confirm("Paksa update cache seluruh perangkat staf?")) return;
+        await fetch(FIREBASE_DB_URL + "/gudang_nuhsantara/version.json", {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ forceReloadTimestamp: Date.now() })
+        });
+        await catatLogAktivitas("Force update dikirim ke staf.");
+        showDashboardToast("Perintah update dikirim!", true);
+        muatAuditLogs();
     }
 
-    // --- LIVE PING METER & HUD MONITOR ---
     async function initCommandCenterHUD() {
-        const statusText = document.getElementById('hudSystemStatusText');
-        const statusDetail = document.getElementById('hudSystemDetail');
-        const serverPulse = document.getElementById('hudServerPulse');
-        const expiryBox = document.getElementById('hudExpiryCountdown');
-        const pingEl = document.getElementById('hudPingText');
-
-        const startTime = performance.now();
+        const statusText = document.getElementById('hudSystemStatusText'), serverPulse = document.getElementById('hudServerPulse'), expiryBox = document.getElementById('hudExpiryCountdown'), pingEl = document.getElementById('hudPingText');
+        const start = performance.now();
         try {
-            const response = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
-            const endTime = performance.now();
-            const pingMs = Math.round(endTime - startTime);
-            if (pingEl) pingEl.innerText = `${pingMs} ms`;
-
-            const data = await response.json();
-
-            if (response.ok) {
-                if (data && data.locked) {
-                    statusText.innerText = data.permanent ? "🚨 TERKUNCI PERMANEN" : "⚠️ TERKUNCI SEMENTARA";
-                    statusText.style.color = "#ef4444";
-                    serverPulse.style.background = "#ef4444";
-                    serverPulse.style.boxShadow = "0 0 10px #ef4444";
-                } else {
-                    statusText.innerText = "🟢 SISTEM NORMAL & AMAN";
-                    statusText.style.color = "#22c55e";
-                    serverPulse.style.background = "#22c55e";
-                    serverPulse.style.boxShadow = "0 0 10px #22c55e";
-                }
-                statusDetail.innerText = "Koneksi Firebase Cloud Stabil";
-
-                if (data && data.expiry) {
-                    const expDate = new Date(data.expiry);
-                    const now = new Date();
-                    const diffTime = expDate - now;
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                    if (diffDays > 0) {
-                        expiryBox.innerText = `Aktif (${diffDays} Hari Lagi)`;
-                        expiryBox.style.color = "var(--accent-blue)";
-                    } else {
-                        expiryBox.innerText = "⚠️ Lisensi Kedaluwarsa!";
-                        expiryBox.style.color = "#ef4444";
-                    }
-                } else {
-                    expiryBox.innerText = "Tanpa Batas Waktu";
-                }
+            const res = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
+            pingEl.innerText = `${Math.round(performance.now() - start)} ms`;
+            const data = await res.json();
+            if (data && data.locked) {
+                statusText.innerText = data.permanent ? "🚨 TERKUNCI PERMANEN" : "⚠️ TERKUNCI SEMENTARA";
+                statusText.style.color = "#ef4444"; serverPulse.style.background = "#ef4444";
             } else {
-                throw new Error("Gagal mengambil data cloud");
+                statusText.innerText = "🟢 SISTEM NORMAL & AMAN";
+                statusText.style.color = "#22c55e"; serverPulse.style.background = "#22c55e";
             }
-        } catch (e) {
-            if (pingEl) pingEl.innerText = "Offline";
-            statusText.innerText = "🔴 SERVER OFFLINE / GAGAL";
-            statusText.style.color = "#ef4444";
-            serverPulse.style.background = "#ef4444";
-            serverPulse.style.boxShadow = "0 0 10px #ef4444";
-            statusDetail.innerText = "Periksa koneksi internet Anda";
-            expiryBox.innerText = "Data tidak tersedia";
-        }
+            if (data && data.expiry) {
+                const diffDays = Math.ceil((new Date(data.expiry) - new Date()) / (1000 * 60 * 60 * 24));
+                expiryBox.innerText = diffDays > 0 ? `Aktif (${diffDays} Hari Lagi)` : "⚠️ Kedaluwarsa!";
+            } else { expiryBox.innerText = "Tanpa Batas Waktu"; }
+        } catch (e) { pingEl.innerText = "Offline"; statusText.innerText = "🔴 SERVER OFFLINE"; }
     }
 
-    // --- TOAST NOTIFIKASI ---
-    function showDashboardToast(message, isSuccess = true) {
-      let existingToast = document.getElementById('dashboard-cyber-toast');
-      if (existingToast) existingToast.remove();
-
-      const toast = document.createElement('div');
-      toast.id = 'dashboard-cyber-toast';
-      
-      const borderColor = isSuccess ? '#22c55e' : '#ef4444';
-      const iconSymbol = isSuccess ? '✅' : '⚠️';
-
-      toast.style.cssText = `
-        position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px);
-        background: rgba(15, 23, 42, 0.98); border: 1.5px solid ${borderColor};
-        color: #f8fafc; padding: 14px 24px; border-radius: 14px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 25px ${isSuccess ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'};
-        font-family: monospace; font-size: 13px; z-index: 2147483647;
-        display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px);
-        opacity: 0; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-      `;
-
-      toast.innerHTML = `<span style="font-size: 18px;">${iconSymbol}</span> <span style="font-weight: bold; letter-spacing: 0.5px;">${message}</span>`;
-      document.body.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateX(-50%) translateY(0)';
-      }, 20);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(-50%) translateY(-20px)';
-        setTimeout(() => toast.remove(), 400);
-      }, 3200);
+    function showDashboardToast(msg, success = true) {
+      let t = document.getElementById('dashboard-cyber-toast'); if (t) t.remove();
+      t = document.createElement('div'); t.id = 'dashboard-cyber-toast';
+      t.style.cssText = `position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background: #0f172a; border: 1.5px solid ${success ? '#22c55e' : '#ef4444'}; color: #f8fafc; padding: 12px 20px; border-radius: 12px; font-family: monospace; font-size: 12px; z-index: 2147483647; box-shadow: 0 10px 30px rgba(0,0,0,0.8);`;
+      t.innerHTML = `${success ? '✅' : '⚠️'} ${msg}`;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
     }
 
     function bukaModalAdmin(aksi) {
@@ -749,140 +598,59 @@
       setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
     }
     
-    function tutupModalAdmin() {
-      document.getElementById('adminModal').style.display = 'none';
-    }
+    function tutupModalAdmin() { document.getElementById('adminModal').style.display = 'none'; }
 
     function verifikasiPinAdmin() {
-      const pin = document.getElementById('adminPinInput').value.trim();
-      if (pin === "2026") {
+      if (document.getElementById('adminPinInput').value.trim() === "2026") {
         tutupModalAdmin();
-        
-        if (targetAksiAdmin === 'lisensi') {
-          bukaPanelNx();
-        } else if (targetAksiAdmin === 'generator') {
-          window.open('./nx-generator/index.html', '_blank');
-        }
-      } else {
-        document.getElementById('pinError').style.display = 'block';
-        document.getElementById('adminPinInput').value = '';
-        document.getElementById('adminPinInput').focus();
-      }
+        if (targetAksiAdmin === 'lisensi') bukaPanelNx();
+        else if (targetAksiAdmin === 'generator') window.open('./nx-generator/index.html', '_blank');
+      } else { document.getElementById('pinError').style.display = 'block'; }
     }
 
-    function bukaPanelNx() {
-      document.getElementById('nxPanelModal').style.display = 'flex';
-      muatDataPanelDashboard();
-    }
-
-    function tutupPanelNx() {
-      document.getElementById('nxPanelModal').style.display = 'none';
-    }
+    function bukaPanelNx() { document.getElementById('nxPanelModal').style.display = 'flex'; muatDataPanelDashboard(); }
+    function tutupPanelNx() { document.getElementById('nxPanelModal').style.display = 'none'; }
 
     function decodeTokenToDate(token) {
       try {
         if (!token || !token.includes("NX")) return null;
-        let afterNx = token.split("NX")[1];
-        if (!afterNx || afterNx.length <= 18) return null;
-        let hexString = afterNx.slice(0, -18);
-        let timestamp = parseInt(hexString, 16);
-        if (isNaN(timestamp)) return null;
-        return new Date(timestamp);
-      } catch (e) {
-        return null;
-      }
+        let hex = token.split("NX")[1].slice(0, -18);
+        let ts = parseInt(hex, 16);
+        return isNaN(ts) ? null : new Date(ts);
+      } catch (e) { return null; }
     }
 
     async function muatDataPanelDashboard() {
-      const textExpiry = document.getElementById('nxExpiryText');
-      if (textExpiry) textExpiry.innerText = "Memuat dari Cloud...";
-
       try {
-        const response = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
-        const data = await response.json();
-
-        if (!data || !data.expiry) {
-          if (textExpiry) textExpiry.innerText = 'Tidak Ada Data / Bebas';
-          return;
-        }
-
-        const expiryDate = new Date(data.expiry);
-        textExpiry.innerText = expiryDate.toLocaleString('id-ID', {
-          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-        }) + ' WIB';
-      } catch (e) {
-        if (textExpiry) textExpiry.innerText = 'Gagal memuat dari Cloud';
-      }
+        const data = await (await fetch(CLOUD_LICENSE_ENDPOINT)).json();
+        document.getElementById('nxExpiryText').innerText = data && data.expiry ? new Date(data.expiry).toLocaleString('id-ID') : 'Bebas';
+      } catch (e) { document.getElementById('nxExpiryText').innerText = 'Gagal memuat'; }
     }
 
     async function simpanTokenDariPanelDashboard() {
-      const inputToken = document.getElementById('inputPanelNxToken');
-      if (!inputToken || !inputToken.value.trim()) {
-        showDashboardToast("Harap masukkan token lisensi NX yang valid!", false);
-        return;
-      }
-
-      const valToken = inputToken.value.trim();
-      const decodedDate = decodeTokenToDate(valToken);
-
-      if (decodedDate && decodedDate > new Date()) {
-        try {
-          await fetch(CLOUD_LICENSE_ENDPOINT, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              locked: false,
-              permanent: false,
-              expiry: decodedDate.toISOString(),
-              updatedAt: new Date().toISOString()
-            })
-          });
-
-          await catatLogAktivitas("Token lisensi cloud diperbarui via Admin Panel.");
-          showDashboardToast("Token Cloud Diperbarui & Semua Perangkat Terbuka!", true);
-          tutupPanelNx();
-          initCommandCenterHUD();
-          muatAuditLogs();
-        } catch (e) {
-          showDashboardToast("Gagal menyimpan ke Cloud Firebase!", false);
-        }
-      } else {
-        showDashboardToast("Token tidak valid atau sudah kedaluwarsa!", false);
-      }
+      const token = document.getElementById('inputPanelNxToken').value.trim();
+      const date = decodeTokenToDate(token);
+      if (date && date > new Date()) {
+        await fetch(CLOUD_LICENSE_ENDPOINT, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ locked: false, permanent: false, expiry: date.toISOString(), updatedAt: new Date().toISOString() })
+        });
+        await catatLogAktivitas("Token cloud diperbarui.");
+        showDashboardToast("Token Diperbarui!", true);
+        tutupPanelNx(); initCommandCenterHUD(); muatAuditLogs();
+      } else { showDashboardToast("Token tidak valid!", false); }
     }
 
     async function simulasiKunciSistemDashboard(type) {
-      const kemarin = new Date();
-      kemarin.setDate(kemarin.getDate() - 1);
-      
-      const isPermanent = (type === 'permanent');
-      
-      try {
-        await fetch(CLOUD_LICENSE_ENDPOINT, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            locked: true,
-            permanent: isPermanent,
-            expiry: kemarin.toISOString(),
-            updatedAt: new Date().toISOString()
-          })
-        });
-        
-        const jenisKunci = isPermanent ? "Permanen" : "Sementara";
-        await catatLogAktivitas(`Sistem dikunci [${jenisKunci}] secara jarak jauh.`);
-
-        if (isPermanent) {
-          showDashboardToast("🚨 SISTEM DIKUNCI PERMANEN DI SEMUA PERANGKAT!", true);
-        } else {
-          showDashboardToast("⚠️ SISTEM DIKUNCI SEMENTARA DI SEMUA PERANGKAT!", true);
-        }
-        tutupPanelNx();
-        initCommandCenterHUD();
-        muatAuditLogs();
-      } catch (e) {
-        showDashboardToast("Gagal mengirim sinyal kunci ke Cloud!", false);
-      }
+      const past = new Date(); past.setDate(past.getDate() - 1);
+      const isPerm = (type === 'permanent');
+      await fetch(CLOUD_LICENSE_ENDPOINT, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locked: true, permanent: isPerm, expiry: past.toISOString(), updatedAt: new Date().toISOString() })
+      });
+      await catatLogAktivitas(`Sistem dikunci [${isPerm ? 'Permanen' : 'Sementara'}].`);
+      showDashboardToast(`Sistem Dikunci ${isPerm ? 'Permanen' : 'Sementara'}!`, true);
+      tutupPanelNx(); initCommandCenterHUD(); muatAuditLogs();
     }
 
     document.getElementById('adminPinInput').addEventListener('keypress', function(e) {
