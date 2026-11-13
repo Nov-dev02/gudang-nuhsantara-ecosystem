@@ -17,6 +17,34 @@
 </head>
 <body>
 
+    <!-- ========================================== -->
+    <!-- ✨ WELCOME POP-UP SAMBUTAN EKOSISTEM BARU    -->
+    <!-- ========================================== -->
+    <div id="welcomeEcosystemModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.95); backdrop-filter: blur(14px); z-index: 2147483646; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; font-family: monospace;">
+        <div style="background: linear-gradient(145deg, #0f172a, #1e293b); border: 1.5px solid rgba(56, 189, 248, 0.4); padding: 32px 24px; border-radius: 20px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(56, 189, 248, 0.15);">
+            
+            <!-- Ikon Vektor Modern (FontAwesome Sparkles) -->
+            <div style="width: 54px; height: 54px; background: rgba(56, 189, 248, 0.15); border: 1.5px solid rgba(56, 189, 248, 0.5); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 14px auto; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);">
+                <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 22px; color: #38bdf8;"></i>
+            </div>
+
+            <h3 style="color: #f8fafc; margin: 0 0 8px 0; font-size: 17px; font-weight: bold; letter-spacing: 0.5px;">GUDANG NUHSANTARA HUB</h3>
+            <div style="font-size: 10.5px; color: #38bdf8; margin-bottom: 16px; background: rgba(56, 189, 248, 0.1); padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);">ENTERPRISE SYSTEM V2.0</div>
+            
+            <p style="color: #cbd5e1; font-size: 12.5px; line-height: 1.6; margin-bottom: 24px; text-align: left;">
+                Halo Tim Gudang,<br><br>
+                Selamat datang di portal sistem operasional pusat Gudang Nuhsantara. Nikmati kemudahan pencatatan Purchase Order (PO) dengan performa aplikasi yang lebih cepat, aman, dan terintegrasi secara <i>real-time</i>.<br><br>
+                Silakan gunakan aplikasi dengan teliti dan tetap semangat untuk aktivitas kerja hari ini. Terima kasih!
+            </p>
+            
+            <button type="button" onclick="tutupWelcomeModal()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border: 1px solid #38bdf8; padding: 12px; font-size: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4); transition: transform 0.1s;">
+                MENGERTI, LANJUTKAN MASUK
+            </button>
+            
+            <div style="font-size: 9.5px; color: #64748b; margin-top: 14px;">Official System Notification — 2026</div>
+        </div>
+    </div>
+
     <!-- Splash Screen / Initial Loading ala Aplikasi Native -->
     <div id="appSplashScreen" class="splash-screen">
         <div class="splash-content">
@@ -307,5 +335,25 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+        // Logika Pop-up Sambutan Ekosistem Baru (Sekali Tampil)
+        window.addEventListener('DOMContentLoaded', function() {
+            const sudahPernahSambutan = localStorage.getItem('gudang_welcome_ecosystem_shown');
+            if (!sudahPernahSambutan) {
+                const modalWelcome = document.getElementById('welcomeEcosystemModal');
+                if (modalWelcome) {
+                    modalWelcome.style.display = 'flex';
+                }
+            }
+        });
+
+        function tutupWelcomeModal() {
+            const modalWelcome = document.getElementById('welcomeEcosystemModal');
+            if (modalWelcome) {
+                modalWelcome.style.display = 'none';
+                localStorage.setItem('gudang_welcome_ecosystem_shown', 'true');
+            }
+        }
+    </script>
 </body>
 </html>
