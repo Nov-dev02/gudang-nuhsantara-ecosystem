@@ -99,7 +99,7 @@
     }
     .btn-quick-copy {
       background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3);
-      color: #38bdf8; width: 30px; height: 30px; border-radius: 8px; display: flex;
+      color: var(--accent-blue); width: 30px; height: 30px; border-radius: 8px; display: flex;
       justify-content: center; align-items: center; cursor: pointer; font-size: 12px;
     }
     .btn-quick-copy:hover { background: rgba(56, 189, 248, 0.25); transform: scale(1.05); }
@@ -155,17 +155,20 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 🖥️ COMMAND CENTER HUD (HEALTH & STATS)     -->
+    <!-- 🖥️ COMMAND CENTER HUD + PING METER (POINT 2) -->
     <!-- ========================================== -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 25px;">
         
-        <!-- Widget 1: Live System Health Monitor -->
-        <div style="background: rgba(2, 6, 23, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 16px; padding: 18px; position: relative; overflow: hidden;">
+        <!-- Widget 1: Live System Health Monitor + Ping Meter -->
+        <div style="background: rgba(2, 6, 23, 0.7); border: 1px solid var(--card-border); border-radius: 16px; padding: 18px; position: relative; overflow: hidden;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <span style="font-size: 11px; color: #94a3b8; font-family: monospace;"><i class="fa-solid fa-server"></i> SYSTEM HEALTH</span>
-                <span id="hudServerPulse" style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e; display: inline-block;"></span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span id="hudPingText" style="font-size: 10px; color: var(--accent-blue); font-family: monospace; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">-- ms</span>
+                    <span id="hudServerPulse" style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e; display: inline-block;"></span>
+                </div>
             </div>
-            <div id="hudSystemStatusText" style="font-size: 14px; font-weight: bold; color: #38bdf8; font-family: monospace; margin-bottom: 4px;">Mengecek Server...</div>
+            <div id="hudSystemStatusText" style="font-size: 14px; font-weight: bold; color: var(--accent-blue); font-family: monospace; margin-bottom: 4px;">Mengecek Server...</div>
             <div id="hudSystemDetail" style="font-size: 10.5px; color: #64748b; font-family: monospace;">Firebase Cloud Gateway Hub</div>
         </div>
 
@@ -182,10 +185,10 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 📢 FITUR 1: GLOBAL BROADCAST ANNOUNCEMENT  -->
+    <!-- 📢 BROADCAST ANNOUNCEMENT                  -->
     <!-- ========================================== -->
-    <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 16px; padding: 16px; margin-bottom: 25px;">
-        <div style="font-size: 12px; color: #38bdf8; font-family: monospace; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+    <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 25px;">
+        <div style="font-size: 12px; color: var(--accent-blue); font-family: monospace; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
             <i class="fa-solid fa-bullhorn"></i> KIRIM BROADCAST PENGUMUMAN KE STAF GUDANG
         </div>
         <div style="display: flex; gap: 8px;">
@@ -227,9 +230,33 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 📜 FITUR 2: AUDIT TRAIL / ACTIVITY LOG     -->
+    <!-- 🎨 POINT 3: QUICK SYSTEM THEME SWITCHER    -->
     <!-- ========================================== -->
-    <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
+    <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
+        <div style="font-size: 12px; color: var(--accent-blue); font-family: monospace; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+            <span><i class="fa-solid fa-palette"></i> TEMA WARNA AKSEN DASHBOARD</span>
+            <span style="font-size: 10px; color: #64748b;">Pilih gaya neon</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button onclick="ubahTemaDashboard('blue')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;">
+                <i class="fa-solid fa-circle" style="color: #38bdf8;"></i> Cyber Blue
+            </button>
+            <button onclick="ubahTemaDashboard('purple')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(192, 132, 252, 0.15); border: 1px solid #c084fc; color: #c084fc; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;">
+                <i class="fa-solid fa-circle" style="color: #c084fc;"></i> Nebula Purple
+            </button>
+            <button onclick="ubahTemaDashboard('green')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #22c55e; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;">
+                <i class="fa-solid fa-circle" style="color: #22c55e;"></i> Matrix Green
+            </button>
+            <button onclick="ubahTemaDashboard('gold')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; color: #fbbf24; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;">
+                <i class="fa-solid fa-circle" style="color: #fbbf24;"></i> Cyber Gold
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 📜 AUDIT TRAIL / ACTIVITY LOG              -->
+    <!-- ========================================== -->
+    <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
         <div style="font-size: 12px; color: #a855f7; font-family: monospace; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
             <span><i class="fa-solid fa-clock-rotate-left"></i> LOG AKTIVITAS & AUDIT TRAIL TERAKHIR</span>
             <span id="txtLastSyncLog" style="font-size: 10px; color: #64748b;">Sinkron: --</span>
@@ -252,7 +279,6 @@
         <button class="btn-admin" onclick="bukaModalAdmin('generator')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399;">
           <i class="fa-solid fa-code"></i> Buka Token Generator
         </button>
-        <!-- FITUR 3: TOMBOL FORCE UPDATE / CLEAR CACHE JARAK JAUH -->
         <button class="btn-admin" onclick="triggerForceUpdateUser()" style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); border-color: #f87171;">
           <i class="fa-solid fa-rotate"></i> Paksa Update Staf
         </button>
@@ -277,40 +303,37 @@
     </div>
   </div>
 
-  <!-- MODAL 2: PANEL KONTROL LISENSI NX (MUNCUL SETELAH PIN BENAR) -->
+  <!-- MODAL 2: PANEL KONTROL LISENSI NX -->
   <div id="nxPanelModal" class="modal-overlay">
     <div class="modal-box" style="max-width: 440px; text-align: left;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
-        <h3 style="color: #38bdf8; margin: 0; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+        <h3 style="color: var(--accent-blue); margin: 0; font-size: 15px; display: flex; align-items: center; gap: 8px;">
           <i class="fa-solid fa-shield-halved" style="color: #22c55e;"></i> PANEL CONTROL LISENSI NX
         </h3>
         <button onclick="tutupPanelNx()" style="background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; padding: 0;">&times;</button>
       </div>
 
-      <!-- Card Status Lisensi -->
       <div style="background: #020617; border: 1px solid #1e293b; padding: 14px; border-radius: 12px; margin-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <span style="font-size: 11px; color: #94a3b8;"><i class="fa-solid fa-satellite-dish"></i> Status Lisensi Cloud:</span>
           <span id="nxStatusBadge" style="padding: 3px 8px; border-radius: 6px; font-size: 10.5px; font-weight: bold; background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);">TERHUBUNG</span>
         </div>
         <div style="font-size: 11.5px; color: #f8fafc; margin-bottom: 4px;">
-          <i class="fa-solid fa-clock"></i> Kedaluwarsa: <span id="nxExpiryText" style="color: #38bdf8; font-weight: bold;">-</span>
+          <i class="fa-solid fa-clock"></i> Kedaluwarsa: <span id="nxExpiryText" style="color: var(--accent-blue); font-weight: bold;">-</span>
         </div>
         <div style="font-size: 10px; color: #64748b;">
           <i class="fa-solid fa-cloud"></i> Sinkronisasi Cloud Real-Time
         </div>
       </div>
 
-      <!-- Form Input Token Baru -->
       <div style="margin-bottom: 16px;">
         <label style="color: #c084fc; font-size: 11px; display: block; margin-bottom: 6px;"><i class="fa-solid fa-code"></i> PERBARUI TOKEN LISENSI CLOUD:</label>
-        <input type="text" id="inputPanelNxToken" placeholder="Tempel token baru di sini (mis: ...NX...)..." style="width: 100%; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 11px; border-radius: 8px; outline: none; font-family: monospace; box-sizing: border-box; text-align: center; margin-bottom: 8px;" />
+        <input type="text" id="inputPanelNxToken" placeholder="Tempel token baru di sini..." style="width: 100%; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: var(--accent-blue); font-size: 11px; border-radius: 8px; outline: none; font-family: monospace; box-sizing: border-box; text-align: center; margin-bottom: 8px;" />
         <button onclick="simpanTokenDariPanelDashboard()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1px solid #34d399; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: monospace; font-size: 12px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
           <i class="fa-solid fa-floppy-disk"></i> SIMPAN & BUKA SEMUA PERANGKAT
         </button>
       </div>
 
-      <!-- Tombol Kontrol Kunci (Sementara & Permanen) -->
       <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 14px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
         <button onclick="simulasiKunciSistemDashboard('temporary')" style="background: rgba(217, 119, 6, 0.15); border: 1px solid rgba(217, 119, 6, 0.4); color: #fbbf24; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1;">
           <i class="fa-solid fa-lock"></i> Lock Sementara
@@ -332,15 +355,15 @@
     const CLOUD_BROADCAST_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json`;
     const CLOUD_LOGS_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/logs.json`;
 
-    let targetAksiAdmin = ""; // Menyimpan tujuan: 'lisensi' atau 'generator'
+    let targetAksiAdmin = "";
 
-    // --- MODUL PENGAMAN KODE AKSES DASHBOARD & HUD MONITOR ---
+    // --- MODUL PENGAMAN & INISIALISASI ---
     document.addEventListener("DOMContentLoaded", function() {
-      initCommandCenterHUD(); // Jalankan pemantauan HUD saat dimuat
+      muatTemaDashboard(); // Terapkan tema warna tersimpan
+      initCommandCenterHUD(); // Jalankan HUD & Ping Meter
       muatAuditLogs(); // Muat log aktivitas
 
       const links = document.querySelectorAll('a, button');
-      
       links.forEach(el => {
         const textContent = el.textContent || "";
         const hrefValue = el.getAttribute('href') || "";
@@ -361,7 +384,35 @@
       });
     });
 
-    // --- FITUR 4: QUICK COPY LINK MODUL ---
+    // --- POINT 3: THEME SWITCHER LOGIC ---
+    function ubahTemaDashboard(warna) {
+        let hexColor = "#38bdf8"; // default blue
+        let borderColor = "rgba(56, 189, 248, 0.2)";
+
+        if (warna === 'purple') {
+            hexColor = "#c084fc";
+            borderColor = "rgba(192, 132, 252, 0.25)";
+        } else if (warna === 'green') {
+            hexColor = "#22c55e";
+            borderColor = "rgba(34, 197, 94, 0.25)";
+        } else if (warna === 'gold') {
+            hexColor = "#fbbf24";
+            borderColor = "rgba(251, 191, 36, 0.25)";
+        }
+
+        document.documentElement.style.setProperty('--accent-blue', hexColor);
+        document.documentElement.style.setProperty('--card-border', borderColor);
+        localStorage.setItem('gudang_admin_theme', warna);
+
+        showDashboardToast(`Tema berhasil diubah ke gaya ${warna.toUpperCase()}!`, true);
+    }
+
+    function muatTemaDashboard() {
+        const savedTheme = localStorage.getItem('gudang_admin_theme') || 'blue';
+        ubahTemaDashboard(savedTheme);
+    }
+
+    // --- QUICK COPY LINK MODUL ---
     function salinLinkModul(pathRelative) {
         const absoluteUrl = new URL(pathRelative, window.location.href).href;
         navigator.clipboard.writeText(absoluteUrl).then(() => {
@@ -371,7 +422,7 @@
         });
     }
 
-    // --- FITUR 1: KIRIM BROADCAST GLOBAL KE FIREBASE ---
+    // --- BROADCAST GLOBAL ---
     async function kirimBroadcastGlobal() {
         const inputMsg = document.getElementById('inputBroadcastMsg');
         const pesan = inputMsg ? inputMsg.value.trim() : "";
@@ -401,19 +452,18 @@
         }
     }
 
-    // --- CATAT LOG AKTIVITAS KE FIREBASE ---
+    // --- AUDIT LOGS ---
     async function catatLogAktivitas(aksi) {
         try {
             const timeStr = new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' });
             const logEntry = { text: `[${timeStr}] ${aksi}` };
             
-            // Ambil log lama dulu
             const res = await fetch(CLOUD_LOGS_ENDPOINT);
             let logs = await res.json() || [];
             if (!Array.isArray(logs)) logs = [];
 
-            logs.unshift(logEntry); // Taruh di urutan paling atas
-            if (logs.length > 10) logs = logs.slice(0, 10); // Batasi max 10 log
+            logs.unshift(logEntry);
+            if (logs.length > 10) logs = logs.slice(0, 10);
 
             await fetch(CLOUD_LOGS_ENDPOINT, {
                 method: 'PUT',
@@ -425,7 +475,6 @@
         }
     }
 
-    // --- MUAT LOG AKTIVITAS KE DASHBOARD ---
     async function muatAuditLogs() {
         const container = document.getElementById('containerAuditLog');
         const txtSync = document.getElementById('txtLastSyncLog');
@@ -446,7 +495,7 @@
         }
     }
 
-    // --- FITUR 3: TRIGGER FORCE UPDATE / CLEAR CACHE JARAK JAUH ---
+    // --- FORCE UPDATE / CLEAR CACHE ---
     async function triggerForceUpdateUser() {
         if (!confirm("⚠️ [FORCE UPDATE]\nTindakan ini akan memaksa seluruh perangkat staf memperbarui cache aplikasi ke versi terbaru. Lanjutkan?")) return;
 
@@ -468,15 +517,21 @@
         }
     }
 
-    // --- HUD LIVE MONITOR & STATS SYNC ---
+    // --- POINT 2: LIVE PING METER & HUD MONITOR ---
     async function initCommandCenterHUD() {
         const statusText = document.getElementById('hudSystemStatusText');
         const statusDetail = document.getElementById('hudSystemDetail');
         const serverPulse = document.getElementById('hudServerPulse');
         const expiryBox = document.getElementById('hudExpiryCountdown');
+        const pingEl = document.getElementById('hudPingText');
 
+        const startTime = performance.now();
         try {
             const response = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
+            const endTime = performance.now();
+            const pingMs = Math.round(endTime - startTime);
+            if (pingEl) pingEl.innerText = `${pingMs} ms`;
+
             const data = await response.json();
 
             if (response.ok) {
@@ -501,7 +556,7 @@
 
                     if (diffDays > 0) {
                         expiryBox.innerText = `Aktif (${diffDays} Hari Lagi)`;
-                        expiryBox.style.color = "#38bdf8";
+                        expiryBox.style.color = "var(--accent-blue)";
                     } else {
                         expiryBox.innerText = "⚠️ Lisensi Kedaluwarsa!";
                         expiryBox.style.color = "#ef4444";
@@ -513,6 +568,7 @@
                 throw new Error("Gagal mengambil data cloud");
             }
         } catch (e) {
+            if (pingEl) pingEl.innerText = "Offline";
             statusText.innerText = "🔴 SERVER OFFLINE / GAGAL";
             statusText.style.color = "#ef4444";
             serverPulse.style.background = "#ef4444";
@@ -522,7 +578,7 @@
         }
     }
 
-    // --- CUSTOM NOTIFIKASI CYBERPUNK ---
+    // --- TOAST NOTIFIKASI ---
     function showDashboardToast(message, isSuccess = true) {
       let existingToast = document.getElementById('dashboard-cyber-toast');
       if (existingToast) existingToast.remove();
