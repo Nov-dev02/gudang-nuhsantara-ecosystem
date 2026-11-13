@@ -585,30 +585,68 @@
     const modulName = "Proses Data";
     
     let staffName = localStorage.getItem('gudang_staff_name');
-    if (!staffName || !staffName.trim()) {
-      staffName = prompt("👋 Selamat datang di Proses Data!\nMasukkan Nama Anda (contoh: Siti - Admin):");
-      if (staffName && staffName.trim()) {
-        staffName = staffName.trim();
-        localStorage.setItem('gudang_staff_name', staffName);
-      } else {
-        staffName = "Staf Proses Data";
-      }
-    }
-
-    const safeKey = staffName.replace(/[^a-zA-Z0-9_-]/g, '_');
-
-    function pingSubApp() {
+    
+    function registerPresence(name) {
+      const safeKey = name.replace(/[^a-zA-Z0-9_-]/g, '_');
       fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: staffName, modul: modulName, time: Date.now() })
+        body: JSON.stringify({ name: name, modul: modulName, time: Date.now() })
       }).catch(e => console.error(e));
     }
 
-    pingSubApp();
-    setInterval(pingSubApp, 30000); // Kirim sinyal online setiap 30 detik
+    if (staffName && staffName.trim()) {
+      registerPresence(staffName.trim());
+      setInterval(() => registerPresence(staffName.trim()), 30000);
+    } else {
+      // Bikin Modal Cyber Custom secara otomatis
+      const modalOverlay = document.createElement('div');
+      modalOverlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(7, 11, 20, 0.95); backdrop-filter: blur(14px);
+        display: flex; justify-content: center; align-items: center; z-index: 2147483647; padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      `;
+
+      modalOverlay.innerHTML = `
+        <div style="background: #0f172a; border: 1px solid #38bdf8; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.2); font-family: monospace;">
+          <div style="font-size: 28px; color: #38bdf8; margin-bottom: 8px;"><i class="fa-solid fa-user-shield"></i></div>
+          <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 16px;">IDENTIFIKASI STAF</h3>
+          <p style="font-size: 11px; color: #94a3b8; margin-bottom: 15px;">Masukkan nama Anda untuk absensi online:</p>
+          
+          <input type="text" id="customStaffInput" placeholder="Contoh: Siti - Admin" style="width: 100%; padding: 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 14px; border-radius: 10px; outline: none; text-align: center; margin-bottom: 15px; box-sizing: border-box; font-family: monospace;">
+          
+          <button id="customStaffSubmit" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 12px; border-radius: 10px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 12px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);">
+            <i class="fa-solid fa-check"></i> SIMPAN & MASUK MODUL
+          </button>
+        </div>
+      `;
+
+      document.body.appendChild(modalOverlay);
+      const inputEl = document.getElementById('customStaffInput');
+      const submitBtn = document.getElementById('customStaffSubmit');
+      setTimeout(() => inputEl.focus(), 100);
+
+      function handleSubmission() {
+        const val = inputEl.value.trim();
+        if (!val) {
+          inputEl.style.borderColor = '#ef4444';
+          return;
+        }
+        localStorage.setItem('gudang_staff_name', val);
+        modalOverlay.remove();
+        registerPresence(val);
+        setInterval(() => registerPresence(val), 30000);
+      }
+
+      submitBtn.addEventListener('click', handleSubmission);
+      inputEl.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') handleSubmission();
+      });
+    }
   });
 </script>
+
 
 
 </body>
