@@ -460,252 +460,245 @@
       </div>
     </div>
   </div>
+
   <!-- CUSTOM MODAL SECURITY ACCESS (CYBERPUNK STYLE) -->
-<div id="nxCustomSecurityModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.9); backdrop-filter: blur(14px); z-index: 2147483647; justify-content: center; align-items: center; box-sizing: border-box; padding: 20px;">
-  <div style="background: #0f172a; border: 1px solid #38bdf8; padding: 30px 24px; border-radius: 20px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(56, 189, 248, 0.25); font-family: monospace;">
-    <div style="width: 50px; height: 50px; background: rgba(56, 189, 248, 0.12); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 14px auto;">
-      <i class="fa-solid fa-shield-halved" style="font-size: 22px; color: #38bdf8;"></i>
-    </div>
-    <h3 style="color: #38bdf8; margin: 0 0 6px 0; font-size: 16px; font-weight: 700; letter-spacing: 1px;">SYSTEM SECURITY ACCESS</h3>
-    <p style="color: #94a3b8; font-size: 11.5px; margin-bottom: 18px; line-height: 1.4;">Akses ke Menu Dashboard Utama dibatasi.<br>Masukkan Kode Akses Administrator:</p>
-    
-    <input type="password" id="inputCustomAccessCode" placeholder="••••••••••••" style="width: 100%; padding: 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 15px; border-radius: 10px; outline: none; font-family: monospace; text-align: center; letter-spacing: 2px; box-sizing: border-box; margin-bottom: 8px;" />
-    <div id="customAccessError" style="color: #ef4444; font-size: 11px; margin-bottom: 14px; display: none;"><i class="fa-solid fa-circle-xmark"></i> Kode Akses Salah! Akses ditolak.</div>
-    
-    <div style="display: flex; gap: 8px; margin-top: 6px;">
-      <button onclick="tutupModalKeamanan()" style="flex: 1; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 10px; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 12px;">Batal</button>
-      <button onclick="verifikasiKodeAksesCustom()" style="flex: 1; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: monospace; font-size: 12px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);">Masuk</button>
+  <div id="nxCustomSecurityModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.9); backdrop-filter: blur(14px); z-index: 2147483647; justify-content: center; align-items: center; box-sizing: border-box; padding: 20px;">
+    <div style="background: #0f172a; border: 1px solid #38bdf8; padding: 30px 24px; border-radius: 20px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(56, 189, 248, 0.25); font-family: monospace;">
+      <div style="width: 50px; height: 50px; background: rgba(56, 189, 248, 0.12); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 14px auto;">
+        <i class="fa-solid fa-shield-halved" style="font-size: 22px; color: #38bdf8;"></i>
+      </div>
+      <h3 style="color: #38bdf8; margin: 0 0 6px 0; font-size: 16px; font-weight: 700; letter-spacing: 1px;">SYSTEM SECURITY ACCESS</h3>
+      <p style="color: #94a3b8; font-size: 11.5px; margin-bottom: 18px; line-height: 1.4;">Akses ke Menu Dashboard Utama dibatasi.<br>Masukkan Kode Akses Administrator:</p>
+      
+      <input type="password" id="inputCustomAccessCode" placeholder="••••••••••••" style="width: 100%; padding: 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 15px; border-radius: 10px; outline: none; font-family: monospace; text-align: center; letter-spacing: 2px; box-sizing: border-box; margin-bottom: 8px;" />
+      <div id="customAccessError" style="color: #ef4444; font-size: 11px; margin-bottom: 14px; display: none;"><i class="fa-solid fa-circle-xmark"></i> Kode Akses Salah! Akses ditolak.</div>
+      
+      <div style="display: flex; gap: 8px; margin-top: 6px;">
+        <button onclick="tutupModalKeamanan()" style="flex: 1; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 10px; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 12px;">Batal</button>
+        <button onclick="verifikasiKodeAksesCustom()" style="flex: 1; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: monospace; font-size: 12px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);">Masuk</button>
+      </div>
     </div>
   </div>
-</div>
-<script>
-  let targetDashboardUrl = "";
 
-  document.addEventListener("DOMContentLoaded", function() {
-    const btnDashboard = document.querySelector('a[href="../index.html"]');
-    
-    if (btnDashboard) {
-      targetDashboardUrl = btnDashboard.href;
-      
-      btnDashboard.addEventListener("click", function(e) {
-        e.preventDefault(); // Cegah langsung pindah / prompt bawaan browser
-        
-        // Munculkan modal custom cyberpunk
-        document.getElementById('nxCustomSecurityModal').style.display = 'flex';
-        document.getElementById('inputCustomAccessCode').value = '';
-        document.getElementById('customAccessError').style.display = 'none';
-        setTimeout(() => document.getElementById('inputCustomAccessCode').focus(), 100);
-      });
-    }
-  });
-
-  function tutupModalKeamanan() {
-    document.getElementById('nxCustomSecurityModal').style.display = 'none';
-  }
-
-      function verifikasiKodeAksesCustom() {
-    const inputCode = document.getElementById('inputCustomAccessCode').value.trim();
-    const KODE_RAHASIA_ADMIN = "NX-ROOT@ECOSYSTEM-2026#SECURE";
-
-    if (inputCode === KODE_RAHASIA_ADMIN) {
-      // 1. Munculkan Toast Notifikasi Sukses ala Cyberpunk DULU
-      tampilkanToastCyberpunkSukses("AKSES DITERIMA // WELCOME, SYSTEM OWNER");
-
-      // 2. Baru tutup modal input kodenya
-      tutupModalKeamanan();
-
-      // 3. Beri jeda 1.5 detik untuk transisi smooth, baru pindah ke dashboard
-      setTimeout(() => {
-        window.location.href = targetDashboardUrl;
-      }, 1500);
-
-    } else {
-      document.getElementById('customAccessError').style.display = 'block';
-      document.getElementById('inputCustomAccessCode').value = '';
-      document.getElementById('inputCustomAccessCode').focus();
-    }
-  }
-
-
-  // Fungsi pembuat Toast Cyberpunk yang smooth & modern
-  function tampilkanToastCyberpunkSukses(pesan) {
-    let existingToast = document.getElementById('nx-cyber-success-toast');
-    if (existingToast) existingToast.remove();
-
-    const toast = document.createElement('div');
-    toast.id = 'nx-cyber-success-toast';
-    toast.style.cssText = `
-      position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px);
-      background: rgba(15, 23, 42, 0.95); border: 1.5px solid #22c55e;
-      color: #f8fafc; padding: 14px 24px; border-radius: 14px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 30px rgba(34, 197, 94, 0.4);
-      font-family: monospace; font-size: 13px; z-index: 2147483647;
-      display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px);
-      opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    `;
-
-    // Menggunakan SVG ikon centang modern bergaya sci-fi/cyberpunk
-    toast.innerHTML = `
-      <div style="width: 24px; height: 24px; background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #22c55e; font-size: 14px; box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);">
-        <i class="fa-solid fa-bolt"></i>
-      </div>
-      <span style="font-weight: bold; letter-spacing: 0.5px; color: #4ade80;">${pesan}</span>
-    `;
-
-    document.body.appendChild(toast);
-
-    // Efek muncul (fade-in & slide down)
-    setTimeout(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(-50%) translateY(0)';
-    }, 20);
-
-    // Efek hilang perlahan (fade-out) sebelum pindah halaman
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(-50%) translateY(-20px)';
-      setTimeout(() => toast.remove(), 400);
-    }, 1200);
-  }
-
-
-  // Bisa tekan Enter untuk konfirmasi langsung
-  document.addEventListener("DOMContentLoaded", function() {
-    const codeInput = document.getElementById('inputCustomAccessCode');
-    if (codeInput) {
-      codeInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') verifikasiKodeAksesCustom();
-      });
-    }
-  });
-</script>
   <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
-    const modulName = "Proses Data";
-    
-    // ==========================================
-    // 1. SISTEM IDENTIFIKASI STAF & PRESENCE
-    // ==========================================
-    let staffName = localStorage.getItem('gudang_staff_name');
-    
-    function registerPresence(name) {
-      const safeKey = name.replace(/[^a-zA-Z0-9_-]/g, '_');
-      fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, modul: modulName, time: Date.now() })
-      }).catch(e => console.error(e));
+    let targetDashboardUrl = "";
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const btnDashboard = document.querySelector('a[href="../index.html"]');
+      
+      if (btnDashboard) {
+        targetDashboardUrl = btnDashboard.href;
+        
+        btnDashboard.addEventListener("click", function(e) {
+          e.preventDefault();
+          document.getElementById('nxCustomSecurityModal').style.display = 'flex';
+          document.getElementById('inputCustomAccessCode').value = '';
+          document.getElementById('customAccessError').style.display = 'none';
+          setTimeout(() => document.getElementById('inputCustomAccessCode').focus(), 100);
+        });
+      }
+    });
+
+    function tutupModalKeamanan() {
+      document.getElementById('nxCustomSecurityModal').style.display = 'none';
     }
 
-    if (staffName && staffName.trim()) {
-      registerPresence(staffName.trim());
-      setInterval(() => registerPresence(staffName.trim()), 30000);
-    } else {
-      const modalOverlay = document.createElement('div');
-      modalOverlay.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(7, 11, 20, 0.95); backdrop-filter: blur(14px);
-        display: flex; justify-content: center; align-items: center; z-index: 2147483647; padding: 20px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    function verifikasiKodeAksesCustom() {
+      const inputCode = document.getElementById('inputCustomAccessCode').value.trim();
+      const KODE_RAHASIA_ADMIN = "NX-ROOT@ECOSYSTEM-2026#SECURE";
+
+      if (inputCode === KODE_RAHASIA_ADMIN) {
+        tampilkanToastCyberpunkSukses("AKSES DITERIMA // WELCOME, SYSTEM OWNER");
+        tutupModalKeamanan();
+        setTimeout(() => {
+          window.location.href = targetDashboardUrl;
+        }, 1500);
+      } else {
+        document.getElementById('customAccessError').style.display = 'block';
+        document.getElementById('inputCustomAccessCode').value = '';
+        document.getElementById('inputCustomAccessCode').focus();
+      }
+    }
+
+    function tampilkanToastCyberpunkSukses(pesan) {
+      let existingToast = document.getElementById('nx-cyber-success-toast');
+      if (existingToast) existingToast.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'nx-cyber-success-toast';
+      toast.style.cssText = `
+        position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px);
+        background: rgba(15, 23, 42, 0.95); border: 1.5px solid #22c55e;
+        color: #f8fafc; padding: 14px 24px; border-radius: 14px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 30px rgba(34, 197, 94, 0.4);
+        font-family: monospace; font-size: 13px; z-index: 2147483647;
+        display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px);
+        opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       `;
 
-      modalOverlay.innerHTML = `
-        <div style="background: #0f172a; border: 1px solid #38bdf8; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.2); font-family: monospace;">
-          <div style="font-size: 28px; color: #38bdf8; margin-bottom: 8px;">🛡️</div>
-          <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 16px;">IDENTIFIKASI STAF</h3>
-          <p style="font-size: 11px; color: #94a3b8; margin-bottom: 15px;">Masukkan nama Anda untuk absensi online:</p>
-          
-          <input type="text" id="customStaffInput" placeholder="Contoh: Siti - Admin" style="width: 100%; padding: 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 14px; border-radius: 10px; outline: none; text-align: center; margin-bottom: 15px; box-sizing: border-box; font-family: monospace;">
-          
-          <button id="customStaffSubmit" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 12px; border-radius: 10px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 12px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);">
-            ✔ SIMPAN & MASUK MODUL
-          </button>
+      toast.innerHTML = `
+        <div style="width: 24px; height: 24px; background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #22c55e; font-size: 14px; box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);">
+          <i class="fa-solid fa-bolt"></i>
         </div>
+        <span style="font-weight: bold; letter-spacing: 0.5px; color: #4ade80;">${pesan}</span>
       `;
 
-      document.body.appendChild(modalOverlay);
-      const inputEl = document.getElementById('customStaffInput');
-      const submitBtn = document.getElementById('customStaffSubmit');
-      setTimeout(() => inputEl.focus(), 100);
+      document.body.appendChild(toast);
 
-      function handleSubmission() {
-        const val = inputEl.value.trim();
-        if (!val) { inputEl.style.borderColor = '#ef4444'; return; }
-        localStorage.setItem('gudang_staff_name', val);
-        modalOverlay.remove();
-        registerPresence(val);
-        setInterval(() => registerPresence(val), 30000);
+      setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+      }, 20);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-20px)';
+        setTimeout(() => toast.remove(), 400);
+      }, 1200);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const codeInput = document.getElementById('inputCustomAccessCode');
+      if (codeInput) {
+        codeInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') verifikasiKodeAksesCustom();
+        });
+      }
+    });
+  </script>
+
+  <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
+      const modulName = "Proses Data";
+      
+      // ==========================================
+      // 1. SISTEM IDENTIFIKASI STAF & PRESENCE
+      // ==========================================
+      let staffName = localStorage.getItem('gudang_staff_name');
+      
+      function registerPresence(name) {
+        const safeKey = name.replace(/[^a-zA-Z0-9_-]/g, '_');
+        fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name, modul: modulName, time: Date.now() })
+        }).catch(e => console.error(e));
       }
 
-      submitBtn.addEventListener('click', handleSubmission);
-      inputEl.addEventListener('keypress', e => { if (e.key === 'Enter') handleSubmission(); });
-    }
+      if (staffName && staffName.trim()) {
+        registerPresence(staffName.trim());
+        setInterval(() => registerPresence(staffName.trim()), 30000);
+      } else {
+        const modalOverlay = document.createElement('div');
+        modalOverlay.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+          background: rgba(7, 11, 20, 0.95); backdrop-filter: blur(14px);
+          display: flex; justify-content: center; align-items: center; z-index: 2147483647; padding: 20px;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        `;
 
-    // ==========================================
-    // 2. LIVE BROADCAST LISTENER (PENGUMUMAN PUSAT)
-    // ==========================================
-    async function cekBroadcastPusat() {
-      try {
-        const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json?t=${Date.now()}`);
-        const data = await res.json();
-        if (!data || !data.message || !data.timestamp) return;
+        modalOverlay.innerHTML = `
+          <div style="background: #0f172a; border: 1px solid #38bdf8; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.2); font-family: monospace;">
+            <div style="font-size: 28px; color: #38bdf8; margin-bottom: 8px;">🛡️</div>
+            <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 16px;">IDENTIFIKASI STAF</h3>
+            <p style="font-size: 11px; color: #94a3b8; margin-bottom: 15px;">Masukkan nama Anda untuk absensi online:</p>
+            
+            <input type="text" id="customStaffInput" placeholder="Contoh: Siti - Admin" style="width: 100%; padding: 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 14px; border-radius: 10px; outline: none; text-align: center; margin-bottom: 15px; box-sizing: border-box; font-family: monospace;">
+            
+            <button id="customStaffSubmit" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 12px; border-radius: 10px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 12px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);">
+              ✔ SIMPAN & MASUK MODUL
+            </button>
+          </div>
+        `;
 
-        const lastRead = localStorage.getItem('gudang_last_broadcast_ts');
-        // Munculkan hanya jika pesan belum pernah ditutup staf & banner belum tampil
-        if (lastRead !== data.timestamp && !document.getElementById('nx-live-broadcast-banner')) {
-          tampilkanBannerBroadcast(data);
+        document.body.appendChild(modalOverlay);
+        const inputEl = document.getElementById('customStaffInput');
+        const submitBtn = document.getElementById('customStaffSubmit');
+        setTimeout(() => inputEl.focus(), 100);
+
+        function handleSubmission() {
+          const val = inputEl.value.trim();
+          if (!val) { inputEl.style.borderColor = '#ef4444'; return; }
+          localStorage.setItem('gudang_staff_name', val);
+          modalOverlay.remove();
+          registerPresence(val);
+          setInterval(() => registerPresence(val), 30000);
         }
-      } catch (e) { console.error("Broadcast check error:", e); }
-    }
 
-    function tampilkanBannerBroadcast(data) {
-      const banner = document.createElement('div');
-      banner.id = 'nx-live-broadcast-banner';
-      banner.style.cssText = `
-        position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
-        width: 92%; max-width: 480px; background: rgba(15, 23, 42, 0.96);
-        border: 1.5px solid #38bdf8; backdrop-filter: blur(12px);
-        border-radius: 16px; padding: 16px 20px; z-index: 2147483646;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.35);
-        font-family: monospace; color: #f8fafc;
-        animation: slideDownBroadcast 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      `;
+        submitBtn.addEventListener('click', handleSubmission);
+        inputEl.addEventListener('keypress', e => { if (e.key === 'Enter') handleSubmission(); });
+      }
 
-      const waktuPesan = new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      // ==========================================
+      // 2. LIVE BROADCAST WHATSAPP-LIKE POPUP AUTO-DISMISS
+      // ==========================================
+      async function cekBroadcastPusat() {
+        try {
+          // Pastikan banner hanya muncul jika sudah melewati layar booting
+          const bootScreen = document.getElementById('boot-screen');
+          if (bootScreen && bootScreen.style.visibility !== 'hidden' && bootScreen.style.opacity !== '0') return;
 
-      banner.innerHTML = `
-        <style>
-          @keyframes slideDownBroadcast {
-            0% { opacity: 0; transform: translate(-50%, -30px); }
-            100% { opacity: 1; transform: translate(-50%, 0); }
+          const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json?t=${Date.now()}`);
+          const data = await res.json();
+          if (!data || !data.message || !data.timestamp) return;
+
+          const lastRead = localStorage.getItem('gudang_last_broadcast_ts');
+          if (lastRead !== String(data.timestamp) && !document.getElementById('nx-live-broadcast-banner')) {
+            localStorage.setItem('gudang_last_broadcast_ts', String(data.timestamp));
+            tampilkanPopupWhatsApp(data);
           }
-        </style>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 6px;">
-          <span style="font-size: 11px; color: #38bdf8; font-weight: bold; letter-spacing: 0.5px;">📢 PENGUMUMAN OWNER (${data.sender || 'NOVAN'})</span>
-          <span style="font-size: 10px; color: #94a3b8;">${waktuPesan} WIB</span>
-        </div>
-        <div style="font-size: 13px; line-height: 1.5; color: #fff; margin-bottom: 14px; word-wrap: break-word;">
-          ${data.message}
-        </div>
-        <button id="btnTutupBroadcast" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11.5px;">
-          ✔ MENGERTI & TUTUP
-        </button>
-      `;
+        } catch (e) { console.error("Broadcast check error:", e); }
+      }
 
-      document.body.appendChild(banner);
+      function tampilkanPopupWhatsApp(data) {
+        const banner = document.createElement('div');
+        banner.id = 'nx-live-broadcast-banner';
+        banner.style.cssText = `
+          position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-50px);
+          width: 92%; max-width: 480px; background: rgba(15, 23, 42, 0.96);
+          border: 1.5px solid #38bdf8; backdrop-filter: blur(12px);
+          border-radius: 16px; padding: 16px 20px; z-index: 2147483646;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.35);
+          font-family: monospace; color: #f8fafc; opacity: 0;
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        `;
 
-      document.getElementById('btnTutupBroadcast').addEventListener('click', function() {
-        localStorage.setItem('gudang_last_broadcast_ts', data.timestamp);
-        banner.remove();
-      });
-    }
+        const waktuPesan = new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-    cekBroadcastPusat();
-    setInterval(cekBroadcastPusat, 5000); // Pantau pesan baru setiap 5 detik
-  });
-</script>
+        banner.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 6px;">
+            <span style="font-size: 11px; color: #38bdf8; font-weight: bold; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-tower-broadcast"></i> NOTIFIKASI SISTEM
+            </span>
+            <span style="font-size: 10px; color: #94a3b8;">${waktuPesan} WIB</span>
+          </div>
+          <div style="font-size: 13px; line-height: 1.5; color: #fff; word-wrap: break-word;">
+            ${data.message}
+          </div>
+        `;
 
+        document.body.appendChild(banner);
+
+        // Trigger animasi masuk (Slide Down & Fade In)
+        setTimeout(() => {
+          banner.style.transform = 'translateX(-50%) translateY(0)';
+          banner.style.opacity = '1';
+        }, 50);
+
+        // Auto dismiss setelah 5 detik (Slide Up & Fade Out)
+        setTimeout(() => {
+          banner.style.transform = 'translateX(-50%) translateY(-30px)';
+          banner.style.opacity = '0';
+          setTimeout(() => banner.remove(), 400);
+        }, 5000);
+      }
+
+      cekBroadcastPusat();
+      setInterval(cekBroadcastPusat, 5000);
+    });
+  </script>
 
 </body>
 </html>
