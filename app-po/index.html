@@ -420,16 +420,22 @@
     }
 
     // ==========================================
-    // 2. LIVE BROADCAST LISTENER (PENGUMUMAN PUSAT)
+    // 2. LIVE BROADCAST LISTENER (HANYA DI HALAMAN PO)
     // ==========================================
     async function cekBroadcastPusat() {
       try {
+        // Pastikan banner hanya muncul jika staf sudah di dalam halaman PO (tidak di login)
+        const poSection = document.getElementById('poSection');
+        if (!poSection || poSection.classList.contains('hidden')) return;
+
         const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json?t=${Date.now()}`);
         const data = await res.json();
         if (!data || !data.message || !data.timestamp) return;
 
         const lastRead = localStorage.getItem('gudang_last_broadcast_ts');
-        if (lastRead !== data.timestamp && !document.getElementById('nx-live-broadcast-banner')) {
+        
+        // Munculkan hanya jika timestamp pesan baru dan belum ada banner aktif
+        if (lastRead !== String(data.timestamp) && !document.getElementById('nx-live-broadcast-banner')) {
           tampilkanBannerBroadcast(data);
         }
       } catch (e) { console.error("Broadcast check error:", e); }
@@ -464,7 +470,7 @@
         <div style="font-size: 13px; line-height: 1.5; color: #fff; margin-bottom: 14px; word-wrap: break-word;">
           ${data.message}
         </div>
-        <button id="btnTutupBroadcast" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11.5px;">
+        <button id="btnTutupBroadcast" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1.5px solid #38bdf8; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11.5px;">
           ✔ MENGERTI & TUTUP
         </button>
       `;
@@ -472,7 +478,8 @@
       document.body.appendChild(banner);
 
       document.getElementById('btnTutupBroadcast').addEventListener('click', function() {
-        localStorage.setItem('gudang_last_broadcast_ts', data.timestamp);
+        // Simpan timestamp secara akurat agar tidak muncul lagi saat restart aplikasi
+        localStorage.setItem('gudang_last_broadcast_ts', String(data.timestamp));
         banner.remove();
       });
     }
