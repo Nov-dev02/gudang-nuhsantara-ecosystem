@@ -355,11 +355,15 @@
             }
         }
     </script>
+    
     <script>
   document.addEventListener("DOMContentLoaded", function() {
     const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
     const modulName = "App PO";
     
+    // ==========================================
+    // 1. SISTEM IDENTIFIKASI STAF & PRESENCE
+    // ==========================================
     let staffName = localStorage.getItem('gudang_staff_name');
     
     function registerPresence(name) {
@@ -385,14 +389,14 @@
 
       modalOverlay.innerHTML = `
         <div style="background: #0f172a; border: 1px solid #38bdf8; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.2); font-family: monospace;">
-          <div style="font-size: 28px; color: #38bdf8; margin-bottom: 8px;"><i class="fa-solid fa-user-shield"></i></div>
+          <div style="font-size: 28px; color: #38bdf8; margin-bottom: 8px;">🛡️</div>
           <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 16px;">IDENTIFIKASI STAF</h3>
           <p style="font-size: 11px; color: #94a3b8; margin-bottom: 15px;">Masukkan nama Anda untuk absensi online:</p>
           
           <input type="text" id="customStaffInput" placeholder="Contoh: Budi - PO" style="width: 100%; padding: 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 14px; border-radius: 10px; outline: none; text-align: center; margin-bottom: 15px; box-sizing: border-box; font-family: monospace;">
           
           <button id="customStaffSubmit" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 12px; border-radius: 10px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 12px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);">
-            <i class="fa-solid fa-check"></i> SIMPAN & MASUK MODUL
+            ✔ SIMPAN & MASUK MODUL
           </button>
         </div>
       `;
@@ -404,10 +408,7 @@
 
       function handleSubmission() {
         const val = inputEl.value.trim();
-        if (!val) {
-          inputEl.style.borderColor = '#ef4444';
-          return;
-        }
+        if (!val) { inputEl.style.borderColor = '#ef4444'; return; }
         localStorage.setItem('gudang_staff_name', val);
         modalOverlay.remove();
         registerPresence(val);
@@ -415,13 +416,71 @@
       }
 
       submitBtn.addEventListener('click', handleSubmission);
-      inputEl.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') handleSubmission();
+      inputEl.addEventListener('keypress', e => { if (e.key === 'Enter') handleSubmission(); });
+    }
+
+    // ==========================================
+    // 2. LIVE BROADCAST LISTENER (PENGUMUMAN PUSAT)
+    // ==========================================
+    async function cekBroadcastPusat() {
+      try {
+        const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json?t=${Date.now()}`);
+        const data = await res.json();
+        if (!data || !data.message || !data.timestamp) return;
+
+        const lastRead = localStorage.getItem('gudang_last_broadcast_ts');
+        if (lastRead !== data.timestamp && !document.getElementById('nx-live-broadcast-banner')) {
+          tampilkanBannerBroadcast(data);
+        }
+      } catch (e) { console.error("Broadcast check error:", e); }
+    }
+
+    function tampilkanBannerBroadcast(data) {
+      const banner = document.createElement('div');
+      banner.id = 'nx-live-broadcast-banner';
+      banner.style.cssText = `
+        position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+        width: 92%; max-width: 480px; background: rgba(15, 23, 42, 0.96);
+        border: 1.5px solid #38bdf8; backdrop-filter: blur(12px);
+        border-radius: 16px; padding: 16px 20px; z-index: 2147483646;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.35);
+        font-family: monospace; color: #f8fafc;
+        animation: slideDownBroadcast 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      `;
+
+      const waktuPesan = new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+      banner.innerHTML = `
+        <style>
+          @keyframes slideDownBroadcast {
+            0% { opacity: 0; transform: translate(-50%, -30px); }
+            100% { opacity: 1; transform: translate(-50%, 0); }
+          }
+        </style>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 6px;">
+          <span style="font-size: 11px; color: #38bdf8; font-weight: bold; letter-spacing: 0.5px;">📢 PENGUMUMAN OWNER (${data.sender || 'NOVAN'})</span>
+          <span style="font-size: 10px; color: #94a3b8;">${waktuPesan} WIB</span>
+        </div>
+        <div style="font-size: 13px; line-height: 1.5; color: #fff; margin-bottom: 14px; word-wrap: break-word;">
+          ${data.message}
+        </div>
+        <button id="btnTutupBroadcast" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11.5px;">
+          ✔ MENGERTI & TUTUP
+        </button>
+      `;
+
+      document.body.appendChild(banner);
+
+      document.getElementById('btnTutupBroadcast').addEventListener('click', function() {
+        localStorage.setItem('gudang_last_broadcast_ts', data.timestamp);
+        banner.remove();
       });
     }
+
+    cekBroadcastPusat();
+    setInterval(cekBroadcastPusat, 5000);
   });
 </script>
-
 
 </body>
 </html>
