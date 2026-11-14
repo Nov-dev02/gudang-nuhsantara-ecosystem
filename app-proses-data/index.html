@@ -567,7 +567,7 @@
     });
   </script>
 
-   <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM -->
+     <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
@@ -632,14 +632,10 @@
       }
 
       // ==========================================
-      // 2. LIVE BROADCAST WHATSAPP-LIKE (AFTER BOOT)
+      // 2. LIVE BROADCAST WHATSAPP-LIKE (LANGSUNG DI HALAMAN UTAMA)
       // ==========================================
       async function cekBroadcastPusat() {
         try {
-          const bootScreen = document.getElementById('boot-screen');
-          // Jika layar booting masih kelihatan, hentikan pengecekan
-          if (bootScreen && bootScreen.style.visibility !== 'hidden' && bootScreen.style.opacity !== '0') return;
-
           const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json?t=${Date.now()}`);
           const data = await res.json();
           if (!data || !data.message || !data.timestamp) return;
@@ -693,11 +689,11 @@
         }, 5000);
       }
 
-      // Jalankan pengecekan pertama setelah 7 detik (memastikan booting sudah selesai), lalu polling tiap 5 detik
+      // Langsung cek broadcast otomatis 2 detik setelah halaman terbuka
       setTimeout(() => {
         cekBroadcastPusat();
         setInterval(cekBroadcastPusat, 5000);
-      }, 7000);
+      }, 2000);
     });
   </script>
 
