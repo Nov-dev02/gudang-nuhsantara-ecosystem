@@ -466,7 +466,7 @@
     </div>
   </div>
 
-  <!-- MODAL PANEL LISENSI -->
+  <!-- MODAL PANEL LISENSI (DENGAN TOMBOL KUNCI SEMENTARA & PERMANEN) -->
   <div id="nxPanelModal" class="modal-overlay">
     <div class="modal-box" style="max-width: 420px; text-align: left;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 14px;">
@@ -475,8 +475,14 @@
       </div>
       <div style="font-size: 11px; color: #f8fafc; margin-bottom: 12px;">Kedaluwarsa: <span id="nxExpiryText" style="color: var(--accent-blue); font-weight: bold;">-</span></div>
       <input type="text" id="inputPanelNxToken" placeholder="Tempel token baru..." style="width: 100%; padding: 9px; background: #020617; border: 1px solid #334155; color: var(--accent-blue); font-size: 10.5px; border-radius: 7px; text-align: center; margin-bottom: 8px; box-sizing: border-box;" />
-      <button onclick="bukaModalAdmin('save_token')" style="width: 100%; background: #10b981; border: none; color: white; padding: 9px; border-radius: 7px; font-weight: bold; font-family: monospace; font-size: 11px; margin-bottom: 10px;">Simpan Token</button>
-      <button onclick="tutupPanelNx()" style="width: 100%; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 7px; border-radius: 7px; font-size: 10.5px;">Tutup</button>
+      <button onclick="bukaModalAdmin('save_token')" style="width: 100%; background: #10b981; border: none; color: white; padding: 9px; border-radius: 7px; font-weight: bold; font-family: monospace; font-size: 11px; margin-bottom: 12px;">Simpan Token</button>
+      
+      <!-- TOMBOL KUNCI SEMENTARA & PERMANEN YANG KEMBALI DIKEMBALIKAN -->
+      <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 12px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+        <button onclick="bukaModalAdmin('lock_temp')" style="background: rgba(217, 119, 6, 0.15); border: 1px solid rgba(217, 119, 6, 0.4); color: #fbbf24; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1;"><i class="fa-solid fa-lock"></i> Lock Sementara</button>
+        <button onclick="bukaModalAdmin('lock_perm')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1;"><i class="fa-solid fa-ban"></i> Lock Permanen</button>
+        <button onclick="tutupPanelNx()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace;">Tutup</button>
+      </div>
     </div>
   </div>
 
@@ -488,7 +494,7 @@
     const CLOUD_PRESENCE_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/presence.json`;
 
     let targetAksiAdmin = "";
-    let globalExpiryDate = null; // Untuk hitung mundur real-time
+    let globalExpiryDate = null;
 
     document.addEventListener("DOMContentLoaded", function() {
       muatTemaDashboard();
@@ -496,7 +502,7 @@
       muatAuditLogs();
       muatStaffPresence();
       setInterval(muatStaffPresence, 10000);
-      setInterval(updateRealtimeCountdown, 1000); // Jalan setiap detik
+      setInterval(updateRealtimeCountdown, 1000);
     });
 
     function switchTab(tabId, desktopEl, mobileEl) {
@@ -606,6 +612,8 @@
         else if (targetAksiAdmin === 'force_update') eksekusiForceUpdateAktif();
         else if (targetAksiAdmin === 'broadcast') eksekusiKirimBroadcastAktif();
         else if (targetAksiAdmin === 'save_token') eksekusiSimpanTokenAktif();
+        else if (targetAksiAdmin === 'lock_temp') eksekusiKunciSistemAktif('temporary');
+        else if (targetAksiAdmin === 'lock_perm') eksekusiKunciSistemAktif('permanent');
     }
 
     async function loginDenganBiometrikAsli() {
@@ -676,7 +684,7 @@
             let logs = await (await fetch(CLOUD_LOGS_ENDPOINT)).json() || [];
             if (!Array.isArray(logs)) logs = [];
             logs.unshift({ text: `[${timeStr}] ${aksi}` });
-            if (logs.length > 20) logs = logs.slice(0, 20); // Maksimal 20 log
+            if (logs.length > 20) logs = logs.slice(0, 20);
             await fetch(CLOUD_LOGS_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logs) });
         } catch (e) { console.error(e); }
     }
@@ -699,7 +707,6 @@
         showDashboardToast("Semua aktivitas ditandai telah dibaca!", true);
     }
 
-    // --- FUNGSI BERSIHKAN / RESET LOG AGAR TIDAK NUMPUK ---
     async function bersihkanSemuaLog() {
         if (!confirm("Hapus seluruh riwayat log aktivitas dan broadcast agar kotak kembali bersih?")) return;
         try {
@@ -741,13 +748,12 @@
         } catch (e) { pingEl.innerText = "Offline"; statusText.innerText = "Offline"; }
     }
 
-    // --- HITUNG MUNDUR REAL-TIME DETIK PER DETIK ---
     function updateRealtimeCountdown() {
         const expiryBox = document.getElementById('hudExpiryCountdown');
         if (!expiryBox) return;
 
         if (!globalExpiryDate) {
-            expiryBox.innerText = "Tanpa Batas Waktu";
+            expiryBox.innerText = "Tanpa Batas";
             return;
         }
 
@@ -820,6 +826,18 @@
         showDashboardToast("Token Disimpan!", true);
         tutupPanelNx(); initCommandCenterHUD();
       } else { showDashboardToast("Token tidak valid!", false); }
+    }
+
+    async function eksekusiKunciSistemAktif(type) {
+      const past = new Date(); past.setDate(past.getDate() - 1);
+      const isPerm = (type === 'permanent');
+      await fetch(CLOUD_LICENSE_ENDPOINT, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locked: true, permanent: isPerm, expiry: past.toISOString(), updatedAt: new Date().toISOString() })
+      });
+      await catatLogAktivitas(`Sistem dikunci [${isPerm ? 'Permanen' : 'Sementara'}].`);
+      showDashboardToast(`Sistem Dikunci ${isPerm ? 'Permanen' : 'Sementara'}!`, true);
+      tutupPanelNx(); initCommandCenterHUD(); muatAuditLogs();
     }
 
     document.getElementById('adminPinInput').addEventListener('keypress', function(e) {
