@@ -567,7 +567,7 @@
     });
   </script>
 
-     <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM -->
+  <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM (FIXED DISPLAY) -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
@@ -632,7 +632,7 @@
       }
 
       // ==========================================
-      // 2. LIVE BROADCAST WHATSAPP-LIKE (LANGSUNG DI HALAMAN UTAMA)
+      // 2. LIVE BROADCAST WHATSAPP-LIKE (FIXED LOGIC)
       // ==========================================
       async function cekBroadcastPusat() {
         try {
@@ -641,8 +641,9 @@
           if (!data || !data.message || !data.timestamp) return;
 
           const lastRead = localStorage.getItem('gudang_last_broadcast_ts');
+          
+          // Hanya tampilkan jika timestamp dari Firebase BERBEDA dari yang tersimpan di localStorage
           if (lastRead !== String(data.timestamp) && !document.getElementById('nx-live-broadcast-banner')) {
-            localStorage.setItem('gudang_last_broadcast_ts', String(data.timestamp));
             tampilkanPopupWhatsApp(data);
           }
         } catch (e) { console.error("Broadcast check error:", e); }
@@ -677,11 +678,16 @@
 
         document.body.appendChild(banner);
 
+        // Kunci/simpan timestamp HANYA KETIKA BANNER BERHASIL MUNCUL DI LAYAR
+        localStorage.setItem('gudang_last_broadcast_ts', String(data.timestamp));
+
+        // Trigger animasi masuk (Slide Down & Fade In)
         setTimeout(() => {
           banner.style.transform = 'translateX(-50%) translateY(0)';
           banner.style.opacity = '1';
         }, 50);
 
+        // Auto dismiss setelah 5 detik (Slide Up & Fade Out)
         setTimeout(() => {
           banner.style.transform = 'translateX(-50%) translateY(-30px)';
           banner.style.opacity = '0';
@@ -689,14 +695,13 @@
         }, 5000);
       }
 
-      // Langsung cek broadcast otomatis 2 detik setelah halaman terbuka
+      // Mulai pantau broadcast otomatis 3 detik setelah halaman aktif
       setTimeout(() => {
         cekBroadcastPusat();
         setInterval(cekBroadcastPusat, 5000);
-      }, 2000);
+      }, 3000);
     });
   </script>
-
 
 </body>
 </html>
