@@ -567,8 +567,21 @@
     });
   </script>
 
-    <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM (FIXED & DEBUGGED) -->
+  <!-- TOMBOL TEST MANUAL DI HP (FLOATING TEST BUTTON) -->
+  <button onclick="testPopupManual()" style="position: fixed; bottom: 20px; right: 20px; background: #22c55e; color: white; border: 2px solid #ffffff; padding: 12px 18px; border-radius: 30px; font-weight: bold; font-family: monospace; font-size: 12px; z-index: 2147483647; box-shadow: 0 4px 20px rgba(0,0,0,0.8); cursor: pointer;">
+    🧪 TEST POPUP NOTIF
+  </button>
+
+  <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM (FIXED & DEBUGGED) -->
   <script>
+    // Global function untuk test manual dari tombol mengambang
+    function testPopupManual() {
+      tampilkanPopupWhatsApp({
+        message: "🚨 INI TEST MANUAL NOTIFIKASI WHATSAPP-LIKE BERHASIL MUNCUL DI HP!",
+        timestamp: Date.now()
+      });
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
       const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
       const modulName = "Proses Data";
@@ -659,11 +672,15 @@
         }
       }
 
-      function tampilkanPopupWhatsApp(data) {
+      window.tampilkanPopupWhatsApp = function(data) {
         console.log("[BROADCAST] Merender banner notifikasi ke layar...");
+        
+        // Hapus banner lama jika ada agar tidak menumpuk
+        const existingBanner = document.getElementById('nx-live-broadcast-banner');
+        if (existingBanner) existingBanner.remove();
+
         const banner = document.createElement('div');
         banner.id = 'nx-live-broadcast-banner';
-        // Z-Index dinaikkan ke 2147483649 agar dipastikan berada di atas segalanya
         banner.style.cssText = `
           position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-50px);
           width: 92%; max-width: 480px; background: rgba(15, 23, 42, 0.98);
@@ -714,7 +731,6 @@
       }, 3000);
     });
   </script>
-
 
 </body>
 </html>
