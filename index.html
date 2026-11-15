@@ -231,6 +231,7 @@
       display: none; justify-content: center; align-items: center; z-index: 99999; padding: 20px;
     }
     #adminModal { z-index: 100005; }
+    #templateModal { z-index: 100002; }
 
     .modal-box {
       background: #0f172a; border: 1px solid var(--accent-blue); padding: 25px;
@@ -399,9 +400,13 @@
       <div id="tab-logs" class="tab-pane">
         <!-- BROADCAST PANEL -->
         <div class="section-box">
-          <div class="section-title">
-            <i class="fa-solid fa-bullhorn"></i> KIRIM BROADCAST PENGUMUMAN KE STAF
+          <div class="section-title" style="justify-content: space-between;">
+            <span><i class="fa-solid fa-bullhorn"></i> KIRIM BROADCAST PENGUMUMAN KE STAF</span>
+            <button onclick="bukaModalTemplate()" style="background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 5px 10px; border-radius: 7px; font-size: 10.5px; font-family: monospace; font-weight: bold; cursor: pointer;">
+              <i class="fa-solid fa-folder-open"></i> 📂 Template Pesan (15)
+            </button>
           </div>
+          
           <div style="display: flex; gap: 8px;">
             <input type="text" id="inputBroadcastMsg" placeholder="Ketik pengumuman penting..." style="flex: 1; padding: 10px; background: #020617; border: 1px solid #334155; color: #f8fafc; font-size: 11px; border-radius: 8px; outline: none; font-family: monospace;" />
             <button onclick="bukaModalAdmin('broadcast')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid var(--accent-blue); color: white; padding: 0 14px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: monospace; font-size: 11px;">
@@ -445,6 +450,84 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- MODAL TEMPLATE PESAN BROADCAST (15 PILIHAN) -->
+  <div id="templateModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 460px; text-align: left; max-height: 85vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 12px;">
+        <h3 style="color: var(--accent-blue); margin: 0; font-size: 13.5px;"><i class="fa-solid fa-folder-open"></i> PILIH TEMPLATE BROADCAST (15)</h3>
+        <button onclick="tutupModalTemplate()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
+      </div>
+      
+      <div style="overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; flex: 1; max-height: 55vh;">
+        
+        <div onclick="pilihTemplateDanTutup('Hai rekan-rekan tim gudang, cuaca hari ini cukup terik. Jangan lupa perbanyak minum air putih dan tetap jaga kesehatan fisik ya!')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">1. Pengingat Cuaca Panas & Fisik</b><br><span style="color: var(--text-desc); font-size: 10px;">"Hai rekan-rekan tim gudang, cuaca hari ini cukup terik..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Perhatian untuk seluruh admin: Mohon segera lakukan sinkronisasi data pesanan Marketplace (Shopee & TikTok) secara berkala.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">2. Instruksi Sinkronisasi Data</b><br><span style="color: var(--text-desc); font-size: 10px;">"Perhatian untuk seluruh admin: Mohon segera lakukan sinkronisasi..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Pengingat operasional: Mohon pastikan kembali seluruh status pesanan dicocokkan dengan teliti dan status Clear ditandai dengan benar.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">3. Pengecekan Status Clear</b><br><span style="color: var(--text-desc); font-size: 10px;">"Pengingat operasional: Mohon pastikan kembali seluruh status pesanan..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Waktunya istirahat rekan-rekan! Silakan rehat sejenak, pastikan area kerja dan perangkat dalam kondisi aman sebelum ditinggal.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">4. Waktu Istirahat Siang</b><br><span style="color: var(--text-desc); font-size: 10px;">"Waktunya istirahat rekan-rekan! Silakan rehat sejenak..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Informasi sistem: Token lisensi NX pusat telah diperbarui. Jika perangkat mengalami kendala akses, silakan lapor ke admin utama.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">5. Update Token Lisensi Sistem</b><br><span style="color: var(--text-desc); font-size: 10px;">"Informasi sistem: Token lisensi NX pusat telah diperbarui..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Pemberitahuan gudang: Jadwal bongkar muat barang masuk akan segera dimulai. Mohon tim logistik bersiap di area staging.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">6. Pemeriksaan Stok Barang Masuk</b><br><span style="color: var(--text-desc); font-size: 10px;">"Pemberitahuan gudang: Jadwal bongkar muat barang masuk..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Mengingatkan kembali kepada tim admin, mohon selesaikan rekap data Purchase Order dan laporan harian sebelum jam operasional berakhir.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">7. Jadwal Rekapitulasi Harian</b><br><span style="color: var(--text-desc); font-size: 10px;">"Mengingatkan kembali kepada tim admin, mohon selesaikan rekap..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Info teknis: Terdeteksi fluktuasi jaringan lokal. Jika sistem terasa lambat, silakan lakukan refresh halaman dashboard secara berkala.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">8. Peringatan Koneksi / Jaringan</b><br><span style="color: var(--text-desc); font-size: 10px;">"Info teknis: Terdeteksi fluktuasi jaringan lokal..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Koordinasi kurir: Pastikan seluruh resi pengiriman hari ini sudah tuntas discan dan diserahkan kepada pihak ekspedisi dengan lengkap.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">9. Pengecekan Pengiriman Kurir</b><br><span style="color: var(--text-desc); font-size: 10px;">"Koordinasi kurir: Pastikan seluruh resi pengiriman hari ini..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Pesan keselamatan: Harap selalu utamakan keselamatan kerja, gunakan atribut pelindung, dan jaga kerapian jalur evakuasi di dalam gudang.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">10. Evaluasi Keamanan & Kerapian Gudang</b><br><span style="color: var(--text-desc); font-size: 10px;">"Pesan keselamatan: Harap selalu utamakan keselamatan kerja..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Informasi pemeliharaan: Akan dilakukan optimalisasi database server secara singkat malam ini. Pastikan tidak ada data yang menggantung.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">11. Pengumuman Sistem Maintenance</b><br><span style="color: var(--text-desc); font-size: 10px;">"Informasi pemeliharaan: Akan dilakukan optimalisasi database..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Selamat pagi tim Gudang Nuhsantara! Awali hari dengan semangat tinggi, tetap teliti, dan semoga target operasional kita tercapai hari ini.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">12. Penyambutan / Semangat Pagi</b><br><span style="color: var(--text-desc); font-size: 10px;">"Selamat pagi tim Gudang Nuhsantara! Awali hari dengan..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Perhatian khusus untuk modul PO: Mohon cek kembali validitas data supplier dan nominal barang masuk agar tidak terjadi selisih pencatatan.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">13. Verifikasi Data Pre-Order (PO)</b><br><span style="color: var(--text-desc); font-size: 10px;">"Perhatian khusus untuk modul PO: Mohon cek kembali validitas..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Pemberitahuan transisi shift: Mohon lakukan handover (serah terima tugas dan catatan penting) kepada tim shift berikutnya dengan jelas.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">14. Pemberitahuan Shift / Pergantian Tugas</b><br><span style="color: var(--text-desc); font-size: 10px;">"Pemberitahuan transisi shift: Mohon lakukan handover..."</span>
+        </div>
+
+        <div onclick="pilihTemplateDanTutup('Terima kasih atas kerja keras dan ketelitian luar biasa dari seluruh tim hari ini. Pertahankan kerja sama yang hebat ini, kawan-kawan!')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <b style="color: var(--accent-blue);">15. Apresiasi Kinerja Tim</b><br><span style="color: var(--text-desc); font-size: 10px;">"Terima kasih atas kerja keras dan ketelitian luar biasa..."</span>
+        </div>
+
+      </div>
+
+      <div style="margin-top: 14px; text-align: right;">
+        <button onclick="tutupModalTemplate()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 10.5px; font-family: monospace;">Tutup</button>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL ADMIN (SECURITY GATE) -->
@@ -617,6 +700,23 @@
         } catch (e) { container.innerHTML = `<span style="color: #ef4444;">Gagal memuat presence.</span>`; }
     }
 
+    // --- FUNGSI MODAL TEMPLATE BROADCAST ---
+    function bukaModalTemplate() {
+        document.getElementById('templateModal').style.display = 'flex';
+    }
+    function tutupModalTemplate() {
+        document.getElementById('templateModal').style.display = 'none';
+    }
+    function pilihTemplateDanTutup(teks) {
+        const inputEl = document.getElementById('inputBroadcastMsg');
+        if (inputEl) {
+            inputEl.value = teks;
+            inputEl.focus();
+            showDashboardToast("Template dipilih!", true);
+        }
+        tutupModalTemplate();
+    }
+
     function triggerSimpanToken() {
         const inputEl = document.getElementById('inputPanelNxToken');
         const token = inputEl.value.trim();
@@ -625,10 +725,7 @@
             return;
         }
         pendingTokenToSave = token;
-        
-        // Langsung kosongkan kotak input di sini agar langsung bersih saat verifikasi PIN muncul
         inputEl.value = "";
-        
         bukaModalAdmin('save_token');
     }
 
