@@ -230,7 +230,7 @@
       background: rgba(7, 11, 20, 0.9); backdrop-filter: blur(14px);
       display: none; justify-content: center; align-items: center; z-index: 99999; padding: 20px;
     }
-    #adminModal { z-index: 100005; } /* Pastikan Security Gate selalu di atas panel lisensi */
+    #adminModal { z-index: 100005; }
 
     .modal-box {
       background: #0f172a; border: 1px solid var(--accent-blue); padding: 25px;
@@ -299,7 +299,7 @@
         </div>
       </header>
 
-      <!-- MOBILE NAVIGATION BAR (MENU SLIDE KHUSUS HP) -->
+      <!-- MOBILE NAVIGATION BAR -->
       <div class="mobile-nav-bar">
         <div class="mobile-nav-item active" onclick="switchTab('overview', null, this)"><i class="fa-solid fa-gauge-high"></i> Overview</div>
         <div class="mobile-nav-item" onclick="switchTab('presence', null, this)"><i class="fa-solid fa-users-viewfinder"></i> Staf Online</div>
@@ -507,7 +507,7 @@
 
     let targetAksiAdmin = "";
     let globalExpiryDate = null;
-    let pendingTokenToSave = ""; // Variabel aman untuk menyimpan token sebelum verifikasi PIN
+    let pendingTokenToSave = "";
 
     document.addEventListener("DOMContentLoaded", function() {
       muatTemaDashboard();
@@ -864,6 +864,11 @@
           });
           await catatLogAktivitas("Token lisensi cloud diperbarui.");
           showDashboardToast("Token Berhasil Disimpan & Lisensi Aktif!", true);
+          
+          // Kosongkan kotak input setelah berhasil disimpan
+          document.getElementById('inputPanelNxToken').value = "";
+          pendingTokenToSave = "";
+
           initCommandCenterHUD();
           muatAuditLogs();
         } catch (e) {
