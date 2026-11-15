@@ -618,12 +618,17 @@
     }
 
     function triggerSimpanToken() {
-        const token = document.getElementById('inputPanelNxToken').value.trim();
+        const inputEl = document.getElementById('inputPanelNxToken');
+        const token = inputEl.value.trim();
         if (!token) {
             showDashboardToast("Masukkan token lisensi terlebih dahulu!", false);
             return;
         }
         pendingTokenToSave = token;
+        
+        // Langsung kosongkan kotak input di sini agar langsung bersih saat verifikasi PIN muncul
+        inputEl.value = "";
+        
         bukaModalAdmin('save_token');
     }
 
@@ -865,10 +870,7 @@
           await catatLogAktivitas("Token lisensi cloud diperbarui.");
           showDashboardToast("Token Berhasil Disimpan & Lisensi Aktif!", true);
           
-          // Kosongkan kotak input setelah berhasil disimpan
-          document.getElementById('inputPanelNxToken').value = "";
           pendingTokenToSave = "";
-
           initCommandCenterHUD();
           muatAuditLogs();
         } catch (e) {
