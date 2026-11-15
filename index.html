@@ -230,6 +230,8 @@
       background: rgba(7, 11, 20, 0.9); backdrop-filter: blur(14px);
       display: none; justify-content: center; align-items: center; z-index: 99999; padding: 20px;
     }
+    #adminModal { z-index: 100005; } /* Pastikan Security Gate selalu di atas panel lisensi */
+
     .modal-box {
       background: #0f172a; border: 1px solid var(--accent-blue); padding: 25px;
       border-radius: 18px; width: 100%; max-width: 400px; text-align: center;
@@ -445,7 +447,7 @@
     </main>
   </div>
 
-  <!-- MODAL ADMIN -->
+  <!-- MODAL ADMIN (SECURITY GATE) -->
   <div id="adminModal" class="modal-overlay">
     <div class="modal-box">
       <div style="font-size: 26px; color: var(--accent-blue); margin-bottom: 8px;"><i class="fa-solid fa-fingerprint"></i></div>
@@ -473,15 +475,25 @@
         <h3 style="color: var(--accent-blue); margin: 0; font-size: 14px;"><i class="fa-solid fa-shield-halved" style="color: #22c55e;"></i> PANEL LISENSI NX</h3>
         <button onclick="tutupPanelNx()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
       </div>
-      <div style="font-size: 11px; color: #f8fafc; margin-bottom: 12px;">Kedaluwarsa: <span id="nxExpiryText" style="color: var(--accent-blue); font-weight: bold;">-</span></div>
-      <input type="text" id="inputPanelNxToken" placeholder="Tempel token baru..." style="width: 100%; padding: 9px; background: #020617; border: 1px solid #334155; color: var(--accent-blue); font-size: 10.5px; border-radius: 7px; text-align: center; margin-bottom: 8px; box-sizing: border-box;" />
-      <button onclick="bukaModalAdmin('save_token')" style="width: 100%; background: #10b981; border: none; color: white; padding: 9px; border-radius: 7px; font-weight: bold; font-family: monospace; font-size: 11px; margin-bottom: 12px;">Simpan Token</button>
+      <div style="font-size: 11px; color: #f8fafc; margin-bottom: 10px;">Kedaluwarsa: <span id="nxExpiryText" style="color: var(--accent-blue); font-weight: bold;">-</span></div>
       
-      <!-- TOMBOL KUNCI SEMENTARA & PERMANEN -->
-      <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 12px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-        <button onclick="bukaModalAdmin('lock_temp')" style="background: rgba(217, 119, 6, 0.15); border: 1px solid rgba(217, 119, 6, 0.4); color: #fbbf24; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1;"><i class="fa-solid fa-lock"></i> Lock Sementara</button>
-        <button onclick="bukaModalAdmin('lock_perm')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1;"><i class="fa-solid fa-ban"></i> Lock Permanen</button>
-        <button onclick="tutupPanelNx()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace;">Tutup</button>
+      <input type="text" id="inputPanelNxToken" placeholder="Tempel token baru..." style="width: 100%; padding: 9px; background: #020617; border: 1px solid #334155; color: var(--accent-blue); font-size: 10.5px; border-radius: 7px; text-align: center; margin-bottom: 10px; box-sizing: border-box;" />
+      
+      <button onclick="triggerSimpanToken()" style="width: 100%; background: #10b981; border: none; color: white; padding: 10px; border-radius: 7px; font-weight: bold; font-family: monospace; font-size: 11.5px; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(16,185,129,0.3); cursor: pointer;">
+        <i class="fa-solid fa-floppy-disk"></i> Simpan Token
+      </button>
+      
+      <!-- ZONA KONTROL DARURAT / KUNCI -->
+      <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.3); padding: 12px; border-radius: 10px;">
+        <div style="font-size: 9.5px; color: #f87171; font-family: monospace; margin-bottom: 8px; font-weight: bold;"><i class="fa-solid fa-triangle-exclamation"></i> KONTROL PENGUNCIAN DARURAT</div>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="bukaModalAdmin('lock_temp')" style="background: rgba(217, 119, 6, 0.2); border: 1px solid rgba(217, 119, 6, 0.5); color: #fbbf24; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1; font-weight: bold;"><i class="fa-solid fa-lock"></i> Kunci Sementara</button>
+          <button onclick="bukaModalAdmin('lock_perm')" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace; flex: 1; font-weight: bold;"><i class="fa-solid fa-ban"></i> Kunci Permanen</button>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; text-align: right;">
+        <button onclick="tutupPanelNx()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 10.5px; font-family: monospace;">Tutup Panel</button>
       </div>
     </div>
   </div>
@@ -495,6 +507,7 @@
 
     let targetAksiAdmin = "";
     let globalExpiryDate = null;
+    let pendingTokenToSave = ""; // Variabel aman untuk menyimpan token sebelum verifikasi PIN
 
     document.addEventListener("DOMContentLoaded", function() {
       muatTemaDashboard();
@@ -604,9 +617,19 @@
         } catch (e) { container.innerHTML = `<span style="color: #ef4444;">Gagal memuat presence.</span>`; }
     }
 
+    function triggerSimpanToken() {
+        const token = document.getElementById('inputPanelNxToken').value.trim();
+        if (!token) {
+            showDashboardToast("Masukkan token lisensi terlebih dahulu!", false);
+            return;
+        }
+        pendingTokenToSave = token;
+        bukaModalAdmin('save_token');
+    }
+
     function eksekusiAksiAdminTervalidasi() {
         tutupModalAdmin();
-        tutupPanelNx(); // Tutup panel lisensi agar notifikasi toast terlihat jelas
+        tutupPanelNx();
         
         if (targetAksiAdmin === 'lisensi') {
             bukaPanelNx();
@@ -617,7 +640,7 @@
         } else if (targetAksiAdmin === 'broadcast') {
             eksekusiKirimBroadcastAktif();
         } else if (targetAksiAdmin === 'save_token') {
-            eksekusiSimpanTokenAktif();
+            eksekusiSimpanTokenAktif(pendingTokenToSave);
         } else if (targetAksiAdmin === 'lock_temp') {
             eksekusiKunciSistemAktif('temporary');
         } else if (targetAksiAdmin === 'lock_perm') {
@@ -806,6 +829,7 @@
       const subTitle = document.getElementById('adminModalSubtitle');
       if (aksi === 'lock_temp') subTitle.innerText = "⚠️ Konfirmasi Kunci Sementara";
       else if (aksi === 'lock_perm') subTitle.innerText = "🚨 Konfirmasi Kunci Permanen";
+      else if (aksi === 'save_token') subTitle.innerText = "💾 Konfirmasi Simpan Token";
       else subTitle.innerText = "Autentikasi Diperlukan";
 
       setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
@@ -829,18 +853,25 @@
       } catch (e) { document.getElementById('nxExpiryText').innerText = 'Gagal'; }
     }
 
-    async function eksekusiSimpanTokenAktif() {
-      const token = document.getElementById('inputPanelNxToken').value.trim();
+    async function eksekusiSimpanTokenAktif(token) {
       let hex = token.includes("NX") ? token.split("NX")[1].slice(0, -18) : null;
       let ts = hex ? parseInt(hex, 16) : NaN;
       if (!isNaN(ts) && new Date(ts) > new Date()) {
-        await fetch(CLOUD_LICENSE_ENDPOINT, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ locked: false, permanent: false, expiry: new Date(ts).toISOString() })
-        });
-        showDashboardToast("Token Disimpan!", true);
-        tutupPanelNx(); initCommandCenterHUD();
-      } else { showDashboardToast("Token tidak valid!", false); }
+        try {
+          await fetch(CLOUD_LICENSE_ENDPOINT, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ locked: false, permanent: false, expiry: new Date(ts).toISOString() })
+          });
+          await catatLogAktivitas("Token lisensi cloud diperbarui.");
+          showDashboardToast("Token Berhasil Disimpan & Lisensi Aktif!", true);
+          initCommandCenterHUD();
+          muatAuditLogs();
+        } catch (e) {
+          showDashboardToast("Gagal menyimpan token ke database!", false);
+        }
+      } else { 
+        showDashboardToast("Token tidak valid!", false); 
+      }
     }
 
     async function eksekusiKunciSistemAktif(type) {
