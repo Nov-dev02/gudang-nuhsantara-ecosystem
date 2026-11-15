@@ -567,7 +567,7 @@
     });
   </script>
 
-  <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM (FIXED DISPLAY) -->
+    <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM (FIXED & DEBUGGED) -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
@@ -632,32 +632,44 @@
       }
 
       // ==========================================
-      // 2. LIVE BROADCAST WHATSAPP-LIKE (FIXED LOGIC)
+      // 2. LIVE BROADCAST WHATSAPP-LIKE (Z-INDEX FIXED)
       // ==========================================
       async function cekBroadcastPusat() {
         try {
+          console.log("[BROADCAST] Mengecek data broadcast ke Firebase...");
           const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json?t=${Date.now()}`);
           const data = await res.json();
-          if (!data || !data.message || !data.timestamp) return;
+          console.log("[BROADCAST] Respon Firebase:", data);
+
+          if (!data || !data.message || !data.timestamp) {
+            console.log("[BROADCAST] Data kosong atau format tidak sesuai.");
+            return;
+          }
 
           const lastRead = localStorage.getItem('gudang_last_broadcast_ts');
+          console.log("[BROADCAST] Terakhir dibaca (local):", lastRead, "| Firebase timestamp:", data.timestamp);
           
-          // Hanya tampilkan jika timestamp dari Firebase BERBEDA dari yang tersimpan di localStorage
           if (lastRead !== String(data.timestamp) && !document.getElementById('nx-live-broadcast-banner')) {
             tampilkanPopupWhatsApp(data);
+          } else {
+            console.log("[BROADCAST] Pesan ini sudah pernah dibaca sebelumnya.");
           }
-        } catch (e) { console.error("Broadcast check error:", e); }
+        } catch (e) { 
+          console.error("[BROADCAST ERROR]:", e); 
+        }
       }
 
       function tampilkanPopupWhatsApp(data) {
+        console.log("[BROADCAST] Merender banner notifikasi ke layar...");
         const banner = document.createElement('div');
         banner.id = 'nx-live-broadcast-banner';
+        // Z-Index dinaikkan ke 2147483649 agar dipastikan berada di atas segalanya
         banner.style.cssText = `
           position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-50px);
-          width: 92%; max-width: 480px; background: rgba(15, 23, 42, 0.96);
-          border: 1.5px solid #38bdf8; backdrop-filter: blur(12px);
-          border-radius: 16px; padding: 16px 20px; z-index: 2147483646;
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.35);
+          width: 92%; max-width: 480px; background: rgba(15, 23, 42, 0.98);
+          border: 2px solid #38bdf8; backdrop-filter: blur(12px);
+          border-radius: 16px; padding: 16px 20px; z-index: 2147483649;
+          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(56, 189, 248, 0.5);
           font-family: monospace; color: #f8fafc; opacity: 0;
           transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         `;
@@ -665,7 +677,7 @@
         const waktuPesan = new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
         banner.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(56, 189, 248, 0.3); padding-bottom: 6px;">
             <span style="font-size: 11px; color: #38bdf8; font-weight: bold; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
               <i class="fa-solid fa-tower-broadcast"></i> NOTIFIKASI SISTEM
             </span>
@@ -678,21 +690,21 @@
 
         document.body.appendChild(banner);
 
-        // Kunci/simpan timestamp HANYA KETIKA BANNER BERHASIL MUNCUL DI LAYAR
+        // Simpan timestamp HANYA KETIKA banner sukses masuk DOM
         localStorage.setItem('gudang_last_broadcast_ts', String(data.timestamp));
 
-        // Trigger animasi masuk (Slide Down & Fade In)
+        // Animasi Slide Down & Fade In
         setTimeout(() => {
           banner.style.transform = 'translateX(-50%) translateY(0)';
           banner.style.opacity = '1';
         }, 50);
 
-        // Auto dismiss setelah 5 detik (Slide Up & Fade Out)
+        // Auto dismiss setelah 6 detik
         setTimeout(() => {
           banner.style.transform = 'translateX(-50%) translateY(-30px)';
           banner.style.opacity = '0';
           setTimeout(() => banner.remove(), 400);
-        }, 5000);
+        }, 6000);
       }
 
       // Mulai pantau broadcast otomatis 3 detik setelah halaman aktif
@@ -702,6 +714,7 @@
       }, 3000);
     });
   </script>
+
 
 </body>
 </html>
