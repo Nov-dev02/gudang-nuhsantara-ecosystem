@@ -172,7 +172,7 @@
       margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
     }
 
-    /* Metric Cards Grid (Hanya di Tab Overview) */
+    /* Metric Cards Grid */
     .metrics-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -184,7 +184,7 @@
       border-radius: 14px; padding: 16px;
     }
     .metric-title { font-size: 10.5px; color: var(--text-desc); font-family: monospace; text-transform: uppercase; }
-    .metric-value { font-size: 1.2rem; font-weight: bold; color: #fff; font-family: monospace; margin: 4px 0; }
+    .metric-value { font-size: 1.1rem; font-weight: bold; color: #fff; font-family: monospace; margin: 4px 0; }
     .metric-sub { font-size: 10px; color: var(--text-desc); font-family: monospace; }
 
     /* Apps Grid */
@@ -322,8 +322,8 @@
           </div>
           <div class="metric-card">
             <div class="metric-title"><i class="fa-solid fa-shield-cat"></i> Cloud License</div>
-            <div id="hudExpiryCountdown" class="metric-value" style="font-size: 1rem;">Memuat...</div>
-            <div class="metric-sub">Status NX Aktif</div>
+            <div id="hudExpiryCountdown" class="metric-value" style="font-size: 0.9rem;">Memuat...</div>
+            <div class="metric-sub">Real-time Countdown</div>
           </div>
         </section>
 
@@ -408,13 +408,18 @@
           </div>
         </div>
 
-        <!-- AUDIT TRAILS & MARK AS READ -->
+        <!-- AUDIT TRAILS & RESET LOGS -->
         <div class="section-box">
           <div class="section-title" style="justify-content: space-between;">
             <span style="color: #a855f7;"><i class="fa-solid fa-clock-rotate-left"></i> LOG AKTIVITAS & AUDIT TRAIL</span>
-            <button onclick="tandaiSemuaDibaca()" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); color: #d8b4fe; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace;">
-              <i class="fa-solid fa-check-double"></i> Tandai Telah Dibaca
-            </button>
+            <div style="display: flex; gap: 6px;">
+              <button onclick="tandaiSemuaDibaca()" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); color: #d8b4fe; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace;">
+                <i class="fa-solid fa-check-double"></i> Dibaca
+              </button>
+              <button onclick="bersihkanSemuaLog()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace;" title="Bersihkan Log Numpuk">
+                <i class="fa-solid fa-trash-can"></i> Bersihkan Log
+              </button>
+            </div>
           </div>
           <div id="containerAuditLog" style="font-family: monospace; font-size: 11px; color: #94a3b8; max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
             <div>Memuat catatan aktivitas sistem...</div>
@@ -483,6 +488,7 @@
     const CLOUD_PRESENCE_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/presence.json`;
 
     let targetAksiAdmin = "";
+    let globalExpiryDate = null; // Untuk hitung mundur real-time
 
     document.addEventListener("DOMContentLoaded", function() {
       muatTemaDashboard();
@@ -490,6 +496,7 @@
       muatAuditLogs();
       muatStaffPresence();
       setInterval(muatStaffPresence, 10000);
+      setInterval(updateRealtimeCountdown, 1000); // Jalan setiap detik
     });
 
     function switchTab(tabId, desktopEl, mobileEl) {
@@ -669,7 +676,7 @@
             let logs = await (await fetch(CLOUD_LOGS_ENDPOINT)).json() || [];
             if (!Array.isArray(logs)) logs = [];
             logs.unshift({ text: `[${timeStr}] ${aksi}` });
-            if (logs.length > 15) logs = logs.slice(0, 15);
+            if (logs.length > 20) logs = logs.slice(0, 20); // Maksimal 20 log
             await fetch(CLOUD_LOGS_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logs) });
         } catch (e) { console.error(e); }
     }
@@ -692,6 +699,18 @@
         showDashboardToast("Semua aktivitas ditandai telah dibaca!", true);
     }
 
+    // --- FUNGSI BERSIHKAN / RESET LOG AGAR TIDAK NUMPUK ---
+    async function bersihkanSemuaLog() {
+        if (!confirm("Hapus seluruh riwayat log aktivitas dan broadcast agar kotak kembali bersih?")) return;
+        try {
+            await fetch(CLOUD_LOGS_ENDPOINT, { method: 'DELETE' });
+            showDashboardToast("Log aktivitas berhasil dibersihkan!", true);
+            muatAuditLogs();
+        } catch (e) {
+            showDashboardToast("Gagal membersihkan log!", false);
+        }
+    }
+
     async function eksekusiForceUpdateAktif() {
         await fetch(FIREBASE_DB_URL + "/gudang_nuhsantara/version.json", {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -703,7 +722,7 @@
     }
 
     async function initCommandCenterHUD() {
-        const statusText = document.getElementById('hudSystemStatusText'), expiryBox = document.getElementById('hudExpiryCountdown'), pingEl = document.getElementById('hudPingText');
+        const statusText = document.getElementById('hudSystemStatusText'), pingEl = document.getElementById('hudPingText');
         const start = performance.now();
         try {
             const res = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
@@ -715,10 +734,43 @@
                 statusText.innerText = "Normal"; statusText.style.color = "#22c55e";
             }
             if (data && data.expiry) {
-                const diffDays = Math.ceil((new Date(data.expiry) - new Date()) / (1000 * 60 * 60 * 24));
-                expiryBox.innerText = diffDays > 0 ? `${diffDays} Hari` : "Habis!";
-            } else { expiryBox.innerText = "Bebas"; }
+                globalExpiryDate = new Date(data.expiry);
+            } else {
+                globalExpiryDate = null;
+            }
         } catch (e) { pingEl.innerText = "Offline"; statusText.innerText = "Offline"; }
+    }
+
+    // --- HITUNG MUNDUR REAL-TIME DETIK PER DETIK ---
+    function updateRealtimeCountdown() {
+        const expiryBox = document.getElementById('hudExpiryCountdown');
+        if (!expiryBox) return;
+
+        if (!globalExpiryDate) {
+            expiryBox.innerText = "Tanpa Batas Waktu";
+            return;
+        }
+
+        const now = new Date();
+        const diff = globalExpiryDate.getTime() - now.getTime();
+
+        if (diff <= 0) {
+            expiryBox.innerText = "⚠️ Kedaluwarsa!";
+            expiryBox.style.color = "#ef4444";
+            return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        if (days > 0) {
+            expiryBox.innerText = `${days}h ${hours}j ${minutes}m ${seconds}s`;
+        } else {
+            expiryBox.innerText = `${hours}j ${minutes}m ${seconds}s`;
+        }
+        expiryBox.style.color = "#fff";
     }
 
     function showDashboardToast(msg, success = true) {
