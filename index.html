@@ -18,7 +18,7 @@
   <style>
     :root {
       --bg-main: #070b14;
-      --sidebar-bg: rgba(11, 18, 32, 0.95);
+      --sidebar-bg: rgba(11, 18, 32, 0.98);
       --card-bg: rgba(15, 23, 42, 0.75);
       --card-border: rgba(56, 189, 248, 0.2);
       --text-main: #f8fafc;
@@ -54,6 +54,9 @@
       justify-content: space-between;
       backdrop-filter: blur(16px);
       z-index: 100;
+      position: sticky;
+      top: 0;
+      height: 100vh;
     }
     .sidebar-brand {
       display: flex; align-items: center; gap: 12px;
@@ -147,6 +150,37 @@
     .metric-value { font-size: 1.3rem; font-weight: bold; color: #fff; font-family: monospace; margin-bottom: 4px; }
     .metric-sub { font-size: 10.5px; color: var(--text-desc); font-family: monospace; }
 
+    /* Mobile Quick Tab Navigation Bar (Pengganti Sidebar di HP) */
+    .mobile-nav-bar {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 10px;
+      border-radius: 14px;
+      gap: 6px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .mobile-nav-item {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-desc);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-family: monospace;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mobile-nav-item.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      font-weight: bold;
+    }
+
     /* Tab Content Panes */
     .tab-pane { display: none; flex-direction: column; gap: 25px; }
     .tab-pane.active { display: flex; animation: fadeInPane 0.4s ease forwards; }
@@ -225,8 +259,10 @@
 
     /* Responsive mobile fix */
     @media (max-width: 768px) {
-      .app-wrapper { grid-template-columns: 1fr; }
-      .sidebar { display: none; } /* Bisa diakali toggle nanti */
+      .app-wrapper { display: flex; flex-direction: column; }
+      .sidebar { display: none; } /* Sembunyikan sidebar di HP */
+      .mobile-nav-bar { display: flex; } /* Tampilkan menu navigasi horizontal di HP */
+      .main-container { padding: 15px; max-height: none; }
     }
   </style>
 </head>
@@ -234,7 +270,7 @@
 
   <div class="app-wrapper">
     
-    <!-- SIDEBAR NAVIGATION -->
+    <!-- SIDEBAR NAVIGATION (UNTUK LAPTOP / DESKTOP) -->
     <aside class="sidebar">
       <div>
         <div class="sidebar-brand">
@@ -280,6 +316,14 @@
           </div>
         </div>
       </header>
+
+      <!-- MOBILE NAVIGATION BAR (MENU HORIZONTAL KHUSUS HP) -->
+      <div class="mobile-nav-bar">
+        <div class="mobile-nav-item active" onclick="switchTab('overview', null, this)"><i class="fa-solid fa-gauge-high"></i> Overview</div>
+        <div class="mobile-nav-item" onclick="switchTab('presence', null, this)"><i class="fa-solid fa-users-viewfinder"></i> Staf Online</div>
+        <div class="mobile-nav-item" onclick="switchTab('logs', null, this)"><i class="fa-solid fa-clock-rotate-left"></i> Audit Logs</div>
+        <div class="mobile-nav-item" onclick="switchTab('admin', null, this)"><i class="fa-solid fa-user-gear"></i> Admin Hub</div>
+      </div>
 
       <!-- METRIC CARDS HEADER (KPIs) -->
       <section class="metrics-grid">
@@ -522,14 +566,25 @@
       });
     });
 
-    // --- SISTEM TAB DINAMIS SAAS ---
-    function switchTab(tabId, element) {
+    // --- SISTEM TAB DINAMIS (SUPPORT MOBILE & DESKTOP) ---
+    function switchTab(tabId, desktopEl, mobileEl) {
       document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
 
       const targetPane = document.getElementById(`tab-${tabId}`);
       if (targetPane) targetPane.classList.add('active');
-      if (element) element.classList.add('active');
+      
+      if (desktopEl) desktopEl.classList.add('active');
+      if (mobileEl) mobileEl.classList.add('active');
+
+      // Sinkronisasi tombol aktif antara sidebar desktop dan menu horizontal mobile
+      document.querySelectorAll('.nav-item').forEach(item => {
+        if(item.getAttribute('onclick') && item.getAttribute('onclick').includes(tabId)) item.classList.add('active');
+      });
+      document.querySelectorAll('.mobile-nav-item').forEach(item => {
+        if(item.getAttribute('onclick') && item.getAttribute('onclick').includes(tabId)) item.classList.add('active');
+      });
 
       const headerTitle = document.getElementById('headerTitleText');
       if (tabId === 'overview') headerTitle.innerText = "Enterprise Command Center";
