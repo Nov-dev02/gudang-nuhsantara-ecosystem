@@ -1,23 +1,24 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
- <link rel="icon" type="image/png" href="logo-gudang-512.png">
-<link rel="apple-touch-icon" href="logo-gudang-192.png">
+  <link rel="icon" type="image/png" href="logo-gudang-512.png">
+  <link rel="apple-touch-icon" href="logo-gudang-192.png">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f172a">
-  <title>Gudang Nuhsantara - Enterprise Dashboard Hub</title>
+  <title>Gudang Nuhsantara - Enterprise SaaS Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="manifest" href="manifest.json">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log('Dashboard Service Worker Registered'));
-  }
-</script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Dashboard Service Worker Registered'));
+    }
+  </script>
   <style>
     :root {
-      --bg-gradient: linear-gradient(135deg, #070b14 0%, #0f172a 50%, #1e1b4b 100%);
+      --bg-main: #070b14;
+      --sidebar-bg: rgba(11, 18, 32, 0.95);
       --card-bg: rgba(15, 23, 42, 0.75);
       --card-border: rgba(56, 189, 248, 0.2);
       --text-main: #f8fafc;
@@ -25,65 +26,155 @@
       --accent-blue: #38bdf8;
       --accent-green: #22c55e;
     }
-    *, *::before, *::after { box-sizing: border-box; transition: all 0.3s ease; }
+    *, *::before, *::after { box-sizing: border-box; transition: all 0.25s ease; }
     body {
-      margin: 0; padding: 20px;
+      margin: 0; padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: var(--bg-gradient);
+      background: var(--bg-main);
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
-      justify-content: center;
-      align-items: center;
     }
-    .portal-container {
-      width: 100%; max-width: 850px;
+
+    /* SaaS Enterprise Layout */
+    .app-wrapper {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--card-border);
+      padding: 25px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      backdrop-filter: blur(16px);
+      z-index: 100;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 12px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 20px;
+    }
+    .brand-icon {
+      width: 40px; height: 40px; background: rgba(56, 189, 248, 0.1);
+      border: 1px solid var(--accent-blue); border-radius: 10px;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 20px; color: var(--accent-blue);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+    }
+    .brand-title h2 { margin: 0; font-size: 1rem; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+    .brand-title p { margin: 2px 0 0 0; font-size: 10px; color: var(--text-desc); font-family: monospace; }
+
+    .nav-menu { display: flex; flex-direction: column; gap: 6px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 10px;
+      color: var(--text-desc); text-decoration: none; font-size: 13px; font-weight: 500;
+      cursor: pointer; font-family: monospace;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent-blue);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .nav-item i { width: 18px; font-size: 14px; }
+
+    .sidebar-footer {
+      background: rgba(2, 6, 23, 0.6);
+      border: 1px solid var(--card-border);
+      padding: 12px; border-radius: 12px; font-family: monospace; font-size: 11px;
+    }
+
+    /* Main Content Area */
+    .main-container {
+      padding: 30px;
+      overflow-y: auto;
+      max-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    /* Top Header Bar */
+    .top-header {
+      display: flex; justify-content: space-between; align-items: center;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 24px;
-      padding: 35px;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(56, 189, 248, 0.15);
-      animation: fadeInPortal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      padding: 15px 25px;
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
     }
-    @keyframes fadeInPortal {
-      0% { opacity: 0; transform: translateY(30px) scale(0.97); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .portal-header {
-      display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding-bottom: 20px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;
-    }
-    .brand-box { display: flex; align-items: center; gap: 12px; }
-    .brand-icon {
-      width: 45px; height: 45px; background: rgba(56, 189, 248, 0.1);
-      border: 1px solid var(--accent-blue); border-radius: 12px;
-      display: flex; justify-content: center; align-items: center;
-      font-size: 22px; color: var(--accent-blue);
-      box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
-    }
-    .brand-title h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px; color: #fff; }
-    .brand-title p { margin: 3px 0 0 0; font-size: 11.5px; color: var(--text-desc); font-family: monospace; }
+    .header-title h1 { margin: 0; font-size: 1.25rem; font-weight: 700; color: #fff; }
+    .header-title p { margin: 2px 0 0 0; font-size: 11px; color: var(--text-desc); font-family: monospace; }
     
+    .header-actions { display: flex; align-items: center; gap: 15px; }
+    .notification-bell {
+      position: relative; background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent-blue);
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; justify-content: center; align-items: center;
+      cursor: pointer; font-size: 15px;
+    }
+    .notification-bell:hover { background: rgba(56, 189, 248, 0.25); }
+
     .owner-badge {
       display: flex; align-items: center; gap: 8px;
       background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3);
       padding: 6px 14px; border-radius: 20px; font-size: 11.5px; color: #d8b4fe; font-family: monospace;
     }
-    
-    .section-title { font-size: 14px; color: var(--accent-blue); font-family: monospace; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-    
+
+    /* Metric Cards Grid (KPIs) */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px; padding: 20px;
+      backdrop-filter: blur(12px);
+      position: relative; overflow: hidden;
+    }
+    .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .metric-title { font-size: 11px; color: var(--text-desc); font-family: monospace; text-transform: uppercase; }
+    .metric-value { font-size: 1.3rem; font-weight: bold; color: #fff; font-family: monospace; margin-bottom: 4px; }
+    .metric-sub { font-size: 10.5px; color: var(--text-desc); font-family: monospace; }
+
+    /* Tab Content Panes */
+    .tab-pane { display: none; flex-direction: column; gap: 25px; }
+    .tab-pane.active { display: flex; animation: fadeInPane 0.4s ease forwards; }
+    @keyframes fadeInPane {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px; padding: 22px;
+      backdrop-filter: blur(12px);
+    }
+    .section-title {
+      font-size: 13px; color: var(--accent-blue); font-family: monospace;
+      margin-bottom: 15px; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* Apps Grid */
     .apps-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px; margin-bottom: 25px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
     }
     .app-card {
       background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px; padding: 22px; text-decoration: none; color: inherit;
       display: flex; flex-direction: column; justify-content: space-between;
-      position: relative; overflow: hidden;
     }
     .app-card:hover {
       transform: translateY(-4px); border-color: var(--accent-blue);
@@ -105,10 +196,6 @@
     .btn-quick-copy:hover { background: rgba(56, 189, 248, 0.25); transform: scale(1.05); }
 
     /* Owner Control Panel Section */
-    .admin-panel-box {
-      background: rgba(2, 6, 23, 0.6); border: 1px dashed rgba(56, 189, 248, 0.3);
-      border-radius: 16px; padding: 20px; margin-top: 20px;
-    }
     .admin-controls { display: flex; gap: 10px; flex-wrap: wrap; }
     .btn-admin {
       background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
@@ -135,148 +222,207 @@
       color: var(--accent-blue); font-size: 18px; border-radius: 10px; outline: none;
       text-align: center; letter-spacing: 6px; margin: 15px 0 10px 0; box-sizing: border-box;
     }
+
+    /* Responsive mobile fix */
+    @media (max-width: 768px) {
+      .app-wrapper { grid-template-columns: 1fr; }
+      .sidebar { display: none; } /* Bisa diakali toggle nanti */
+    }
   </style>
 </head>
 <body>
 
-  <div class="portal-container">
-    <!-- HEADER -->
-    <div class="portal-header">
-      <div class="brand-box">
-        <div class="brand-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
-        <div class="brand-title">
-          <h1>GUDANG NUHSANTARA</h1>
-          <p>CENTRAL APP LAUNCHER & GATEWAY HUB</p>
+  <div class="app-wrapper">
+    
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-brand">
+          <div class="brand-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+          <div class="brand-title">
+            <h2>GUDANG NUHSANTARA</h2>
+            <p>ENTERPRISE HUB v2.0</p>
+          </div>
+        </div>
+
+        <nav class="nav-menu">
+          <a class="nav-item active" onclick="switchTab('overview', this)"><i class="fa-solid fa-gauge-high"></i> Overview & Apps</a>
+          <a class="nav-item" onclick="switchTab('presence', this)"><i class="fa-solid fa-users-viewfinder"></i> Live Staf Online</a>
+          <a class="nav-item" onclick="switchTab('logs', this)"><i class="fa-solid fa-clock-rotate-left"></i> Audit Logs</a>
+          <a class="nav-item" onclick="switchTab('admin', this)"><i class="fa-solid fa-user-gear"></i> Owner Admin Hub</a>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <div style="color: #64748b; margin-bottom: 4px;">SYSTEM STATUS</div>
+        <div style="color: var(--accent-green); display: flex; align-items: center; gap: 6px;">
+          <span style="width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green);"></span> 
+          Cloud Database Active
         </div>
       </div>
-      <div class="owner-badge">
-        <i class="fa-solid fa-shield-halved" style="color: #a855f7;"></i> SYSTEM OWNER: NOVAN
-      </div>
-    </div>
+    </aside>
 
-    <!-- 🖥️ COMMAND CENTER HUD + PING METER -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 25px;">
-        <div style="background: rgba(2, 6, 23, 0.7); border: 1px solid var(--card-border); border-radius: 16px; padding: 18px; position: relative; overflow: hidden;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 11px; color: #94a3b8; font-family: monospace;"><i class="fa-solid fa-server"></i> SYSTEM HEALTH</span>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span id="hudPingText" style="font-size: 10px; color: var(--accent-blue); font-family: monospace; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">-- ms</span>
-                    <span id="hudServerPulse" style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e; display: inline-block;"></span>
-                </div>
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="main-container">
+      
+      <!-- TOP HEADER BAR -->
+      <header class="top-header">
+        <div class="header-title">
+          <h1 id="headerTitleText">Enterprise Command Center</h1>
+          <p>Pusat kendali operasional logistik & manajemen gudang online.</p>
+        </div>
+        <div class="header-actions">
+          <div class="notification-bell" onclick="switchTab('logs', document.querySelectorAll('.nav-item')[2])" title="Lihat Log & Broadcast">
+            <i class="fa-solid fa-bell"></i>
+          </div>
+          <div class="owner-badge">
+            <i class="fa-solid fa-shield-halved" style="color: #a855f7;"></i> NOVAN
+          </div>
+        </div>
+      </header>
+
+      <!-- METRIC CARDS HEADER (KPIs) -->
+      <section class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">System Health & Ping</span>
+            <span id="hudServerPulse" style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e;"></span>
+          </div>
+          <div id="hudSystemStatusText" class="metric-value">Normal</div>
+          <div id="hudPingText" class="metric-sub">Gateway: -- ms</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Staf Aktif (Real-Time)</span>
+            <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i>
+          </div>
+          <div id="txtOnlineCount" class="metric-value">0 Aktif</div>
+          <div class="metric-sub">Terdeteksi di semua modul</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Cloud License Expiry</span>
+            <i class="fa-solid fa-shield-cat" style="color: #c084fc;"></i>
+          </div>
+          <div id="hudExpiryCountdown" class="metric-value">Memuat...</div>
+          <div class="metric-sub">Status Lisensi NX Aktif</div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 1: OVERVIEW & APPS LAUNCHER ================= -->
+      <div id="tab-overview" class="tab-pane active">
+        
+        <!-- MAIN APPS LAUNCHER -->
+        <div class="section-box">
+          <div class="section-title" style="justify-content: space-between;">
+            <span><i class="fa-solid fa-rocket"></i> PILIH MODUL APLIKASI OPERASIONAL</span>
+            <button onclick="gantiNamaStafLokal()" style="background: none; border: none; color: #94a3b8; font-size: 10.5px; font-family: monospace; cursor: pointer; text-decoration: underline;">
+              <i class="fa-solid fa-user-pen"></i> Ganti Nama Staf
+            </button>
+          </div>
+          
+          <div class="apps-grid">
+            <div class="app-card">
+              <div>
+                <i class="fa-solid fa-bolt-lightning icon-main"></i>
+                <h3>Proses Data Gudang</h3>
+                <p>Sinkronisasi marketplace Shopee & TikTok, pencocokan admin, status Clear, hingga ekspor laporan Excel.</p>
+              </div>
+              <div class="app-link-row">
+                <a href="./app-proses-data/index.html" class="app-link-btn" onclick="bukaModulDenganIdentitas(event, './app-proses-data/index.html', 'Proses Data')">Buka Modul <i class="fa-solid fa-arrow-right"></i></a>
+                <button type="button" class="btn-quick-copy" onclick="salinLinkModul('./app-proses-data/index.html')" title="Salin Tautan"><i class="fa-solid fa-copy"></i></button>
+              </div>
             </div>
-            <div id="hudSystemStatusText" style="font-size: 14px; font-weight: bold; color: var(--accent-blue); font-family: monospace; margin-bottom: 4px;">Mengecek Server...</div>
-            <div id="hudSystemDetail" style="font-size: 10.5px; color: #64748b; font-family: monospace;">Firebase Cloud Gateway Hub</div>
-        </div>
 
-        <div style="background: rgba(2, 6, 23, 0.7); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 16px; padding: 18px; position: relative; overflow: hidden;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 11px; color: #c084fc; font-family: monospace;"><i class="fa-solid fa-shield-cat"></i> ACTIVE LICENSE HUB</span>
-                <i class="fa-solid fa-clock-rotate-left" style="color: #c084fc; font-size: 12px;"></i>
+            <div class="app-card">
+              <div>
+                <i class="fa-solid fa-file-invoice-dollar icon-main" style="color: #34d399;"></i>
+                <h3>Aplikasi Purchase Order</h3>
+                <p>Pusat pencatatan, manajemen, dan pengelolaan data pre-order serta pembelian barang gudang.</p>
+              </div>
+              <div class="app-link-row">
+                <a href="./app-po/index.html" class="app-link-btn" style="color: #34d399;" onclick="bukaModulDenganIdentitas(event, './app-po/index.html', 'App PO')">Buka Modul <i class="fa-solid fa-arrow-right"></i></a>
+                <button type="button" class="btn-quick-copy" onclick="salinLinkModul('./app-po/index.html')" title="Salin Tautan" style="border-color: rgba(52,211,153,0.3); color: #34d399; background: rgba(52,211,153,0.1);"><i class="fa-solid fa-copy"></i></button>
+              </div>
             </div>
-            <div id="hudExpiryCountdown" style="font-size: 13px; font-weight: bold; color: #f8fafc; font-family: monospace; margin-bottom: 4px;">Memuat Data...</div>
-            <div style="font-size: 10.5px; color: #64748b; font-family: monospace;">Status Sinkronisasi Real-Time</div>
+          </div>
         </div>
-    </div>
 
-    <!-- 🟢 REAL-TIME STAFF PRESENCE (DENGAN NAMA STAF & TOMBOL BERSIHKAN) -->
-    <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 25px;">
-        <div style="font-size: 12px; color: var(--accent-blue); font-family: monospace; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-            <span><i class="fa-solid fa-users-viewfinder"></i> PEMANTAU STAF ONLINE (REAL-TIME)</span>
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <span id="txtOnlineCount" style="font-size: 10px; color: #22c55e; background: rgba(34,197,94,0.1); padding: 2px 6px; border-radius: 4px;">0 Aktif</span>
-                <button onclick="bersihkanDataPresence()" title="Bersihkan Daftar Lama" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; font-family: monospace;">
-                    <i class="fa-solid fa-broom"></i> Reset
-                </button>
-            </div>
-        </div>
-        <div id="containerStaffPresence" style="font-family: monospace; font-size: 11.5px; color: #94a3b8; display: flex; gap: 8px; flex-wrap: wrap;">
-            <span style="color: #64748b;">Memindai aktivitas staf di modul...</span>
-        </div>
-    </div>
-
-    <!-- 📢 BROADCAST ANNOUNCEMENT -->
-    <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 25px;">
-        <div style="font-size: 12px; color: var(--accent-blue); font-family: monospace; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+        <!-- 📢 BROADCAST ANNOUNCEMENT -->
+        <div class="section-box">
+          <div class="section-title">
             <i class="fa-solid fa-bullhorn"></i> KIRIM BROADCAST PENGUMUMAN KE STAF GUDANG
-        </div>
-        <div style="display: flex; gap: 8px;">
+          </div>
+          <div style="display: flex; gap: 8px;">
             <input type="text" id="inputBroadcastMsg" placeholder="Ketik pengumuman penting..." style="flex: 1; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: #f8fafc; font-size: 11.5px; border-radius: 8px; outline: none; font-family: monospace;" />
             <button onclick="bukaModalAdmin('broadcast')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid var(--accent-blue); color: white; padding: 0 16px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: monospace; font-size: 11px;">
-                <i class="fa-solid fa-paper-plane"></i> Kirim
+              <i class="fa-solid fa-paper-plane"></i> Kirim
             </button>
+          </div>
         </div>
-    </div>
 
-    <!-- MAIN APPS LAUNCHER -->
-    <div class="section-title" style="justify-content: space-between;">
-      <span><i class="fa-solid fa-rocket"></i> PILIH MODUL APLIKASI OPERASIONAL</span>
-      <button onclick="gantiNamaStafLokal()" style="background: none; border: none; color: #94a3b8; font-size: 10.5px; font-family: monospace; cursor: pointer; text-decoration: underline;">
-        <i class="fa-solid fa-user-pen"></i> Ganti Nama Staf
-      </button>
-    </div>
-    <div class="apps-grid">
-      <div class="app-card">
-        <div>
-          <i class="fa-solid fa-bolt-lightning icon-main"></i>
-          <h3>Proses Data Gudang</h3>
-          <p>Sinkronisasi marketplace Shopee & TikTok, pencocokan admin, status Clear, hingga ekspor laporan Excel.</p>
-        </div>
-        <div class="app-link-row">
-          <a href="./app-proses-data/index.html" class="app-link-btn" onclick="bukaModulDenganIdentitas(event, './app-proses-data/index.html', 'Proses Data')">Buka Modul <i class="fa-solid fa-arrow-right"></i></a>
-          <button type="button" class="btn-quick-copy" onclick="salinLinkModul('./app-proses-data/index.html')" title="Salin Tautan"><i class="fa-solid fa-copy"></i></button>
-        </div>
-      </div>
-
-      <div class="app-card">
-        <div>
-          <i class="fa-solid fa-file-invoice-dollar icon-main" style="color: #34d399;"></i>
-          <h3>Aplikasi Purchase Order</h3>
-          <p>Pusat pencatatan, manajemen, dan pengelolaan data pre-order serta pembelian barang gudang.</p>
-        </div>
-        <div class="app-link-row">
-          <a href="./app-po/index.html" class="app-link-btn" style="color: #34d399;" onclick="bukaModulDenganIdentitas(event, './app-po/index.html', 'App PO')">Buka Modul <i class="fa-solid fa-arrow-right"></i></a>
-          <button type="button" class="btn-quick-copy" onclick="salinLinkModul('./app-po/index.html')" title="Salin Tautan" style="border-color: rgba(52,211,153,0.3); color: #34d399; background: rgba(52,211,153,0.1);"><i class="fa-solid fa-copy"></i></button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 🎨 THEME SWITCHER -->
-    <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
-        <div style="font-size: 12px; color: var(--accent-blue); font-family: monospace; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+        <!-- 🎨 THEME SWITCHER -->
+        <div class="section-box">
+          <div class="section-title" style="justify-content: space-between;">
             <span><i class="fa-solid fa-palette"></i> TEMA WARNA AKSEN DASHBOARD</span>
             <span style="font-size: 10px; color: #64748b;">Pilih gaya neon</span>
-        </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button onclick="ubahTemaDashboard('blue')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;"><i class="fa-solid fa-circle" style="color: #38bdf8;"></i> Cyber Blue</button>
             <button onclick="ubahTemaDashboard('purple')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(192, 132, 252, 0.15); border: 1px solid #c084fc; color: #c084fc; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;"><i class="fa-solid fa-circle" style="color: #c084fc;"></i> Nebula Purple</button>
             <button onclick="ubahTemaDashboard('green')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #22c55e; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;"><i class="fa-solid fa-circle" style="color: #22c55e;"></i> Matrix Green</button>
             <button onclick="ubahTemaDashboard('gold')" style="flex: 1; min-width: 100px; padding: 8px; background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; color: #fbbf24; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; font-weight: bold;"><i class="fa-solid fa-circle" style="color: #fbbf24;"></i> Cyber Gold</button>
+          </div>
         </div>
-    </div>
 
-    <!-- 📜 AUDIT LOGS -->
-    <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
-        <div style="font-size: 12px; color: #a855f7; font-family: monospace; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
-            <span><i class="fa-solid fa-clock-rotate-left"></i> LOG AKTIVITAS & AUDIT TRAIL TERAKHIR</span>
-            <span id="txtLastSyncLog" style="font-size: 10px; color: #64748b;">Sinkron: --</span>
-        </div>
-        <div id="containerAuditLog" style="font-family: monospace; font-size: 11px; color: #94a3b8; max-height: 90px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">
-            <div>Memuat catatan aktivitas sistem...</div>
-        </div>
-    </div>
-
-    <!-- OWNER CONTROL PANEL -->
-    <div class="admin-panel-box">
-      <div class="section-title" style="margin-bottom: 10px; color: #a855f7;"><i class="fa-solid fa-user-gear"></i> OWNER / SUPER ADMIN CONTROLS</div>
-      <p style="font-size: 11.5px; color: var(--text-desc); margin: 0 0 15px 0; line-height: 1.4;">
-        Akses cepat bagi pengembang untuk mengelola token lisensi NX pusat atau membuka generator token tanpa harus masuk ke aplikasi operasional.
-      </p>
-      <div class="admin-controls">
-        <button class="btn-admin" onclick="bukaModalAdmin('lisensi')" style="background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%); border-color: #c084fc;"><i class="fa-solid fa-key"></i> Panel Lisensi NX</button>
-        <button class="btn-admin" onclick="bukaModalAdmin('generator')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399;"><i class="fa-solid fa-code"></i> Buka Token Generator</button>
-        <button class="btn-admin" onclick="bukaModalAdmin('force_update')" style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); border-color: #f87171;"><i class="fa-solid fa-rotate"></i> Paksa Update Staf</button>
       </div>
-    </div>
+
+      <!-- ================= TAB 2: LIVE STAF ONLINE ================= -->
+      <div id="tab-presence" class="tab-pane">
+        <div class="section-box">
+          <div class="section-title" style="justify-content: space-between;">
+            <span><i class="fa-solid fa-users-viewfinder"></i> PEMANTAU STAF ONLINE (REAL-TIME)</span>
+            <button onclick="bersihkanDataPresence()" title="Bersihkan Daftar Lama" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10.5px; font-family: monospace;">
+              <i class="fa-solid fa-broom"></i> Reset Daftar
+            </button>
+          </div>
+          <div id="containerStaffPresence" style="font-family: monospace; font-size: 12px; color: #94a3b8; display: flex; gap: 10px; flex-wrap: wrap;">
+            <span>Memindai aktivitas staf di modul...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 3: AUDIT LOGS ================= -->
+      <div id="tab-logs" class="tab-pane">
+        <div class="section-box">
+          <div class="section-title" style="justify-content: space-between;">
+            <span style="color: #a855f7;"><i class="fa-solid fa-clock-rotate-left"></i> LOG AKTIVITAS & AUDIT TRAIL TERAKHIR</span>
+            <span id="txtLastSyncLog" style="font-size: 10px; color: #64748b;">Sinkron: --</span>
+          </div>
+          <div id="containerAuditLog" style="font-family: monospace; font-size: 11.5px; color: #94a3b8; max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+            <div>Memuat catatan aktivitas sistem...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 4: OWNER ADMIN HUB ================= -->
+      <div id="tab-admin" class="tab-pane">
+        <div class="section-box" style="border-color: rgba(168, 85, 247, 0.4);">
+          <div class="section-title" style="color: #a855f7;"><i class="fa-solid fa-user-gear"></i> OWNER / SUPER ADMIN CONTROLS</div>
+          <p style="font-size: 12px; color: var(--text-desc); margin: 0 0 20px 0; line-height: 1.5;">
+            Akses tingkat lanjut bagi pengembang untuk mengelola token lisensi NX pusat, membangkitkan token baru, atau memaksa pembaruan aplikasi di seluruh perangkat staf.
+          </p>
+          <div class="admin-controls">
+            <button class="btn-admin" onclick="bukaModalAdmin('lisensi')" style="background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%); border-color: #c084fc;"><i class="fa-solid fa-key"></i> Panel Lisensi NX</button>
+            <button class="btn-admin" onclick="bukaModalAdmin('generator')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399;"><i class="fa-solid fa-code"></i> Buka Token Generator</button>
+            <button class="btn-admin" onclick="bukaModalAdmin('force_update')" style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); border-color: #f87171;"><i class="fa-solid fa-rotate"></i> Paksa Update Staf</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
   </div>
 
   <!-- MODAL 1: UNIVERSAL ADMIN SECURITY GATE (PIN + WEBAUTHN) -->
@@ -376,6 +522,22 @@
       });
     });
 
+    // --- SISTEM TAB DINAMIS SAAS ---
+    function switchTab(tabId, element) {
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+      const targetPane = document.getElementById(`tab-${tabId}`);
+      if (targetPane) targetPane.classList.add('active');
+      if (element) element.classList.add('active');
+
+      const headerTitle = document.getElementById('headerTitleText');
+      if (tabId === 'overview') headerTitle.innerText = "Enterprise Command Center";
+      else if (tabId === 'presence') headerTitle.innerText = "Live Staff Monitor (Real-Time)";
+      else if (tabId === 'logs') headerTitle.innerText = "System Audit Logs & Trail";
+      else if (tabId === 'admin') headerTitle.innerText = "Owner Admin & License Hub";
+    }
+
     function bufferToHex(buffer) {
         return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
@@ -384,7 +546,7 @@
         return new Uint8Array(matches.map(byte => parseInt(byte, 16))).buffer;
     }
 
-    // --- IDENTITAS NAMA STAF ASLI (MENGGANTIKAN DEV-XXXX) ---
+    // --- IDENTITAS NAMA STAF ASLI ---
     async function bukaModulDenganIdentitas(event, targetUrl, modulName) {
         event.preventDefault();
         
@@ -400,7 +562,6 @@
             localStorage.setItem('gudang_staff_name', staffName);
         }
 
-        // Bersihkan karakter khusus untuk key Firebase
         const safeKey = staffName.replace(/[^a-zA-Z0-9_-]/g, '_');
 
         try {
@@ -417,7 +578,6 @@
             console.error("Gagal mencatat kehadiran staf", e);
         }
 
-        // Lanjut membuka modul tujuan
         window.location.href = targetUrl;
     }
 
@@ -459,11 +619,10 @@
             let activeCount = 0, htmlContent = "";
             Object.keys(data).forEach(id => {
                 const item = data[id];
-                // Tampilkan jika aktif dalam 15 menit terakhir (900000ms)
                 if (now - item.time < 900000) {
                     activeCount++;
                     const displayName = item.name || item.device || id;
-                    htmlContent += `<span style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 4px 10px; border-radius: 6px; color: #38bdf8;">🟢 ${displayName} (${item.modul})</span>`;
+                    htmlContent += `<span style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 6px 12px; border-radius: 8px; color: #38bdf8;">🟢 ${displayName} (${item.modul})</span>`;
                 }
             });
             container.innerHTML = activeCount > 0 ? htmlContent : `<span style="color: #64748b;">Tidak ada staf online saat ini.</span>`;
@@ -471,7 +630,7 @@
         } catch (e) { container.innerHTML = `<span style="color: #ef4444;">Gagal memuat presence.</span>`; }
     }
 
-    // --- EKSEKUSI AKSI ADMIN SETELAH AUTENTIKASI SUKSES ---
+    // --- EKSEKUSI AKSI ADMIN TERVALIDASI ---
     function eksekusiAksiAdminTervalidasi() {
         tutupModalAdmin();
         showDashboardToast("Autentikasi Berhasil! 🧬✨", true);
@@ -585,7 +744,7 @@
             let logs = await (await fetch(CLOUD_LOGS_ENDPOINT)).json() || [];
             if (!Array.isArray(logs)) logs = [];
             logs.unshift({ text: `[${timeStr}] ${aksi}` });
-            if (logs.length > 10) logs = logs.slice(0, 10);
+            if (logs.length > 15) logs = logs.slice(0, 15);
             await fetch(CLOUD_LOGS_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logs) });
         } catch (e) { console.error(e); }
     }
@@ -614,20 +773,20 @@
         const start = performance.now();
         try {
             const res = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
-            pingEl.innerText = `${Math.round(performance.now() - start)} ms`;
+            pingEl.innerText = `Gateway: ${Math.round(performance.now() - start)} ms`;
             const data = await res.json();
             if (data && data.locked) {
-                statusText.innerText = data.permanent ? "🚨 TERKUNCI PERMANEN" : "⚠️ TERKUNCI SEMENTARA";
+                statusText.innerText = data.permanent ? "🚨 Terkunci Permanen" : "⚠️ Terkunci Sementara";
                 statusText.style.color = "#ef4444"; serverPulse.style.background = "#ef4444";
             } else {
-                statusText.innerText = "🟢 SISTEM NORMAL & AMAN";
+                statusText.innerText = "Normal & Aman";
                 statusText.style.color = "#22c55e"; serverPulse.style.background = "#22c55e";
             }
             if (data && data.expiry) {
                 const diffDays = Math.ceil((new Date(data.expiry) - new Date()) / (1000 * 60 * 60 * 24));
-                expiryBox.innerText = diffDays > 0 ? `Aktif (${diffDays} Hari Lagi)` : "⚠️ Kedaluwarsa!";
-            } else { expiryBox.innerText = "Tanpa Batas Waktu"; }
-        } catch (e) { pingEl.innerText = "Offline"; statusText.innerText = "🔴 SERVER OFFLINE"; }
+                expiryBox.innerText = diffDays > 0 ? `${diffDays} Hari Lagi` : "⚠️ Kedaluwarsa!";
+            } else { expiryBox.innerText = "Tanpa Batas"; }
+        } catch (e) { pingEl.innerText = "Gateway: Offline"; statusText.innerText = "🔴 Offline"; }
     }
 
     function showDashboardToast(msg, success = true) {
