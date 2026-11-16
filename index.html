@@ -718,7 +718,7 @@
       else if (tabId === 'admin') headerTitle.innerText = "Owner Admin & License Hub";
     }
 
-    // --- LOGIKA LIVE CHAT CS CENTER DI DASHBOARD (DENGAN FITUR TARIK & HAPUS SEMUA) ---
+    // --- LOGIKA LIVE CHAT CS CENTER DI DASHBOARD (DENGAN FITUR HAPUS ROOM & TARIK PESAN) ---
     async function muatDaftarChatStaf() {
       try {
         const res = await fetch(CLOUD_CHATS_ENDPOINT + "?t=" + Date.now());
@@ -750,13 +750,17 @@
             muatIsiPesanChat(staffId, messages);
           }
 
+          // Tombol Hapus Room Chat langsung dari daftar sebelah kiri ala WhatsApp
           html += `
-            <div class="chat-room-item ${activeStaffRoom === staffId ? 'active' : ''}" onclick="pilihRuangChat('${staffId}', '${room.staffName || staffId}')">
-              <div>
-                <b style="color: #fff;">${room.staffName || staffId}</b><br>
-                <span style="font-size: 10px; color: var(--text-desc);">${lastMsg.substring(0, 22)}...</span>
+            <div class="chat-room-item ${activeStaffRoom === staffId ? 'active' : ''}" style="display: flex; justify-content: space-between; align-items: center;">
+              <div onclick="pilihRuangChat('${staffId}', '${room.staffName || staffId}')" style="flex: 1; min-width: 0; cursor: pointer;">
+                <b style="color: #fff; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${room.staffName || staffId}</b>
+                <span style="font-size: 10px; color: var(--text-desc); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${lastMsg.substring(0, 18)}...</span>
               </div>
-              ${unreadCount > 0 ? `<span style="background: #ef4444; color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 10px;">${unreadCount}</span>` : ''}
+              <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                ${unreadCount > 0 ? `<span style="background: #ef4444; color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 10px;">${unreadCount}</span>` : ''}
+                <button onclick="event.stopPropagation(); hapusRoomChatStaf('${staffId}', '${room.staffName || staffId}')" title="Hapus Room Chat" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 12px; padding: 4px;"><i class="fa-solid fa-trash-can"></i></button>
+              </div>
             </div>
           `;
         });
@@ -801,6 +805,28 @@
       } catch (e) { console.error(e); }
 
       muatDaftarChatStaf();
+    }
+
+    // Fungsionalitas Owner Menghapus Seluruh Room Chat Staf dari Daftar Sebelah Kiri
+    async function hapusRoomChatStaf(staffId, staffName) {
+      if (!confirm(`Hapus seluruh ruang chat dan riwayat untuk "${staffName}" secara permanen?`)) return;
+      try {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffId}.json`, {
+          method: 'DELETE'
+        });
+        
+        if (activeStaffRoom === staffId) {
+          activeStaffRoom = null;
+          document.getElementById('activeChatTitle').innerText = "Pilih ruang chat staf di sebelah kiri";
+          document.getElementById('chatMessagesContainer').innerHTML = `<div style="color: var(--text-desc); text-align: center; margin: auto;">Belum ada ruang chat yang dipilih.</div>`;
+        }
+
+        muatDaftarChatStaf();
+        showDashboardToast(`Room chat ${staffName} berhasil dihapus!`, true);
+      } catch (e) {
+        console.error(e);
+        showDashboardToast("Gagal menghapus room chat!", false);
+      }
     }
 
     // Fungsionalitas Owner Menarik/Menghapus Pesan Sendiri
