@@ -1,5 +1,5 @@
 // =========================================================================
-// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD (v4.2 FINAL WITH PERMANENT LOCK)
+// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD (v4.3 WITH LOCK SCREEN CHAT)
 // =========================================================================
 
 // 🌐 URL FIREBASE REALTIME DATABASE MILIKMU
@@ -9,6 +9,7 @@ const CLOUD_LICENSE_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/license.jso
 const ADMIN_NX_PIN = "2026";
 let secretClickCount = 0;
 let secretClickTimer = null;
+let lockChatPollInterval = null;
 
 // --- DECODER TOKEN NX ---
 function decodeTokenToDate(token) {
@@ -61,12 +62,150 @@ async function cekStatusCloud() {
       const lockScreen = document.getElementById('nx-global-lock-screen');
       if (lockScreen) {
         lockScreen.remove();
+        tutupLockChatWidget();
         location.reload();
       }
     }
   } catch (err) {
     console.log("Menunggu koneksi cloud...");
   }
+}
+
+// --- PENDUKUNG WIDGET CHAT DI LAYAR TERKUNCI ---
+function getSafeStaffKeyForLock() {
+    let name = localStorage.getItem('gudang_staff_name') || "Staf_LockScreen";
+    return name.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+function toggleLockChatWidget() {
+    const box = document.getElementById('lockChatWidgetBox');
+    if (!box) return;
+    if (box.style.display === 'flex') {
+        box.style.display = 'none';
+        clearInterval(lockChatPollInterval);
+    } else {
+        box.style.display = 'flex';
+        muatPesanLockChat();
+        lockChatPollInterval = setInterval(muatPesanLockChat, 3000);
+        setTimeout(() => {
+            const inputEl = document.getElementById('lockInputChat');
+            if (inputEl) inputEl.focus();
+        }, 100);
+    }
+}
+
+function tutupLockChatWidget() {
+    const box = document.getElementById('lockChatWidgetBox');
+    if (box) box.style.display = 'none';
+    clearInterval(lockChatPollInterval);
+}
+
+async function muatPesanLockChat() {
+    const staffKey = getSafeStaffKeyForLock();
+    try {
+        const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}.json?t=` + Date.now());
+        const data = await res.json();
+        const container = document.getElementById('lockChatMessagesContainer');
+        const badge = document.getElementById('lockChatBadge');
+        if (!container) return;
+
+        if (!data || !data.messages) {
+            container.innerHTML = `<div style="color: #94a3b8; text-align: center; margin: auto;">Halo, ada kendala token? Kirim pesan ke owner di sini.</div>`;
+            if (badge) badge.style.display = 'none';
+            return;
+        }
+
+        const messages = data.messages;
+        let html = "";
+        let unread = 0;
+
+        Object.keys(messages).forEach(k => {
+            const m = messages[k];
+            let bubbleStyle = m.sender === 'staff' 
+                ? "background: #0284c7; color: #fff; align-self: flex-end;" 
+                : "background: #1e293b; color: #f8fafc; align-self: flex-start;";
+
+            if (m.sender === 'owner' && !m.read) unread++;
+
+            html += `
+                <div style="max-width: 80%; padding: 8px 11px; border-radius: 10px; ${bubbleStyle} word-break: break-word;">
+                    <div style="font-size: 9px; opacity: 0.7; margin-bottom: 2px;">${m.sender.toUpperCase()}</div>
+                    <div>${m.text}</div>
+                    <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
+                        ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+
+        if (badge) {
+            if (unread > 0 && document.getElementById('lockChatWidgetBox').style.display !== 'flex') {
+                badge.innerText = unread;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (e) { console.error(e); }
+}
+
+async function kirimPesanLockChat() {
+    const input = document.getElementById('lockInputChat');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+    const staffKey = getSafeStaffKeyForLock();
+
+    const newMsg = {
+        sender: 'staff',
+        text: `[LAYAR TERKUNCI] ${text}`,
+        time: Date.now(),
+        read: false
+    };
+
+    try {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/messages.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newMsg)
+        });
+        input.value = "";
+        muatPesanLockChat();
+    } catch (e) { alert("Gagal mengirim pesan!"); }
+}
+
+// --- HTML KOMPONEN FLOATING CHAT UNTUK LAYAR TERKUNCI ---
+function buatFloatingChatHTML() {
+    return `
+      <!-- FLOATING CHAT BUTTON DI LAYAR TERKUNCI -->
+      <div id="lockFloatingChatBtn" style="position: fixed !important; bottom: 24px !important; right: 24px !important; width: 56px !important; height: 56px !important; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important; border: 1px solid #38bdf8 !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; color: #fff !important; font-size: 24px !important; cursor: pointer !important; z-index: 2147483648 !important; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.5) !important;" onclick="toggleLockChatWidget()">
+          <i class="fa-solid fa-headset"></i>
+          <span id="lockChatBadge" style="position: absolute !important; top: -2px !important; right: -2px !important; background: #ef4444 !important; color: #fff !important; font-size: 10px !important; font-weight: bold !important; padding: 2px 6px !important; border-radius: 10px !important; display: none; font-family: monospace !important; border: 1px solid #0f172a !important;">0</span>
+      </div>
+
+      <!-- KOTAK WIDGET CHAT DI LAYAR TERKUNCI -->
+      <div id="lockChatWidgetBox" style="position: fixed !important; bottom: 90px !important; right: 24px !important; width: 350px !important; height: 400px !important; background: #0f172a !important; border: 1px solid rgba(56, 189, 248, 0.4) !important; border-radius: 16px !important; box-shadow: 0 25px 50px rgba(0,0,0,0.9) !important; z-index: 2147483649 !important; display: none; flex-direction: column !important; overflow: hidden !important; font-family: monospace !important;">
+          <div style="background: rgba(15, 23, 42, 0.95) !important; padding: 10px 14px !important; border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important; display: flex !important; justify-content: space-between !important; align-items: center !important;">
+              <div>
+                  <b style="color: #fff; font-size: 12px;"><i class="fa-solid fa-robot" style="color: #38bdf8;"></i> CS Asisten Nuhsantara</b>
+                  <div style="font-size: 9.5px; color: #94a3b8;">Mode Darurat (Layar Terkunci)</div>
+              </div>
+              <button onclick="toggleLockChatWidget()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
+          </div>
+
+          <div id="lockChatMessagesContainer" style="flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; font-size: 11.5px; background: #070b14;">
+              <div style="color: #94a3b8; text-align: center; margin: auto;">Memuat pesan...</div>
+          </div>
+
+          <div style="display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 10px; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important;">
+              <input type="text" id="lockInputChat" placeholder="Ketik kendala token..." style="flex: 1; padding: 9px 10px; background: #020617; border: 1px solid #334155; color: #fff; border-radius: 7px; font-size: 11.5px; outline: none; font-family: monospace;" onkeypress="if(event.key === 'Enter') kirimPesanLockChat()" />
+              <button type="button" onclick="kirimPesanLockChat()" style="padding: 9px 12px; background: #0284c7; border: 1px solid #38bdf8; color: white; border-radius: 7px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11.5px;">Kirim</button>
+          </div>
+      </div>
+    `;
 }
 
 // --- TAMPILKAN LAYAR KUNCI PERMANEN (KILL SWITCH - TANPA FORM INPUT) ---
@@ -104,6 +243,7 @@ function tampilkanLayarKunciPermanen() {
       <button type="button" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace;">💬 HUBUNGI ADMINISTRATOR</button>
     </a>
     <div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core</div>
+    ${buatFloatingChatHTML()}
   `;
 
   lockScreen.appendChild(box);
@@ -154,6 +294,7 @@ function tampilkanLayarKunciMandiri() {
       <button type="button" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace;">💬 HUBUNGI ADMINISTRATOR</button>
     </a>
     <div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core</div>
+    ${buatFloatingChatHTML()}
   `;
 
   lockScreen.appendChild(box);
@@ -194,6 +335,7 @@ function tampilkanLayarKunciMandiri() {
             });
 
             clearInterval(loadingInterval);
+            tutupLockChatWidget();
             location.reload(true);
           } catch (e) {
             clearInterval(loadingInterval);
