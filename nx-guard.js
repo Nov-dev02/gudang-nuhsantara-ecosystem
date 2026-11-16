@@ -200,14 +200,13 @@ function buatFloatingChatHTML() {
               <div style="color: #94a3b8; text-align: center; margin: auto;">Memuat pesan...</div>
           </div>
 
-          <div style="display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 10px; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important; box-sizing: border-box !important;">
-              <input type="text" id="lockInputChat" placeholder="Ketik kendala token..." style="flex: 1; min-width: 0; width: 100%; padding: 9px 10px; background: #020617; border: 1px solid #334155; color: #fff; border-radius: 7px; font-size: 11.5px; outline: none; font-family: monospace; box-sizing: border-box;" onkeypress="if(event.key === 'Enter') kirimPesanLockChat()" />
-              <button type="button" onclick="kirimPesanLockChat()" style="flex-shrink: 0; padding: 9px 12px; background: #0284c7; border: 1px solid #38bdf8; color: white; border-radius: 7px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11.5px; box-sizing: border-box;">Kirim</button>
+          <div style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; padding: 10px !important; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important; box-sizing: border-box !important; width: 100% !important;">
+              <input type="text" id="lockInputChat" placeholder="Ketik kendala token..." style="flex: 1 !important; width: auto !important; padding: 9px 10px !important; background: #020617 !important; border: 1px solid #334155 !important; color: #fff !important; border-radius: 7px !important; font-size: 11.5px !important; outline: none !important; font-family: monospace !important; box-sizing: border-box !important;" onkeypress="if(event.key === 'Enter') kirimPesanLockChat()" />
+              <button type="button" onclick="kirimPesanLockChat()" style="flex-shrink: 0 !important; width: auto !important; padding: 9px 14px !important; background: #0284c7 !important; border: 1px solid #38bdf8 !important; color: white !important; border-radius: 7px !important; cursor: pointer !important; font-family: monospace !important; font-weight: bold !important; font-size: 11.5px !important; box-sizing: border-box !important;">Kirim</button>
           </div>
       </div>
     `;
 }
-
 // --- TAMPILKAN LAYAR KUNCI PERMANEN (KILL SWITCH - TANPA FORM INPUT) ---
 function tampilkanLayarKunciPermanen() {
   const existing = document.getElementById('nx-global-lock-screen');
