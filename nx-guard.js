@@ -187,8 +187,8 @@ function buatFloatingChatHTML() {
       </div>
 
       <!-- KOTAK WIDGET CHAT DI LAYAR TERKUNCI -->
-      <div id="lockChatWidgetBox" style="position: fixed !important; bottom: 90px !important; right: 24px !important; width: 350px !important; height: 400px !important; background: #0f172a !important; border: 1px solid rgba(56, 189, 248, 0.4) !important; border-radius: 16px !important; box-shadow: 0 25px 50px rgba(0,0,0,0.9) !important; z-index: 2147483649 !important; display: none; flex-direction: column !important; overflow: hidden !important; font-family: monospace !important;">
-          <div style="background: rgba(15, 23, 42, 0.95) !important; padding: 10px 14px !important; border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important; display: flex !important; justify-content: space-between !important; align-items: center !important;">
+      <div id="lockChatWidgetBox" style="position: fixed !important; bottom: 90px !important; right: 24px !important; width: 350px !important; max-width: calc(100vw - 48px) !important; height: 400px !important; background: #0f172a !important; border: 1px solid rgba(56, 189, 248, 0.4) !important; border-radius: 16px !important; box-shadow: 0 25px 50px rgba(0,0,0,0.9) !important; z-index: 2147483649 !important; display: none; flex-direction: column !important; overflow: hidden !important; font-family: monospace !important; box-sizing: border-box !important;">
+          <div style="background: rgba(15, 23, 42, 0.95) !important; padding: 10px 14px !important; border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important; display: flex !important; justify-content: space-between !important; align-items: center !important; box-sizing: border-box !important;">
               <div>
                   <b style="color: #fff; font-size: 12px;"><i class="fa-solid fa-robot" style="color: #38bdf8;"></i> CS Asisten Nuhsantara</b>
                   <div style="font-size: 9.5px; color: #94a3b8;">Mode Darurat (Layar Terkunci)</div>
@@ -196,13 +196,13 @@ function buatFloatingChatHTML() {
               <button onclick="toggleLockChatWidget()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
           </div>
 
-          <div id="lockChatMessagesContainer" style="flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; font-size: 11.5px; background: #070b14;">
+          <div id="lockChatMessagesContainer" style="flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; font-size: 11.5px; background: #070b14; box-sizing: border-box !important;">
               <div style="color: #94a3b8; text-align: center; margin: auto;">Memuat pesan...</div>
           </div>
 
-          <div style="display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 10px; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important;">
-              <input type="text" id="lockInputChat" placeholder="Ketik kendala token..." style="flex: 1; padding: 9px 10px; background: #020617; border: 1px solid #334155; color: #fff; border-radius: 7px; font-size: 11.5px; outline: none; font-family: monospace;" onkeypress="if(event.key === 'Enter') kirimPesanLockChat()" />
-              <button type="button" onclick="kirimPesanLockChat()" style="padding: 9px 12px; background: #0284c7; border: 1px solid #38bdf8; color: white; border-radius: 7px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11.5px;">Kirim</button>
+          <div style="display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 10px; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important; box-sizing: border-box !important;">
+              <input type="text" id="lockInputChat" placeholder="Ketik kendala token..." style="flex: 1; min-width: 0; width: 100%; padding: 9px 10px; background: #020617; border: 1px solid #334155; color: #fff; border-radius: 7px; font-size: 11.5px; outline: none; font-family: monospace; box-sizing: border-box;" onkeypress="if(event.key === 'Enter') kirimPesanLockChat()" />
+              <button type="button" onclick="kirimPesanLockChat()" style="flex-shrink: 0; padding: 9px 12px; background: #0284c7; border: 1px solid #38bdf8; color: white; border-radius: 7px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11.5px; box-sizing: border-box;">Kirim</button>
           </div>
       </div>
     `;
