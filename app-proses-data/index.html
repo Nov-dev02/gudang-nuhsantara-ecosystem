@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="theme-color" content="#0f172a">
@@ -13,6 +13,64 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-v2-192.png">
   <link rel="apple-touch-icon" href="icon-v2-192.png">
   <link rel="stylesheet" href="style.css">
+  <style>
+      /* CSS WIDGET LIVE CHAT - STANDAR WHATSAPP (KIRI: OWNER/BOT, KANAN: STAF) */
+      .floating-chat-btn {
+          position: fixed !important; bottom: 24px !important; right: 24px !important; width: 56px !important; height: 56px !important;
+          background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+          border: 1px solid #38bdf8 !important; border-radius: 50% !important; display: flex !important;
+          justify-content: center !important; align-items: center !important; color: #fff !important; font-size: 24px !important;
+          cursor: pointer !important; z-index: 2147483640 !important; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.5) !important;
+      }
+      .chat-badge-po {
+          position: absolute !important; top: -2px !important; right: -2px !important; background: #ef4444 !important; color: #fff !important;
+          font-size: 10px !important; font-weight: bold !important; padding: 2px 6px !important; border-radius: 10px !important; display: none;
+          font-family: monospace !important; border: 1px solid #0f172a !important;
+      }
+
+      .chat-widget-box {
+          position: fixed !important; bottom: 90px !important; right: 16px !important; left: 16px !important; width: auto !important; max-width: 380px !important;
+          height: 420px !important; background: #0f172a !important; border: 1px solid rgba(56, 189, 248, 0.4) !important;
+          border-radius: 16px !important; box-shadow: 0 25px 50px rgba(0,0,0,0.9) !important; z-index: 2147483641 !important;
+          display: none; flex-direction: column !important; overflow: hidden !important; font-family: monospace !important;
+          margin-left: auto !important; box-sizing: border-box !important;
+      }
+      @media (min-width: 480px) {
+          .chat-widget-box { left: auto !important; right: 24px !important; width: 350px !important; }
+      }
+      .chat-widget-header {
+          background: rgba(15, 23, 42, 0.95) !important; padding: 10px 14px !important; border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important;
+          display: flex !important; justify-content: space-between !important; align-items: center !important; flex-shrink: 0 !important;
+      }
+      .chat-widget-messages {
+          flex: 1 1 auto !important; padding: 12px !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 8px !important; font-size: 11.5px !important;
+          min-height: 0 !important; box-sizing: border-box !important;
+      }
+      .chat-bubble-po {
+          max-width: 80% !important; padding: 8px 11px !important; border-radius: 10px !important; line-height: 1.4 !important; word-break: break-word !important; box-sizing: border-box !important;
+      }
+      .chat-bubble-po.right { background: #0284c7 !important; color: #fff !important; align-self: flex-end !important; border-bottom-right-radius: 2px !important; }
+      .chat-bubble-po.left { background: #1e293b !important; color: #f8fafc !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important; }
+      .chat-bubble-po.bot { background: rgba(168, 85, 247, 0.15) !important; border: 1px solid rgba(168, 85, 247, 0.3) !important; color: #d8b4fe !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important; }
+
+      .chat-widget-input-row {
+          display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important;
+          padding: 10px !important; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important;
+          flex-shrink: 0 !important; box-sizing: border-box !important; width: 100% !important;
+      }
+      .chat-widget-input-row input#inputChatPo {
+          flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; padding: 9px 10px !important;
+          background: #020617 !important; border: 1px solid #334155 !important; color: #fff !important;
+          border-radius: 7px !important; font-size: 11.5px !important; outline: none !important; font-family: monospace !important;
+          box-sizing: border-box !important; margin: 0 !important;
+      }
+      .chat-widget-input-row button {
+          flex: 0 0 auto !important; width: auto !important; min-width: 65px !important; padding: 9px 12px !important;
+          background: #0284c7 !important; border: 1px solid #38bdf8 !important; color: white !important;
+          border-radius: 7px !important; cursor: pointer !important; font-family: monospace !important;
+          font-weight: bold !important; font-size: 11.5px !important; box-sizing: border-box !important; margin: 0 !important;
+      }
+  </style>
 </head>
 <body>
  <a href="../index.html" style="position: fixed !important; top: 15px !important; left: 15px !important; background: #0f172a !important; border: 2px solid #38bdf8 !important; color: #38bdf8 !important; padding: 10px 16px !important; border-radius: 25px !important; font-size: 12px !important; font-family: monospace !important; font-weight: bold !important; text-decoration: none !important; display: flex !important; align-items: center !important; gap: 8px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.9) !important; z-index: 999999 !important;">
@@ -567,16 +625,48 @@
     });
   </script>
 
-  <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM (FIXED & DEBUGGED) -->
+  <!-- ========================================== -->
+  <!-- WIDGET FLOATING LIVE CHAT & BROADCAST (PROSES DATA) -->
+  <!-- ========================================== -->
+  <div id="floatingChatBtn" class="floating-chat-btn" onclick="toggleChatWidget()" style="display: none;">
+      <i class="fa-solid fa-headset"></i>
+      <span id="chatUnreadBadgePo" class="chat-badge-po">0</span>
+  </div>
+
+  <div id="chatWidgetBox" class="chat-widget-box">
+      <div class="chat-widget-header">
+          <div>
+              <b style="color: #fff; font-size: 12px;"><i class="fa-solid fa-robot" style="color: #38bdf8;"></i> CS Asisten Nuhsantara</b>
+              <div id="chatWidgetSub" style="font-size: 9.5px; color: #94a3b8;">Terhubung dengan Asisten Virtual</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+              <button onclick="hapusSemuaChatStaf()" title="Hapus Semua Percakapan" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
+              <button onclick="toggleChatWidget()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
+          </div>
+      </div>
+
+      <div class="chat-widget-messages" id="chatWidgetMessagesContainer">
+          <div style="color: #94a3b8; text-align: center; margin: auto; font-size: 11px;">Memuat asisten virtual...</div>
+      </div>
+
+      <div style="padding: 4px 12px; background: rgba(15, 23, 42, 0.95); flex-shrink: 0;">
+          <span id="typingIndicatorPo" style="color: #38bdf8; font-size: 10px; font-style: italic; display: none;">Owner sedang mengetik...</span>
+      </div>
+
+      <div class="chat-widget-input-row">
+          <input type="text" id="inputChatPo" placeholder="Ketik pesan atau kendala..." oninput="handleStaffTyping()" onkeypress="if(event.key === 'Enter') kirimPesanStaff()" />
+          <button type="button" onclick="kirimPesanStaff()">Kirim</button>
+      </div>
+  </div>
+
+  <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM + LIVE CHAT -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
       const modulName = "Proses Data";
       
-      // ==========================================
-      // 1. SISTEM IDENTIFIKASI STAF & PRESENCE
-      // ==========================================
       let staffName = localStorage.getItem('gudang_staff_name');
+      let safeStaffKey = staffName ? staffName.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
       
       function registerPresence(name) {
         const safeKey = name.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -590,6 +680,7 @@
       if (staffName && staffName.trim()) {
         registerPresence(staffName.trim());
         setInterval(() => registerPresence(staffName.trim()), 30000);
+        inisialisasiLiveChatStaf(staffName.trim());
       } else {
         const modalOverlay = document.createElement('div');
         modalOverlay.style.cssText = `
@@ -625,6 +716,7 @@
           modalOverlay.remove();
           registerPresence(val);
           setInterval(() => registerPresence(val), 30000);
+          inisialisasiLiveChatStaf(val);
         }
 
         submitBtn.addEventListener('click', handleSubmission);
@@ -632,90 +724,322 @@
       }
 
       // ==========================================
-      // 2. LIVE BROADCAST WHATSAPP-LIKE (Z-INDEX FIXED)
+      // LOGIKA LIVE CHAT STAF (DENGAN FITUR TARIK & HAPUS SEMUA)
       // ==========================================
-      async function cekBroadcastPusat() {
-        try {
-          console.log("[BROADCAST] Mengecek data broadcast ke Firebase...");
-          const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json?t=${Date.now()}`);
-          const data = await res.json();
-          console.log("[BROADCAST] Respon Firebase:", data);
+      let chatPollInterval = null;
+      let staffTypingTimeout = null;
 
-          if (!data || !data.message || !data.timestamp) {
-            console.log("[BROADCAST] Data kosong atau format tidak sesuai.");
-            return;
-          }
+      async function inisialisasiLiveChatStaf(name) {
+        safeStaffKey = name.replace(/[^a-zA-Z0-9_-]/g, '_');
+        document.getElementById('floatingChatBtn').style.display = 'flex';
 
-          const lastRead = localStorage.getItem('gudang_last_broadcast_ts');
-          console.log("[BROADCAST] Terakhir dibaca (local):", lastRead, "| Firebase timestamp:", data.timestamp);
-          
-          if (lastRead !== String(data.timestamp) && !document.getElementById('nx-live-broadcast-banner')) {
-            tampilkanPopupWhatsApp(data);
-          } else {
-            console.log("[BROADCAST] Pesan ini sudah pernah dibaca sebelumnya.");
-          }
-        } catch (e) { 
-          console.error("[BROADCAST ERROR]:", e); 
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/staffName.json`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(name)
+        });
+
+        const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`);
+        const msgs = await res.json();
+        if (!msgs) {
+          const botWelcome = {
+            sender: 'bot',
+            text: `Halo ${name}, saya Asisten Virtual Gudang Nuhsantara. Ada kendala operasional Proses Data yang bisa saya bantu?`,
+            time: Date.now(),
+            read: true
+          };
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
+          });
         }
+
+        muatPesanChatStaf();
+        chatPollInterval = setInterval(muatPesanChatStaf, 3000);
+      }
+
+      window.toggleChatWidget = function() {
+        const box = document.getElementById('chatWidgetBox');
+        if (box.style.display === 'flex') {
+          box.style.display = 'none';
+        } else {
+          box.style.display = 'flex';
+          setTimeout(() => document.getElementById('inputChatPo').focus(), 100);
+        }
+      };
+
+      window.tarikPesanStaf = async function(messageKey) {
+        if (!safeStaffKey) return;
+        if (!confirm("Tarik/hapus pesan ini?")) return;
+        try {
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages/${messageKey}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: "🚫 Pesan ini telah ditarik" })
+          });
+          muatPesanChatStaf();
+        } catch (e) { console.error(e); }
+      };
+
+      window.hapusSemuaChatStaf = async function() {
+        if (!safeStaffKey) return;
+        if (!confirm("Hapus semua riwayat percakapan ini?")) return;
+        try {
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+            method: 'DELETE'
+          });
+          const botWelcome = {
+            sender: 'bot',
+            text: `Riwayat dibersihkan. Halo, ada yang bisa dibantu lagi?`,
+            time: Date.now(),
+            read: true
+          };
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
+          });
+          muatPesanChatStaf();
+        } catch (e) { console.error(e); }
+      };
+
+      async function muatPesanChatStaf() {
+        if (!safeStaffKey) return;
+        try {
+          const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}.json?t=` + Date.now());
+          const data = await res.json();
+          if (!data) return;
+
+          const messages = data.messages || {};
+          const isOwnerTyping = data.typingOwner || false;
+          const container = document.getElementById('chatWidgetMessagesContainer');
+          const typingEl = document.getElementById('typingIndicatorPo');
+          const badgeEl = document.getElementById('chatUnreadBadgePo');
+
+          typingEl.style.display = isOwnerTyping ? 'block' : 'none';
+
+          let html = "";
+          let unreadFromOwner = 0;
+          let ownerUpdates = {};
+
+          Object.keys(messages).forEach(k => {
+            const m = messages[k];
+            let bubbleClass = "left";
+            let deleteBtn = "";
+            
+            if (m.sender === 'staff') {
+              bubbleClass = "right"; // Staf di KANAN
+              if (m.text !== "🚫 Pesan ini telah ditarik") {
+                deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanStaf('${k}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
+              }
+            } else if (m.sender === 'bot') {
+              bubbleClass = "bot"; // Bot di KIRI
+            } else {
+              bubbleClass = "left"; // Owner / Broadcast di KIRI
+              if (!m.read) {
+                unreadFromOwner++;
+                ownerUpdates[`${k}/read`] = true;
+              }
+            }
+
+            let tickMark = "";
+            if (m.sender === 'staff') {
+              if (m.read) {
+                tickMark = `<span style="color: #38bdf8; font-size: 11px; margin-left: 4px;" title="Dibaca Owner">✓✓</span>`;
+              } else {
+                tickMark = `<span style="color: #94a3b8; font-size: 11px; margin-left: 4px;" title="Terkirim">✓✓</span>`;
+              }
+            }
+
+            html += `
+              <div class="chat-bubble-po ${bubbleClass}">
+                <div style="font-size: 9px; opacity: 0.7; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
+                  <span>${m.sender.toUpperCase()}</span>
+                  ${deleteBtn}
+                </div>
+                <div>${m.text}</div>
+                <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
+                  ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${tickMark}
+                </div>
+              </div>
+            `;
+          });
+
+          container.innerHTML = html || `<div style="color: #94a3b8; text-align: center; margin: auto;">Mulai percakapan...</div>`;
+          container.scrollTop = container.scrollHeight;
+
+          if (unreadFromOwner > 0 && document.getElementById('chatWidgetBox').style.display !== 'flex') {
+            badgeEl.innerText = unreadFromOwner;
+            badgeEl.style.display = 'inline-block';
+          } else {
+            badgeEl.style.display = 'none';
+          }
+
+          if (document.getElementById('chatWidgetBox').style.display === 'flex' && Object.keys(ownerUpdates).length > 0) {
+            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+              method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ownerUpdates)
+            });
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      window.kirimPesanStaff = async function() {
+        const inputEl = document.getElementById('inputChatPo');
+        const text = inputEl.value.trim();
+        if (!text || !safeStaffKey) return;
+
+        const newMsg = {
+          sender: 'staff',
+          text: text,
+          time: Date.now(),
+          read: false
+        };
+
+        try {
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newMsg)
+          });
+          inputEl.value = "";
+          muatPesanChatStaf();
+        } catch (e) { console.error(e); }
+      };
+
+      window.handleStaffTyping = async function() {
+        if (!safeStaffKey) return;
+        try {
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typingStaff.json`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(true)
+          });
+          clearTimeout(staffTypingTimeout);
+          staffTypingTimeout = setTimeout(async () => {
+            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typingStaff.json`, {
+              method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(false)
+            });
+          }, 1500);
+        } catch (e) {}
+      };
+
+      // ==========================================
+      // LIVE BROADCAST PRO: AUDIO, VIBRATE, & BANNER INTERAKTIF
+      // ==========================================
+      function playAlertSoundAndVibrate() {
+          if ("vibrate" in navigator) {
+              try { navigator.vibrate([300, 150, 300, 150, 500]); } catch (e) {}
+          }
+          try {
+              const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+              const osc1 = audioCtx.createOscillator();
+              const gain1 = audioCtx.createGain();
+              osc1.type = 'sine';
+              osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+              osc1.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15);
+              gain1.gain.setValueAtTime(0.15, audioCtx.currentTime);
+              gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+              osc1.connect(gain1);
+              gain1.connect(audioCtx.destination);
+              osc1.start();
+              osc1.stop(audioCtx.currentTime + 0.6);
+          } catch (e) {}
       }
 
       function tampilkanPopupWhatsApp(data) {
-        console.log("[BROADCAST] Merender banner notifikasi ke layar...");
-        
-        // Hapus banner lama jika ada agar tidak menumpuk
         const existingBanner = document.getElementById('nx-live-broadcast-banner');
         if (existingBanner) existingBanner.remove();
+
+        playAlertSoundAndVibrate();
 
         const banner = document.createElement('div');
         banner.id = 'nx-live-broadcast-banner';
         banner.style.cssText = `
-          position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-50px);
-          width: 92%; max-width: 480px; background: rgba(15, 23, 42, 0.98);
-          border: 2px solid #38bdf8; backdrop-filter: blur(12px);
-          border-radius: 16px; padding: 16px 20px; z-index: 2147483649;
-          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(56, 189, 248, 0.5);
+          position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-50px);
+          width: 92%; max-width: 460px; background: rgba(15, 23, 42, 0.98);
+          border: 2px solid #ef4444; backdrop-filter: blur(14px);
+          border-radius: 18px; padding: 20px; z-index: 2147483647;
+          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 40px rgba(239, 68, 68, 0.4);
           font-family: monospace; color: #f8fafc; opacity: 0;
           transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         `;
 
         const waktuPesan = new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const escapedMessage = (data.message || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
         banner.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(56, 189, 248, 0.3); padding-bottom: 6px;">
-            <span style="font-size: 11px; color: #38bdf8; font-weight: bold; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-tower-broadcast"></i> NOTIFIKASI SISTEM
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(239, 68, 68, 0.3); padding-bottom: 8px;">
+            <span style="font-size: 11.5px; color: #ef4444; font-weight: bold; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-triangle-exclamation fa-bounce"><b> PENGUMUMAN PENTING OWNER</b></i>
             </span>
             <span style="font-size: 10px; color: #94a3b8;">${waktuPesan} WIB</span>
           </div>
-          <div style="font-size: 13px; line-height: 1.5; color: #fff; word-wrap: break-word;">
+          
+          <div style="font-size: 13.5px; line-height: 1.6; color: #fff; word-wrap: break-word; margin-bottom: 18px; background: rgba(239, 68, 68, 0.08); padding: 12px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2);">
             ${data.message}
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button type="button" onclick="tandaiBroadcastDibaca('${data.timestamp}')" style="flex: 1; background: #334155; border: 1px solid #475569; color: #cbd5e1; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11.5px; font-family: monospace;">
+              ✔ Tandai Dibaca
+            </button>
+            <button type="button" onclick="bukaChatDariBroadcast('${data.timestamp}', '${escapedMessage}')" style="flex: 1; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11.5px; font-family: monospace; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+              💬 Buka / Balas Chat
+            </button>
           </div>
         `;
 
         document.body.appendChild(banner);
 
-        // Simpan timestamp HANYA KETIKA banner sukses masuk DOM
-        localStorage.setItem('gudang_last_broadcast_ts', String(data.timestamp));
-
-        // Animasi Slide Down & Fade In
         setTimeout(() => {
           banner.style.transform = 'translateX(-50%) translateY(0)';
           banner.style.opacity = '1';
         }, 50);
-
-        // Auto dismiss setelah 6 detik
-        setTimeout(() => {
-          banner.style.transform = 'translateX(-50%) translateY(-30px)';
-          banner.style.opacity = '0';
-          setTimeout(() => banner.remove(), 400);
-        }, 6000);
       }
 
-      // Mulai pantau broadcast otomatis 3 detik setelah halaman aktif
-      setTimeout(() => {
-        cekBroadcastPusat();
-        setInterval(cekBroadcastPusat, 5000);
-      }, 3000);
+      window.tandaiBroadcastDibaca = function(timestamp) {
+        localStorage.setItem('gudang_last_broadcast_ts', String(timestamp));
+        const banner = document.getElementById('nx-live-broadcast-banner');
+        if (banner) {
+            banner.style.transform = 'translateX(-50%) translateY(-30px)';
+            banner.style.opacity = '0';
+            setTimeout(() => banner.remove(), 400);
+        }
+      };
+
+      // 📢 TOMBOL "BUKA / BALAS CHAT" MASUK KE KIRI SEBAGAI PESAN DARI OWNER
+      window.bukaChatDariBroadcast = async function(timestamp, messageText) {
+        tandaiBroadcastDibaca(timestamp);
+        
+        if (typeof toggleChatWidget === 'function') {
+            toggleChatWidget(); // Buka widget chat
+        }
+
+        if (safeStaffKey) {
+            const autoMsg = {
+                sender: 'owner', // Diatur sebagai owner supaya otomatis masuk ke KIRI
+                text: `📢 [Broadcast Owner]: "${messageText || 'Pengumuman penting sistem.'}"`,
+                time: Date.now(),
+                read: true
+            };
+            try {
+                await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(autoMsg)
+                });
+                if (typeof muatPesanChatStaf === 'function') {
+                    muatPesanChatStaf();
+                }
+            } catch (e) {}
+        }
+      };
+
+      async function cekBroadcastPusat() {
+        try {
+          const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json?t=${Date.now()}`);
+          const data = await res.json();
+          if (!data || !data.message || !data.timestamp) return;
+
+          const lastRead = localStorage.getItem('gudang_last_broadcast_ts');
+          if (lastRead !== String(data.timestamp) && !document.getElementById('nx-live-broadcast-banner')) {
+            tampilkanPopupWhatsApp(data);
+          }
+        } catch (e) {}
+      }
+
+      cekBroadcastPusat();
+      setInterval(cekBroadcastPusat, 1000); // Polling instan 1 detik
+      window.addEventListener('focus', cekBroadcastPusat);
     });
   </script>
 
