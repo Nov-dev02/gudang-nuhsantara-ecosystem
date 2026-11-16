@@ -664,6 +664,7 @@
         `;
 
         const waktuPesan = new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const escapedMessage = (data.message || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
         banner.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(239, 68, 68, 0.3); padding-bottom: 8px;">
@@ -673,7 +674,7 @@
             <span style="font-size: 10px; color: #94a3b8;">${waktuPesan} WIB</span>
           </div>
           
-          <div id="broadcastMessageText" style="font-size: 13.5px; line-height: 1.6; color: #fff; word-wrap: break-word; margin-bottom: 18px; background: rgba(239, 68, 68, 0.08); padding: 12px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2);">
+          <div style="font-size: 13.5px; line-height: 1.6; color: #fff; word-wrap: break-word; margin-bottom: 18px; background: rgba(239, 68, 68, 0.08); padding: 12px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2);">
             ${data.message}
           </div>
 
@@ -681,7 +682,7 @@
             <button type="button" onclick="tandaiBroadcastDibaca('${data.timestamp}')" style="flex: 1; background: #334155; border: 1px solid #475569; color: #cbd5e1; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11.5px; font-family: monospace;">
               ✔ Tandai Dibaca
             </button>
-            <button type="button" onclick="bukaChatDariBroadcast('${data.timestamp}')" style="flex: 1; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11.5px; font-family: monospace; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+            <button type="button" onclick="bukaChatDariBroadcast('${data.timestamp}', '${escapedMessage}')" style="flex: 1; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11.5px; font-family: monospace; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
               💬 Buka / Balas Chat
             </button>
           </div>
@@ -705,24 +706,20 @@
         }
     };
 
-    // OTOMATIS KIRIM PESAN KE CHAT PAS TOMBOL "BUKA / BALAS CHAT" DIKLIK
-    window.bukaChatDariBroadcast = async function(timestamp) {
-        const msgEl = document.getElementById('broadcastMessageText');
-        const broadcastText = msgEl ? msgEl.innerText.trim() : "Merespons pengumuman penting owner.";
-        
+    // 📢 OTOMATIS MASUK KE SEBELAH KIRI SEBAGAI PESAN DARI OWNER / BROADCAST
+    window.bukaChatDariBroadcast = async function(timestamp, messageText) {
         tandaiBroadcastDibaca(timestamp);
         
         if (typeof toggleChatWidget === 'function') {
             toggleChatWidget(); // Buka widget chat
         }
 
-        // Kirim otomatis isi pesan broadcast ke chat owner sebagai pesan staf
         if (safeStaffKey) {
             const autoMsg = {
-                sender: 'staff',
-                text: `💬 [Merespons Broadcast]: "${broadcastText}"`,
+                sender: 'owner', // Diatur sebagai owner supaya otomatis masuk ke KIRI
+                text: `📢 [Broadcast Owner]: "${messageText || 'Pengumuman penting sistem.'}"`,
                 time: Date.now(),
-                read: false
+                read: true
             };
             try {
                 await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
