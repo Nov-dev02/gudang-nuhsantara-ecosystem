@@ -648,11 +648,118 @@
       muatAuditLogs();
       muatStaffPresence();
       muatDaftarChatStaf();
+      mulaiPantauBroadcastRealtime(); // Pemantau broadcast instant
 
       setInterval(muatStaffPresence, 10000);
       setInterval(updateRealtimeCountdown, 1000);
       setInterval(muatDaftarChatStaf, 4000); // Polling chat secara real-time
     });
+
+    // --- SISTEM BROADCAST PRO: AUDIO, VIBRATE, & REAL-TIME INSTANT ---
+    function playAlertSoundAndVibrate() {
+        if ("vibrate" in navigator) {
+            try { navigator.vibrate([300, 150, 300, 150, 500]); } catch (e) {}
+        }
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+            osc1.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15);
+            gain1.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.start();
+            osc1.stop(audioCtx.currentTime + 0.6);
+        } catch (e) {}
+    }
+
+    function tampilkanPopupWhatsApp(data) {
+        const existingBanner = document.getElementById('nx-live-broadcast-banner');
+        if (existingBanner) existingBanner.remove();
+
+        playAlertSoundAndVibrate();
+
+        const banner = document.createElement('div');
+        banner.id = 'nx-live-broadcast-banner';
+        banner.style.cssText = `
+          position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-50px);
+          width: 92%; max-width: 460px; background: rgba(15, 23, 42, 0.98);
+          border: 2px solid #ef4444; backdrop-filter: blur(14px);
+          border-radius: 18px; padding: 20px; z-index: 2147483647;
+          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 40px rgba(239, 68, 68, 0.4);
+          font-family: monospace; color: #f8fafc; opacity: 0;
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        `;
+
+        const waktuPesan = new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+        banner.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(239, 68, 68, 0.3); padding-bottom: 8px;">
+            <span style="font-size: 11.5px; color: #ef4444; font-weight: bold; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-triangle-exclamation fa-bounce"><b> PENGUMUMAN PENTING OWNER</b></i>
+            </span>
+            <span style="font-size: 10px; color: #94a3b8;">${waktuPesan} WIB</span>
+          </div>
+          
+          <div style="font-size: 13.5px; line-height: 1.6; color: #fff; word-wrap: break-word; margin-bottom: 18px; background: rgba(239, 68, 68, 0.08); padding: 12px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2);">
+            ${data.message}
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button type="button" onclick="tandaiBroadcastDibaca('${data.timestamp}')" style="flex: 1; background: #334155; border: 1px solid #475569; color: #cbd5e1; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11.5px; font-family: monospace;">
+              ✔ Tandai Dibaca
+            </button>
+            <button type="button" onclick="bukaChatDariBroadcast('${data.timestamp}')" style="flex: 1; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11.5px; font-family: monospace; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+              💬 Buka / Balas Chat
+            </button>
+          </div>
+        `;
+
+        document.body.appendChild(banner);
+
+        setTimeout(() => {
+          banner.style.transform = 'translateX(-50%) translateY(0)';
+          banner.style.opacity = '1';
+        }, 50);
+    }
+
+    window.tandaiBroadcastDibaca = function(timestamp) {
+        localStorage.setItem('gudang_last_broadcast_ts', String(timestamp));
+        const banner = document.getElementById('nx-live-broadcast-banner');
+        if (banner) {
+            banner.style.transform = 'translateX(-50%) translateY(-30px)';
+            banner.style.opacity = '0';
+            setTimeout(() => banner.remove(), 400);
+        }
+    };
+
+    window.bukaChatDariBroadcast = function(timestamp) {
+        tandaiBroadcastDibaca(timestamp);
+        switchTab('chat'); // Langsung pindah ke tab Live Chat CS di dashboard
+    };
+
+    function mulaiPantauBroadcastRealtime() {
+        async function cekInstantBroadcast() {
+            try {
+                const res = await fetch(CLOUD_BROADCAST_ENDPOINT + "?t=" + Date.now());
+                const data = await res.json();
+                if (!data || !data.message || !data.timestamp) return;
+
+                const lastRead = localStorage.getItem('gudang_last_broadcast_ts');
+                if (lastRead !== String(data.timestamp)) {
+                    if (!document.getElementById('nx-live-broadcast-banner')) {
+                        tampilkanPopupWhatsApp(data);
+                    }
+                }
+            } catch (e) {}
+        }
+        cekInstantBroadcast();
+        setInterval(cekInstantBroadcast, 1000); // Polling instan 1 detik tanpa jeda
+        window.addEventListener('focus', cekInstantBroadcast);
+    }
 
     // --- LOGIKA SPLASH SCREEN & OWNER ACCESS GATE ---
     function initSplashScreenFlow() {
@@ -719,7 +826,7 @@
     }
 
     // --- LOGIKA LIVE CHAT CS CENTER DI DASHBOARD (DENGAN FITUR HAPUS ROOM & TARIK PESAN) ---
-   async function muatDaftarChatStaf() {
+    async function muatDaftarChatStaf() {
       try {
         const res = await fetch(CLOUD_CHATS_ENDPOINT + "?t=" + Date.now());
         const data = await res.json() || {};
@@ -745,7 +852,6 @@
             lastMsg = m.text;
           });
 
-          // TAMBAHAN: Jika room ini sedang aktif dibuka, badge unread wajib 0 secara instan!
           if (activeStaffRoom === staffId) {
             unreadCount = 0;
           }
@@ -771,7 +877,6 @@
 
         roomsListEl.innerHTML = html;
 
-        // Update Badge di Sidebar & Mobile
         const badgeEls = [document.getElementById('sidebarChatBadge'), document.getElementById('mobileChatBadge')];
         badgeEls.forEach(el => {
           if (el) {
@@ -791,7 +896,6 @@
       activeStaffRoom = staffId;
       document.getElementById('activeChatTitle').innerText = `Chat dengan: ${staffName}`;
       
-      // Tandai pesan dari staf di room ini menjadi read (centang biru)
       try {
         const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffId}/messages.json`);
         const messages = await res.json() || {};
@@ -811,7 +915,6 @@
       muatDaftarChatStaf();
     }
 
-    // Fungsionalitas Owner Menghapus Seluruh Room Chat Staf dari Daftar Sebelah Kiri
     async function hapusRoomChatStaf(staffId, staffName) {
       if (!confirm(`Hapus seluruh ruang chat dan riwayat untuk "${staffName}" secara permanen?`)) return;
       try {
@@ -833,7 +936,6 @@
       }
     }
 
-    // Fungsionalitas Owner Menarik/Menghapus Pesan Sendiri
     async function tarikPesanOwner(messageKey) {
       if (!activeStaffRoom) return;
       if (!confirm("Tarik/hapus pesan ini?")) return;
@@ -847,7 +949,6 @@
       } catch (e) { console.error(e); }
     }
 
-    // Fungsionalitas Owner Menghapus Semua Percakapan dengan Staf Aktif
     async function hapusSemuaChatOwner() {
       if (!activeStaffRoom) {
         showDashboardToast("Pilih ruang chat staf terlebih dahulu!", false);
@@ -858,7 +959,6 @@
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages.json`, {
           method: 'DELETE'
         });
-        // Kirim ulang pesan bot default agar chat tidak kosong
         const botWelcome = {
           sender: 'bot',
           text: `Riwayat percakapan telah dibersihkan oleh Owner.`,
@@ -877,7 +977,6 @@
       const container = document.getElementById('chatMessagesContainer');
       const typingEl = document.getElementById('typingIndicatorOwner');
       
-      // Cek status mengetik staf
       try {
         const typingRes = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffId}/typingStaff.json`);
         const isTyping = await typingRes.json();
@@ -892,7 +991,6 @@
 
         if (m.sender === 'owner') {
           bubbleClass = "owner";
-          // Tombol hapus/tarik pesan khusus untuk owner jika belum ditarik
           if (m.text !== "🚫 Pesan ini telah ditarik") {
             deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanOwner('${k}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
           }
@@ -900,7 +998,6 @@
           bubbleClass = "bot";
         }
 
-        // Status centang WhatsApp style
         let tickMark = "";
         if (m.sender === 'owner' || m.sender === 'bot') {
           if (m.read) {
@@ -1145,7 +1242,6 @@
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
         
-        // KEMBALIKAN TAMPILAN DETIK DI SINI:
         expiryBox.innerText = days > 0 
             ? `${days}h ${hours}j ${minutes}m ${seconds}d` 
             : `${hours}j ${minutes}m ${seconds}d`;
