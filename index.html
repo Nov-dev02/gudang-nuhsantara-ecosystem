@@ -1135,7 +1135,7 @@
         } catch (e) { pingEl.innerText = "Offline"; }
     }
 
-    function updateRealtimeCountdown() {
+   function updateRealtimeCountdown() {
         const expiryBox = document.getElementById('hudExpiryCountdown');
         if (!expiryBox || !globalExpiryDate) return;
         const diff = globalExpiryDate.getTime() - Date.now();
@@ -1144,7 +1144,12 @@
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        expiryBox.innerText = days > 0 ? `${days}h ${hours}j ${minutes}m` : `${hours}j ${minutes}m ${seconds}s`;
+        
+        // KEMBALIKAN TAMPILAN DETIK DI SINI:
+        expiryBox.innerText = days > 0 
+            ? `${days}h ${hours}j ${minutes}m ${seconds}d` 
+            : `${hours}j ${minutes}m ${seconds}d`;
+        
         expiryBox.style.color = "#fff";
     }
 
