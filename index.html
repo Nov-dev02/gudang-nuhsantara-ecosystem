@@ -719,7 +719,7 @@
     }
 
     // --- LOGIKA LIVE CHAT CS CENTER DI DASHBOARD (DENGAN FITUR HAPUS ROOM & TARIK PESAN) ---
-    async function muatDaftarChatStaf() {
+   async function muatDaftarChatStaf() {
       try {
         const res = await fetch(CLOUD_CHATS_ENDPOINT + "?t=" + Date.now());
         const data = await res.json() || {};
@@ -745,12 +745,16 @@
             lastMsg = m.text;
           });
 
+          // TAMBAHAN: Jika room ini sedang aktif dibuka, badge unread wajib 0 secara instan!
+          if (activeStaffRoom === staffId) {
+            unreadCount = 0;
+          }
+
           totalUnread += unreadCount;
           if (activeStaffRoom === staffId) {
             muatIsiPesanChat(staffId, messages);
           }
 
-          // Tombol Hapus Room Chat langsung dari daftar sebelah kiri ala WhatsApp
           html += `
             <div class="chat-room-item ${activeStaffRoom === staffId ? 'active' : ''}" style="display: flex; justify-content: space-between; align-items: center;">
               <div onclick="pilihRuangChat('${staffId}', '${room.staffName || staffId}')" style="flex: 1; min-width: 0; cursor: pointer;">
