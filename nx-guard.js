@@ -1,5 +1,5 @@
 // =========================================================================
-// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD & UNIVERSAL LIVE CHAT (v4.4)
+// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD & PRO LIVE CHAT (v4.5)
 // =========================================================================
 
 // 🌐 URL FIREBASE REALTIME DATABASE MILIKMU
@@ -9,7 +9,8 @@ const CLOUD_LICENSE_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/license.jso
 const ADMIN_NX_PIN = "2026";
 let secretClickCount = 0;
 let secretClickTimer = null;
-let lockChatPollInterval = null;
+let universalChatPollInterval = null;
+let staffTypingTimeout = null;
 
 // --- DECODER TOKEN NX ---
 function decodeTokenToDate(token) {
@@ -71,11 +72,36 @@ async function cekStatusCloud() {
 }
 
 // =========================================================================
-// 💬 UNIVERSAL LIVE CHAT WIDGET (MUNCUL DI SEMUA HALAMAN / MODE NORMAL & KUNCI)
+// 💬 PRO LIVE CHAT WIDGET (SETARA APP PO - DENGAN FITUR LENGKAP)
 // =========================================================================
 function getSafeStaffKeyForChat() {
     let name = localStorage.getItem('gudang_staff_name') || "Staf_General";
     return name.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+async function inisialisasiUniversalChatData() {
+    const staffName = localStorage.getItem('gudang_staff_name') || "Staf_General";
+    const safeStaffKey = getSafeStaffKeyForChat();
+
+    // Daftarkan nama staf ke database chat
+    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/staffName.json`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(staffName)
+    }).catch(e => {});
+
+    // Cek apakah pesan sudah ada, jika kosong kirim pesan sambutan bot otomatis
+    const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`);
+    const msgs = await res.json();
+    if (!msgs) {
+        const botWelcome = {
+          sender: 'bot',
+          text: `Halo ${staffName}, saya Asisten Virtual Gudang Nuhsantara. Ada kendala operasional atau token yang bisa saya bantu?`,
+          time: Date.now(),
+          read: true
+        };
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
+        }).catch(e => {});
+    }
 }
 
 function toggleUniversalChatWidget() {
@@ -87,11 +113,13 @@ function toggleUniversalChatWidget() {
     
     if (box.style.display === 'flex') {
         box.style.display = 'none';
-        clearInterval(lockChatPollInterval);
+        clearInterval(universalChatPollInterval);
     } else {
         box.style.display = 'flex';
-        muatPesanUniversalChat();
-        lockChatPollInterval = setInterval(muatPesanUniversalChat, 3000);
+        inisialisasiUniversalChatData().then(() => {
+            muatPesanUniversalChat();
+            universalChatPollInterval = setInterval(muatPesanUniversalChat, 3000);
+        });
         setTimeout(() => {
             const inputEl = document.getElementById('universalInputChat');
             if (inputEl) inputEl.focus();
@@ -99,54 +127,120 @@ function toggleUniversalChatWidget() {
     }
 }
 
-async function muatPesanUniversalChat() {
-    const staffKey = getSafeStaffKeyForChat();
+// FUNGSI TARIK / HAPUS PESAN SENDIRI
+async function tarikPesanUniversal(messageKey) {
+    const safeStaffKey = getSafeStaffKeyForChat();
+    if (!confirm("Tarik/hapus pesan ini?")) return;
     try {
-        const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}.json?t=` + Date.now());
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages/${messageKey}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: "🚫 Pesan ini telah ditarik" })
+        });
+        muatPesanUniversalChat();
+    } catch (e) { console.error(e); }
+}
+
+// FUNGSI HAPUS SEMUA PERCAKAPAN
+async function hapusSemuaChatUniversal() {
+    const safeStaffKey = getSafeStaffKeyForChat();
+    if (!confirm("Hapus semua riwayat percakapan ini?")) return;
+    try {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+            method: 'DELETE'
+        });
+        const botWelcome = {
+          sender: 'bot',
+          text: `Riwayat dibersihkan. Halo, ada yang bisa dibantu?`,
+          time: Date.now(),
+          read: true
+        };
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
+        });
+        muatPesanUniversalChat();
+    } catch (e) { console.error(e); }
+}
+
+async function muatPesanUniversalChat() {
+    const safeStaffKey = getSafeStaffKeyForChat();
+    try {
+        const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}.json?t=` + Date.now());
         const data = await res.json();
+        if (!data) return;
+
+        const messages = data.messages || {};
+        const isOwnerTyping = data.typingOwner || false;
         const container = document.getElementById('universalChatMessagesContainer');
+        const typingEl = document.getElementById('typingIndicatorUniversal');
         const badge = document.getElementById('universalChatBadge');
         if (!container) return;
 
-        if (!data || !data.messages) {
-            container.innerHTML = `<div style="color: #94a3b8; text-align: center; margin: auto;">Halo, ada kendala sistem atau PO? Ketik pesan ke Owner di sini.</div>`;
-            if (badge) badge.style.display = 'none';
-            return;
-        }
+        if (typingEl) typingEl.style.display = isOwnerTyping ? 'block' : 'none';
 
-        const messages = data.messages;
         let html = "";
-        let unread = 0;
+        let unreadFromOwner = 0;
+        let ownerUpdates = {};
 
         Object.keys(messages).forEach(k => {
             const m = messages[k];
-            let bubbleStyle = m.sender === 'staff' 
-                ? "background: #0284c7; color: #fff; align-self: flex-end;" 
-                : "background: #1e293b; color: #f8fafc; align-self: flex-start;";
+            let bubbleStyle = "";
+            let deleteBtn = "";
 
-            if (m.sender === 'owner' && !m.read) unread++;
+            if (m.sender === 'staff') {
+                bubbleStyle = "background: #0284c7 !important; color: #fff !important; align-self: flex-end !important; border-bottom-right-radius: 2px !important;";
+                if (m.text !== "🚫 Pesan ini telah ditarik") {
+                    deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanUniversal('${k}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
+                }
+            } else if (m.sender === 'bot') {
+                bubbleStyle = "background: rgba(168, 85, 247, 0.15) !important; border: 1px solid rgba(168, 85, 247, 0.3) !important; color: #d8b4fe !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important;";
+            } else {
+                bubbleStyle = "background: #1e293b !important; color: #f8fafc !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important;";
+                if (!m.read) {
+                    unreadFromOwner++;
+                    ownerUpdates[`${k}/read`] = true;
+                }
+            }
+
+            let tickMark = "";
+            if (m.sender === 'staff') {
+                if (m.read) {
+                    tickMark = `<span style="color: #38bdf8; font-size: 11px; margin-left: 4px;" title="Dibaca Owner">✓✓</span>`;
+                } else {
+                    tickMark = `<span style="color: #94a3b8; font-size: 11px; margin-left: 4px;" title="Terkirim">✓✓</span>`;
+                }
+            }
 
             html += `
-                <div style="max-width: 80%; padding: 8px 11px; border-radius: 10px; ${bubbleStyle} word-break: break-word;">
-                    <div style="font-size: 9px; opacity: 0.7; margin-bottom: 2px;">${m.sender.toUpperCase()}</div>
+                <div style="max-width: 80% !important; padding: 8px 11px !important; border-radius: 10px !important; ${bubbleStyle} word-break: break-word !important; box-sizing: border-box !important;">
+                    <div style="font-size: 9px; opacity: 0.7; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>${m.sender.toUpperCase()}</span>
+                        ${deleteBtn}
+                    </div>
                     <div>${m.text}</div>
                     <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
-                        ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${tickMark}
                     </div>
                 </div>
             `;
         });
 
-        container.innerHTML = html;
+        container.innerHTML = html || `<div style="color: #94a3b8; text-align: center; margin: auto;">Mulai percakapan...</div>`;
         container.scrollTop = container.scrollHeight;
 
         if (badge) {
-            if (unread > 0 && document.getElementById('universalChatWidgetBox').style.display !== 'flex') {
-                badge.innerText = unread;
+            if (unreadFromOwner > 0 && document.getElementById('universalChatWidgetBox').style.display !== 'flex') {
+                badge.innerText = unreadFromOwner;
                 badge.style.display = 'inline-block';
             } else {
                 badge.style.display = 'none';
             }
+        }
+
+        if (document.getElementById('universalChatWidgetBox').style.display === 'flex' && Object.keys(ownerUpdates).length > 0) {
+            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ownerUpdates)
+            });
         }
     } catch (e) { console.error(e); }
 }
@@ -156,7 +250,7 @@ async function kirimPesanUniversalChat() {
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
-    const staffKey = getSafeStaffKeyForChat();
+    const safeStaffKey = getSafeStaffKeyForChat();
 
     const newMsg = {
         sender: 'staff',
@@ -166,7 +260,7 @@ async function kirimPesanUniversalChat() {
     };
 
     try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/messages.json`, {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newMsg)
@@ -176,8 +270,30 @@ async function kirimPesanUniversalChat() {
     } catch (e) { alert("Gagal mengirim pesan!"); }
 }
 
+async function handleStaffTypingUniversal() {
+    const safeStaffKey = getSafeStaffKeyForChat();
+    try {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typingStaff.json`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(true)
+        });
+        clearTimeout(staffTypingTimeout);
+        staffTypingTimeout = setTimeout(async () => {
+            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typingStaff.json`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(false)
+            });
+        }, 1500);
+    } catch (e) {}
+}
+
 function injectUniversalChatHTML() {
-    if (document.getElementById('universalChatWidgetBox')) return;
+    // Jika halaman sudah memiliki widget chat sendiri (seperti App PO), jangan inject agar tidak bentrok
+    if (
+        document.getElementById('universalChatWidgetBox') || 
+        document.getElementById('chatWidgetBox') || 
+        document.getElementById('floatingChatBtn')
+    ) {
+        return;
+    }
 
     const wrapper = document.createElement('div');
     wrapper.id = 'universalChatWrapper';
@@ -188,30 +304,36 @@ function injectUniversalChatHTML() {
           <span id="universalChatBadge" style="position: absolute !important; top: -2px !important; right: -2px !important; background: #ef4444 !important; color: #fff !important; font-size: 10px !important; font-weight: bold !important; padding: 2px 6px !important; border-radius: 10px !important; display: none; font-family: monospace !important; border: 1px solid #0f172a !important;">0</span>
       </div>
 
-      <!-- KOTAK WIDGET CHAT UNIVERSAL -->
-      <div id="universalChatWidgetBox" style="position: fixed !important; bottom: 90px !important; right: 24px !important; width: 350px !important; max-width: calc(100vw - 48px) !important; height: 400px !important; background: #0f172a !important; border: 1px solid rgba(56, 189, 248, 0.4) !important; border-radius: 16px !important; box-shadow: 0 25px 50px rgba(0,0,0,0.9) !important; z-index: 2147483648 !important; display: none; flex-direction: column !important; overflow: hidden !important; font-family: monospace !important; box-sizing: border-box !important;">
-          <div style="background: rgba(15, 23, 42, 0.95) !important; padding: 10px 14px !important; border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important; display: flex !important; justify-content: space-between !important; align-items: center !important; box-sizing: border-box !important;">
+      <!-- KOTAK WIDGET CHAT UNIVERSAL (PRO VERSION) -->
+      <div id="universalChatWidgetBox" style="position: fixed !important; bottom: 90px !important; right: 24px !important; width: 350px !important; max-width: calc(100vw - 48px) !important; height: 420px !important; background: #0f172a !important; border: 1px solid rgba(56, 189, 248, 0.4) !important; border-radius: 16px !important; box-shadow: 0 25px 50px rgba(0,0,0,0.9) !important; z-index: 2147483648 !important; display: none; flex-direction: column !important; overflow: hidden !important; font-family: monospace !important; box-sizing: border-box !important;">
+          <div style="background: rgba(15, 23, 42, 0.95) !important; padding: 10px 14px !important; border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important; display: flex !important; justify-content: space-between !important; align-items: center !important; box-sizing: border-box !important; flex-shrink: 0 !important;">
               <div>
                   <b style="color: #fff; font-size: 12px;"><i class="fa-solid fa-robot" style="color: #38bdf8;"></i> CS Asisten Nuhsantara</b>
                   <div style="font-size: 9.5px; color: #94a3b8;">Live Chat Staf & Owner</div>
               </div>
-              <button onclick="toggleUniversalChatWidget()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                  <button onclick="hapusSemuaChatUniversal()" title="Hapus Semua Percakapan" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
+                  <button onclick="toggleUniversalChatWidget()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
+              </div>
           </div>
 
-          <div id="universalChatMessagesContainer" style="flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; font-size: 11.5px; background: #070b14; box-sizing: border-box !important;">
+          <div id="universalChatMessagesContainer" style="flex: 1 1 auto !important; padding: 12px !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 8px !important; font-size: 11.5px !important; background: #070b14; box-sizing: border-box !important; min-height: 0 !important;">
               <div style="color: #94a3b8; text-align: center; margin: auto;">Memuat pesan...</div>
           </div>
 
-          <div style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; padding: 10px !important; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important; box-sizing: border-box !important; width: 100% !important;">
-              <input type="text" id="universalInputChat" placeholder="Ketik pesan ke owner..." style="flex: 1 !important; width: auto !important; padding: 9px 10px !important; background: #020617 !important; border: 1px solid #334155 !important; color: #fff !important; border-radius: 7px !important; font-size: 11.5px !important; outline: none !important; font-family: monospace !important; box-sizing: border-box !important;" onkeypress="if(event.key === 'Enter') kirimPesanUniversalChat()" />
-              <button type="button" onclick="kirimPesanUniversalChat()" style="flex-shrink: 0 !important; width: auto !important; padding: 9px 14px !important; background: #0284c7 !important; border: 1px solid #38bdf8 !important; color: white !important; border-radius: 7px !important; cursor: pointer !important; font-family: monospace !important; font-weight: bold !important; font-size: 11.5px !important; box-sizing: border-box !important;">Kirim</button>
+          <div style="padding: 4px 12px; background: rgba(15, 23, 42, 0.95); flex-shrink: 0;">
+              <span id="typingIndicatorUniversal" style="color: #38bdf8; font-size: 10px; font-style: italic; display: none;">Owner sedang mengetik...</span>
+          </div>
+
+          <div style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; padding: 10px !important; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important; box-sizing: border-box !important; width: 100% !important; flex-shrink: 0 !important;">
+              <input type="text" id="universalInputChat" placeholder="Ketik pesan ke owner..." style="flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; padding: 9px 10px !important; background: #020617 !important; border: 1px solid #334155 !important; color: #fff !important; border-radius: 7px !important; font-size: 11.5px !important; outline: none !important; font-family: monospace !important; box-sizing: border-box !important;" oninput="handleStaffTypingUniversal()" onkeypress="if(event.key === 'Enter') kirimPesanUniversalChat()" />
+              <button type="button" onclick="kirimPesanUniversalChat()" style="flex: 0 0 auto !important; width: auto !important; min-width: 65px !important; padding: 9px 12px !important; background: #0284c7 !important; border: 1px solid #38bdf8 !important; color: white !important; border-radius: 7px !important; cursor: pointer !important; font-family: monospace !important; font-weight: bold !important; font-size: 11.5px !important; box-sizing: border-box !important;">Kirim</button>
           </div>
       </div>
     `;
     document.body.appendChild(wrapper);
 }
 
-// Otomatis pasang tombol chat universal begitu halaman selesai dimuat
 document.addEventListener("DOMContentLoaded", () => {
     injectUniversalChatHTML();
 });
