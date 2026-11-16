@@ -523,7 +523,11 @@
             <div class="chat-box-area">
               <div style="padding: 12px 15px; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid var(--card-border); font-family: monospace; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
                 <span id="activeChatTitle" style="color: #fff; font-weight: bold;">Pilih ruang chat staf di sebelah kiri</span>
-                <span id="typingIndicatorOwner" style="color: var(--accent-blue); font-size: 10.5px; font-style: italic; display: none;">Staf sedang mengetik...</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span id="typingIndicatorOwner" style="color: var(--accent-blue); font-size: 10.5px; font-style: italic; display: none;">Staf sedang mengetik...</span>
+                  <!-- Tombol Hapus Semua Percakapan Khusus Owner -->
+                  <button onclick="hapusSemuaChatOwner()" title="Hapus Semua Percakapan dengan Staf Ini" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
               </div>
 
               <div class="chat-messages-container" id="chatMessagesContainer">
@@ -714,7 +718,7 @@
       else if (tabId === 'admin') headerTitle.innerText = "Owner Admin & License Hub";
     }
 
-    // --- LOGIKA LIVE CHAT CS CENTER DI DASHBOARD ---
+    // --- LOGIKA LIVE CHAT CS CENTER DI DASHBOARD (DENGAN FITUR TARIK & HAPUS SEMUA) ---
     async function muatDaftarChatStaf() {
       try {
         const res = await fetch(CLOUD_CHATS_ENDPOINT + "?t=" + Date.now());
@@ -799,6 +803,46 @@
       muatDaftarChatStaf();
     }
 
+    // Fungsionalitas Owner Menarik/Menghapus Pesan Sendiri
+    async function tarikPesanOwner(messageKey) {
+      if (!activeStaffRoom) return;
+      if (!confirm("Tarik/hapus pesan ini?")) return;
+      try {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages/${messageKey}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: "🚫 Pesan ini telah ditarik" })
+        });
+        muatDaftarChatStaf();
+      } catch (e) { console.error(e); }
+    }
+
+    // Fungsionalitas Owner Menghapus Semua Percakapan dengan Staf Aktif
+    async function hapusSemuaChatOwner() {
+      if (!activeStaffRoom) {
+        showDashboardToast("Pilih ruang chat staf terlebih dahulu!", false);
+        return;
+      }
+      if (!confirm("Hapus seluruh riwayat percakapan dengan staf ini?")) return;
+      try {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages.json`, {
+          method: 'DELETE'
+        });
+        // Kirim ulang pesan bot default agar chat tidak kosong
+        const botWelcome = {
+          sender: 'bot',
+          text: `Riwayat percakapan telah dibersihkan oleh Owner.`,
+          time: Date.now(),
+          read: true
+        };
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages.json`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
+        });
+        muatDaftarChatStaf();
+        showDashboardToast("Riwayat chat berhasil dibersihkan!", true);
+      } catch (e) { console.error(e); }
+    }
+
     async function muatIsiPesanChat(staffId, messages) {
       const container = document.getElementById('chatMessagesContainer');
       const typingEl = document.getElementById('typingIndicatorOwner');
@@ -814,8 +858,17 @@
       Object.keys(messages).forEach(k => {
         const m = messages[k];
         let bubbleClass = "staff";
-        if (m.sender === 'owner') bubbleClass = "owner";
-        else if (m.sender === 'bot') bubbleClass = "bot";
+        let deleteBtn = "";
+
+        if (m.sender === 'owner') {
+          bubbleClass = "owner";
+          // Tombol hapus/tarik pesan khusus untuk owner jika belum ditarik
+          if (m.text !== "🚫 Pesan ini telah ditarik") {
+            deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanOwner('${k}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
+          }
+        } else if (m.sender === 'bot') {
+          bubbleClass = "bot";
+        }
 
         // Status centang WhatsApp style
         let tickMark = "";
@@ -829,7 +882,10 @@
 
         html += `
           <div class="chat-bubble ${bubbleClass}">
-            <div style="font-size: 9.5px; opacity: 0.7; margin-bottom: 2px;">${m.sender.toUpperCase()}</div>
+            <div style="font-size: 9.5px; opacity: 0.7; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
+              <span>${m.sender.toUpperCase()}</span>
+              ${deleteBtn}
+            </div>
             <div>${m.text}</div>
             <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
               ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${tickMark}
