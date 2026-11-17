@@ -969,39 +969,41 @@
 
     // FUNGSI UTAMA ACC / TOLAK DENGAN GENERATOR TOKEN ASLI
     window.prosesResponTokenStaf = async function(staffKey, statusAksi, durasiDiminta) {
-        try {
-            let tokenBaru = "";
-            let pesanBalasan = "";
+    try {
+        let tokenBaru = "";
+        let pesanBalasan = "";
 
-            if (statusAksi === 'acc') {
-                tokenBaru = buatTokenDurasiOtomatis(durasiDiminta);
-                pesanBalasan = `✅ Permintaan durasi **${durasiDiminta}** telah di-ACC oleh Owner!\n\nToken Akses Resmi Anda:\n\`${tokenBaru}\`\n\nSilakan klik tombol salin atau gunakan token di atas untuk memperbarui lisensi aplikasi.`;
-            } else {
-                pesanBalasan = `❌ Mohon maaf, permintaan perpanjangan durasi **${durasiDiminta}** ditolak oleh Owner.`;
-            }
-
-            const replyMsg = {
-                sender: 'owner',
-                text: pesanBalasan,
-                time: Date.now(),
-                read: false
-            };
-            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/messages.json`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(replyMsg)
-            });
-
-            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/token_request.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ status: statusAksi === 'acc' ? 'approved' : 'rejected', token_generated: tokenBaru })
-            });
-
-            showDashboardToast(`Permintaan token berhasil di-${statusAksi.toUpperCase()}!`, true);
-            muatDaftarChatStaf();
-        } catch (err) {
-            console.error("Gagal memproses token:", err);
-            showDashboardToast("Terjadi kesalahan saat memproses token.", false);
+        if (statusAksi === 'acc') {
+            tokenBaru = buatTokenDurasiOtomatis(durasiDiminta);
+            // Format dibuat bersih agar mudah diparsing dan disalin murni kodenya
+            pesanBalasan = `✅ Token Akses Resmi (${durasiDiminta}):\n${tokenBaru}`;
+        } else {
+            pesanBalasan = `❌ Mohon maaf, permintaan perpanjangan durasi **${durasiDiminta}** ditolak oleh Owner.`;
         }
-    };
+
+        const replyMsg = {
+            sender: 'owner',
+            text: pesanBalasan,
+            time: Date.now(),
+            read: false
+        };
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/messages.json`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(replyMsg)
+        });
+
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/token_request.json`, {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ status: statusAksi === 'acc' ? 'approved' : 'rejected', token_generated: tokenBaru })
+        });
+
+        showDashboardToast(`Permintaan token berhasil di-${statusAksi.toUpperCase()}!`, true);
+        muatDaftarChatStaf();
+    } catch (err) {
+        console.error("Gagal memproses token:", err);
+        showDashboardToast("Terjadi kesalahan saat memproses token.", false);
+    }
+};
+
 
     function buatTokenDurasiOtomatis(durasiString) {
         let bulanTambah = 1;
