@@ -48,7 +48,7 @@
             min-height: 0 !important; box-sizing: border-box !important;
         }
         .chat-bubble-po {
-            max-width: 80% !important; padding: 8px 11px !important; border-radius: 10px !important; line-height: 1.4 !important; word-break: break-word !important; box-sizing: border-box !important;
+            max-width: 85% !important; padding: 8px 11px !important; border-radius: 10px !important; line-height: 1.4 !important; word-break: break-word !important; box-sizing: border-box !important;
         }
         .chat-bubble-po.right { background: #0284c7 !important; color: #fff !important; align-self: flex-end !important; border-bottom-right-radius: 2px !important; }
         .chat-bubble-po.left { background: #1e293b !important; color: #f8fafc !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important; }
@@ -466,20 +466,16 @@
       }
     };
 
-    // ✨ FUNGSI SALIN TOKEN BERSIH (Hanya mengambil string token-nya saja)
-    window.salinTokenChat = function(textTeks) {
-        let tokenBersih = textTeks;
-        // Jika ada penanda TOKEN AKSES RESMI atau format token, ambil bagian tokennya saja
-        if (textTeks.includes("TOKEN AKSES RESMI:")) {
-            const parts = textTeks.split("TOKEN AKSES RESMI:");
-            if (parts[1]) tokenBersih = parts[1].trim();
-        } else if (textTeks.includes("NX")) {
-            // Ambil dari kemunculan NX atau bersihkan dari tag HTML
-            tokenBersih = textTeks.replace(/<[^>]*>?/gm, '').trim();
+    // ✨ FUNGSI SALIN TOKEN BERSIH KHUSUS DARI KOTAK HEADER
+    window.salinTokenChat = function(kodeToken) {
+        let tokenBersih = kodeToken.trim();
+        if (tokenBersih.includes("NX")) {
+            const match = tokenBersih.match(/[a-zA-Z0-9]+NX[a-zA-Z0-9]+/);
+            if (match) tokenBersih = match[0];
         }
         
         navigator.clipboard.writeText(tokenBersih).then(() => {
-            alert("Token berhasil disalin ke clipboard!");
+            alert("Token berhasil disalin: " + tokenBersih);
         }).catch(err => {
             console.error('Gagal menyalin:', err);
         });
@@ -541,7 +537,7 @@
           const m = messages[k];
           let bubbleClass = "left";
           let deleteBtn = "";
-          let copyBtnHtml = "";
+          let chatContentHtml = "";
           
           const isTokenMessage = m.text && (m.text.includes("NX") || m.text.length > 20);
 
@@ -560,16 +556,35 @@
             }
           }
 
-          // Tombol Salin Token berbentuk Icon kecil minimalis di pojok kanan bawah gelembung chat
+          // Format Khusus Token: Header Kotak & Tombol Copy di Sebelah Kanan
           if (isTokenMessage && (m.sender === 'bot' || m.sender === 'owner')) {
-              const escapedText = m.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-              copyBtnHtml = `
-                <div style="margin-top: 4px; text-align: right;">
-                  <button type="button" onclick="salinTokenChat('${escapedText}')" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; width: 24px; height: 24px; border-radius: 6px; font-size: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;" title="Salin Token">
-                    <i class="fa-solid fa-copy"></i>
-                  </button>
+              let rawText = m.text;
+              let extractedToken = rawText.trim();
+              if (rawText.includes("NX")) {
+                  const match = rawText.match(/[a-zA-Z0-9]+NX[a-zA-Z0-9]+/);
+                  if (match) extractedToken = match[0];
+              } else if (rawText.includes(":")) {
+                  const parts = rawText.split(":");
+                  if (parts[1]) extractedToken = parts[1].replace(/[`<>\n]/g, '').trim();
+              }
+              const escapedToken = extractedToken.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+              chatContentHtml = `
+                <div>${m.text.split('\n')[0]}</div>
+                <div style="margin-top: 8px; font-family: monospace; width: 100%;">
+                  <div style="font-size: 10.5px; color: #94a3b8; margin-bottom: 4px; font-weight: bold;">Akses token resmi</div>
+                  <div style="display: flex; align-items: center; background: #020617; border: 1px solid #38bdf8; border-radius: 8px; padding: 6px 10px; gap: 8px;">
+                    <div style="flex: 1; color: #38bdf8; font-size: 11px; font-family: monospace; overflow-x: auto; white-space: nowrap; padding: 2px 0;">
+                      ${extractedToken}
+                    </div>
+                    <button type="button" onclick="salinTokenChat('${escapedToken}')" style="background: #38bdf8; border: none; color: #070b14; padding: 5px 10px; border-radius: 6px; font-size: 10.5px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;" title="Salin Token">
+                      <i class="fa-solid fa-copy"></i> Copy
+                    </button>
+                  </div>
                 </div>
               `;
+          } else {
+              chatContentHtml = `<div>${m.text}</div>`;
           }
 
           let tickMark = "";
@@ -583,8 +598,7 @@
                 <span>${m.sender.toUpperCase()}</span>
                 ${deleteBtn}
               </div>
-              <div>${m.text}</div>
-              ${copyBtnHtml}
+              ${chatContentHtml}
               <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
                 ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${tickMark}
               </div>
