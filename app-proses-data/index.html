@@ -666,7 +666,7 @@
       </div>
   </div>
 
-  <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM + LIVE CHAT -->
+  <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM + LIVE CHAT + AI BOT -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
@@ -731,7 +731,7 @@
       }
 
       // ==========================================
-      // LOGIKA LIVE CHAT STAF (DENGAN FITUR TARIK & HAPUS SEMUA)
+      // LOGIKA LIVE CHAT STAF & AI AUTO-REPLY BOT
       // ==========================================
       let chatPollInterval = null;
       let staffTypingTimeout = null;
@@ -830,14 +830,14 @@
             let deleteBtn = "";
             
             if (m.sender === 'staff') {
-              bubbleClass = "right"; // Staf di KANAN
+              bubbleClass = "right"; 
               if (m.text !== "🚫 Pesan ini telah ditarik") {
                 deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanStaf('${k}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
               }
             } else if (m.sender === 'bot') {
-              bubbleClass = "bot"; // Bot di KIRI
+              bubbleClass = "bot"; 
             } else {
-              bubbleClass = "left"; // Owner / Broadcast di KIRI
+              bubbleClass = "left"; 
               if (!m.read) {
                 unreadFromOwner++;
                 ownerUpdates[`${k}/read`] = true;
@@ -885,6 +885,63 @@
         } catch (e) { console.error(e); }
       }
 
+      // 🤖 FUNGSI BOT AI UNTUK MENANGANI KENDALA TOKEN OTOMATIS
+      async function cekDanProsesBotAi(textPesan, currentStaffName) {
+        const textLower = textPesan.toLowerCase();
+        const isKeywordKendala = textLower.includes("token") || textLower.includes("expired") || textLower.includes("habis") || textLower.includes("terkunci") || textLower.includes("mati");
+
+        try {
+          const reqRes = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`);
+          const currentReq = await reqRes.json();
+
+          if (isKeywordKendala) {
+            setTimeout(async () => {
+              const botReply = {
+                sender: 'bot',
+                text: `Halo ${currentStaffName}, terdeteksi kendala token/aplikasi terkunci. Butuh perpanjangan masa aktif berapa lama? (Contoh: 1 Minggu, 1 Bulan, atau 1 Tahun)`,
+                time: Date.now(),
+                read: true
+              };
+              await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botReply)
+              });
+              
+              await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ status: "waiting_duration", timestamp: Date.now() })
+              });
+              muatPesanChatStaf();
+            }, 800);
+
+          } else if (currentReq && currentReq.status === "waiting_duration") {
+            const durasiDiminta = textPesan;
+            setTimeout(async () => {
+              await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ 
+                  status: "pending", 
+                  requested_duration: durasiDiminta, 
+                  timestamp: Date.now() 
+                })
+              });
+
+              const botConfirm = {
+                sender: 'bot',
+                text: `Permintaan durasi **${durasiDiminta}** sudah dikirim ke Owner. Mohon tunggu sebentar, Owner sedang meninjau dan memproses persetujuannya ya...`,
+                time: Date.now(),
+                read: true
+              };
+              await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botConfirm)
+              });
+              muatPesanChatStaf();
+            }, 800);
+          }
+        } catch (err) {
+          console.error("Bot AI Error:", err);
+        }
+      }
+
       window.kirimPesanStaff = async function() {
         const inputEl = document.getElementById('inputChatPo');
         const text = inputEl.value.trim();
@@ -903,6 +960,10 @@
           });
           inputEl.value = "";
           muatPesanChatStaf();
+
+          // Panggil AI Bot otomatis
+          cekDanProsesBotAi(text, staffName);
+
         } catch (e) { console.error(e); }
       };
 
@@ -1005,17 +1066,16 @@
         }
       };
 
-      // 📢 TOMBOL "BUKA / BALAS CHAT" MASUK KE KIRI SEBAGAI PESAN DARI OWNER
       window.bukaChatDariBroadcast = async function(timestamp, messageText) {
         tandaiBroadcastDibaca(timestamp);
         
         if (typeof toggleChatWidget === 'function') {
-            toggleChatWidget(); // Buka widget chat
+            toggleChatWidget();
         }
 
         if (safeStaffKey) {
             const autoMsg = {
-                sender: 'owner', // Diatur sebagai owner supaya otomatis masuk ke KIRI
+                sender: 'owner',
                 text: `📢 [Broadcast Owner]: "${messageText || 'Pengumuman penting sistem.'}"`,
                 time: Date.now(),
                 read: true
@@ -1045,7 +1105,7 @@
       }
 
       cekBroadcastPusat();
-      setInterval(cekBroadcastPusat, 1000); // Polling instan 1 detik
+      setInterval(cekBroadcastPusat, 1000);
       window.addEventListener('focus', cekBroadcastPusat);
     });
   </script>
