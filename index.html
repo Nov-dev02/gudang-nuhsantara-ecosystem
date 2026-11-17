@@ -654,7 +654,7 @@
       setInterval(muatDaftarChatStaf, 4000);
     });
 
-    // --- ENGINE GENERATOR TOKEN ASLI SESUAI SCRIPT KAMU ---
+    // --- ENGINE GENERATOR TOKEN ASLI ---
     function buatTokenDariDurasi(durasiString) {
         let bulanTambah = 1;
         const durLower = (durasiString || "").toLowerCase();
@@ -691,6 +691,23 @@
 
         return randomPrefix + "NX" + timeHex + randomSuffix;
     }
+
+    // --- FUNGSI SALIN TOKEN BERSIH (HANYA KODENYA SAJA) ---
+    window.salinTokenChat = function(textTeks) {
+        let tokenBersih = textTeks;
+        if (textTeks.includes("Token Akses Resmi Anda:")) {
+            const parts = textTeks.split("Token Akses Resmi Anda:");
+            if (parts[1]) tokenBersih = parts[1].replace(/[`<>/b]/g, '').trim();
+        } else if (textTeks.includes("NX")) {
+            tokenBersih = textTeks.replace(/<[^>]*>?/gm, '').trim();
+        }
+        
+        navigator.clipboard.writeText(tokenBersih).then(() => {
+            alert("Token bersih berhasil disalin ke clipboard!");
+        }).catch(err => {
+            console.error('Gagal menyalin:', err);
+        });
+    };
 
     // --- SISTEM BROADCAST PRO ---
     function playAlertSoundAndVibrate() {
@@ -1055,6 +1072,9 @@
         const m = messages[k];
         let bubbleClass = "staff";
         let deleteBtn = "";
+        let copyBtnHtml = "";
+        
+        const isTokenMessage = m.text && (m.text.includes("NX") || m.text.length > 20);
 
         if (m.sender === 'owner') {
           bubbleClass = "owner";
@@ -1062,6 +1082,18 @@
             deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanOwner('${k}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
           }
         } else if (m.sender === 'bot') { bubbleClass = "bot"; }
+
+        // Tombol Salin Token Berbentuk Icon Kecil Minimalis
+        if (isTokenMessage && (m.sender === 'owner' || m.sender === 'bot')) {
+            const escapedText = m.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            copyBtnHtml = `
+              <div style="margin-top: 4px; text-align: right;">
+                <button type="button" onclick="salinTokenChat('${escapedText}')" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; width: 24px; height: 24px; border-radius: 6px; font-size: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;" title="Salin Token">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+              </div>
+            `;
+        }
 
         let tickMark = "";
         if (m.sender === 'owner' || m.sender === 'bot') {
@@ -1075,6 +1107,7 @@
               ${deleteBtn}
             </div>
             <div>${m.text}</div>
+            ${copyBtnHtml}
             <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
               ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${tickMark}
             </div>
