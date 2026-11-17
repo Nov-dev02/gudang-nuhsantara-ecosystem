@@ -556,25 +556,27 @@
             }
           }
 
-          // Format Khusus Token: Header Kotak & Tombol Copy di Sebelah Kanan
+          // Format Khusus Token: Header Kotak & Tombol Copy di Sebelah Kanan (SUDAH DIPERBAIKI)
           if (isTokenMessage && (m.sender === 'bot' || m.sender === 'owner')) {
               let rawText = m.text;
-              let extractedToken = rawText.trim();
-              if (rawText.includes("NX")) {
-                  const match = rawText.match(/[a-zA-Z0-9]+NX[a-zA-Z0-9]+/);
-                  if (match) extractedToken = match[0];
-              } else if (rawText.includes(":")) {
-                  const parts = rawText.split(":");
-                  if (parts[1]) extractedToken = parts[1].replace(/[`<>\n]/g, '').trim();
+              let extractedToken = "";
+              
+              const match = rawText.match(/[a-zA-Z0-9]+NX[a-zA-Z0-9]+/);
+              if (match) {
+                  extractedToken = match[0];
+              } else {
+                  const lines = rawText.split('\n');
+                  extractedToken = lines[lines.length - 1].replace(/[`<>\n]/g, '').trim();
               }
+
+              const displayHeaderTitle = rawText.includes("Token Akses Resmi") ? rawText.split('\n')[0] : "Akses token resmi";
               const escapedToken = extractedToken.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
               chatContentHtml = `
-                <div>${m.text.split('\n')[0]}</div>
-                <div style="margin-top: 8px; font-family: monospace; width: 100%;">
-                  <div style="font-size: 10.5px; color: #94a3b8; margin-bottom: 4px; font-weight: bold;">Akses token resmi</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">${displayHeaderTitle}</div>
+                <div style="margin-top: 6px; font-family: monospace; width: 100%;">
                   <div style="display: flex; align-items: center; background: #020617; border: 1px solid #38bdf8; border-radius: 8px; padding: 6px 10px; gap: 8px;">
-                    <div style="flex: 1; color: #38bdf8; font-size: 11px; font-family: monospace; overflow-x: auto; white-space: nowrap; padding: 2px 0;">
+                    <div style="flex: 1; color: #38bdf8; font-size: 11px; font-family: monospace; overflow-x: auto; white-space: nowrap; padding: 2px 0; user-select: all;">
                       ${extractedToken}
                     </div>
                     <button type="button" onclick="salinTokenChat('${escapedToken}')" style="background: #38bdf8; border: none; color: #070b14; padding: 5px 10px; border-radius: 6px; font-size: 10.5px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;" title="Salin Token">
