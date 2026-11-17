@@ -1,16 +1,35 @@
 // =========================================================================
-// 🌐 KONFIGURASI DINAMIS LINK GAS (GOOGLE APPS SCRIPT)
+// 🌐 KONFIGURASI DINAMIS LINK GAS (SINKRONISASI CLOUD FIREBASE + LOCAL)
 // =========================================================================
 const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbzgfgJTg5maF0gLBcmFhLwqQS9dAzqXmFthEcp_GW3WtrOKuOfqP_INVLxlm0-68Yv8fA/exec";
+const FIREBASE_CONFIG_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app/gudang_nuhsantara/config/gas_url.json";
 
 function getGasUrl() {
-  return localStorage.getItem('GUDANG_GAS_URL') || DEFAULT_GAS_URL;
+  const saved = localStorage.getItem('GUDANG_GAS_URL');
+  return (saved && saved.trim() !== "") ? saved.trim() : DEFAULT_GAS_URL;
 }
 
 Object.defineProperty(window, 'WEB_APP_URL', {
   get: function() { return getGasUrl(); },
   configurable: true
 });
+
+// Otomatis sinkronisasi link GAS terbaru dari Firebase saat aplikasi dibuka
+async function syncGasUrlFromCloud() {
+  try {
+    const res = await fetch(`${FIREBASE_CONFIG_URL}?t=${Date.now()}`);
+    const cloudUrl = await res.json();
+    if (cloudUrl && typeof cloudUrl === 'string' && cloudUrl.startsWith('https://script.google.com/')) {
+      if (localStorage.getItem('GUDANG_GAS_URL') !== cloudUrl.trim()) {
+        localStorage.setItem('GUDANG_GAS_URL', cloudUrl.trim());
+        console.log("✅ Link GAS berhasil disinkronkan dari Cloud:", cloudUrl);
+      }
+    }
+  } catch (e) {
+    console.warn("Gagal sinkronisasi link GAS dari cloud, menggunakan cache lokal.", e);
+  }
+}
+document.addEventListener('DOMContentLoaded', syncGasUrlFromCloud);
 
 let currentDownloadUrl = "";
 const SCRIPT_URL_REKAPAN = "https://script.google.com/macros/s/AKfycbzLud58sY-o4azbshEww7-JSXCLoZ2sbmALaS2z6aRhmT-Q_vvXCzlDn4NqzBCedZpS/exec";
@@ -836,14 +855,31 @@ function tutupModalGas() {
   if (modal) modal.style.display = 'none';
 }
 
-function simpanGasUrl() {
+async function simpanGasUrl() {
   const input = document.getElementById('input-gas-url');
   if (input && input.value.trim() !== '') {
     const newUrl = input.value.trim();
+
+    if (!newUrl.startsWith('https://script.google.com/macros/s/')) {
+      showCustomToastNotification("Format URL GAS tidak valid! Harus berawalan https://script.google.com/macros/s/...", "#f43f5e");
+      return;
+    }
+
+    // 1. Simpan ke lokal dan Firebase Cloud agar semua perangkat staf ikut ter-update
     localStorage.setItem('GUDANG_GAS_URL', newUrl);
     localStorage.setItem('GUDANG_REFRESH_BYPASS', 'true');
     tutupModalGas();
-    showCustomToastNotification("Menyimpan URL GAS & Memuat Ulang...", "#38bdf8");
+    showCustomToastNotification("Menyimpan ke Cloud & Memperbarui Semua Perangkat...", "#38bdf8");
+
+    try {
+      await fetch(FIREBASE_CONFIG_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUrl)
+      });
+    } catch (e) {
+      console.error("Gagal push URL ke Firebase:", e);
+    }
 
     setTimeout(() => {
       window.location.reload();
