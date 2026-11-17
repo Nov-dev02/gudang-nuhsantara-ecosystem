@@ -666,7 +666,7 @@
       </div>
   </div>
 
-  <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM + LIVE CHAT + AI BOT -->
+  <!-- SCRIPT UTAMA & WHATSAPP-LIKE NOTIFIKASI SISTEM + LIVE CHAT + AI BOT + SALIN TOKEN -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
@@ -772,6 +772,16 @@
         }
       };
 
+      // ✨ FUNGSI SALIN TOKEN OTOMATIS KE CLIPBOARD
+      window.salinTokenChat = function(textTeks) {
+          const cleanText = textTeks.replace(/<\/?b>/g, '').trim();
+          navigator.clipboard.writeText(cleanText).then(() => {
+              alert("Token berhasil disalin ke clipboard!");
+          }).catch(err => {
+              console.error('Gagal menyalin:', err);
+          });
+      };
+
       window.tarikPesanStaf = async function(messageKey) {
         if (!safeStaffKey) return;
         if (!confirm("Tarik/hapus pesan ini?")) return;
@@ -828,7 +838,11 @@
             const m = messages[k];
             let bubbleClass = "left";
             let deleteBtn = "";
+            let copyBtnHtml = "";
             
+            // Deteksi apakah pesan dari bot/owner mengandung token (mengandung 'NX' atau teks panjang)
+            const isTokenMessage = m.text && (m.text.includes("NX") || m.text.length > 20);
+
             if (m.sender === 'staff') {
               bubbleClass = "right"; 
               if (m.text !== "🚫 Pesan ini telah ditarik") {
@@ -842,6 +856,16 @@
                 unreadFromOwner++;
                 ownerUpdates[`${k}/read`] = true;
               }
+            }
+
+            // Jika pesan terdeteksi token, tampilkan tombol Salin Token
+            if (isTokenMessage && (m.sender === 'bot' || m.sender === 'owner')) {
+                const escapedText = m.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                copyBtnHtml = `
+                  <button type="button" onclick="salinTokenChat('${escapedText}')" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; font-family: monospace; display: inline-flex; align-items: center; gap: 5px; margin-top: 8px;">
+                    <i class="fa-solid fa-copy"></i> Salin Token
+                  </button>
+                `;
             }
 
             let tickMark = "";
@@ -860,6 +884,7 @@
                   ${deleteBtn}
                 </div>
                 <div>${m.text}</div>
+                ${copyBtnHtml}
                 <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
                   ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${tickMark}
                 </div>
