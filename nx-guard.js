@@ -186,6 +186,11 @@ async function muatPesanUniversalChat() {
             const m = messages[k];
             let bubbleStyle = "";
             let deleteBtn = "";
+            let chatContentHtml = "";
+            
+            const rawText = m.text || "";
+            const isTokenMessage = (m.sender === 'bot' || m.sender === 'owner') && 
+                                   (rawText.includes("NX") || (rawText.length > 25 && (rawText.includes("Token") || rawText.includes("🔑") || rawText.includes("aktif"))));
 
             if (m.sender === 'staff') {
                 bubbleStyle = "background: #0284c7 !important; color: #fff !important; align-self: flex-end !important; border-bottom-right-radius: 2px !important;";
@@ -202,6 +207,40 @@ async function muatPesanUniversalChat() {
                 }
             }
 
+            // Layout Vertikal Khusus Token (Tombol Salin Full Lebar)
+            if (isTokenMessage) {
+                let extractedToken = rawText.trim();
+                const lines = rawText.split('\n');
+                for (let line of lines) {
+                    let cleanLine = line.trim();
+                    if (cleanLine.length > 8 && !cleanLine.toLowerCase().includes("akses") && !cleanLine.toLowerCase().includes("token resmi")) {
+                        extractedToken = cleanLine;
+                        break;
+                    }
+                }
+                if (extractedToken.includes('\n')) {
+                    const subLines = extractedToken.split('\n');
+                    extractedToken = subLines[subLines.length - 1].trim();
+                }
+
+                const escapedToken = extractedToken.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                chatContentHtml = `
+                  <div style="font-weight: 600; margin-bottom: 4px; color: #38bdf8;"><i class="fa-solid fa-key"></i> Akses Token Resmi</div>
+                  <div style="font-size: 11px; margin-bottom: 8px; opacity: 0.9; word-break: break-all;">${rawText}</div>
+                  <div style="font-family: monospace; width: 100%; background: #020617; border: 1px solid #38bdf8; border-radius: 8px; padding: 8px; box-sizing: border-box;">
+                    <div style="color: #38bdf8; font-size: 11.5px; font-family: monospace; word-break: break-all; margin-bottom: 8px; user-select: all; background: rgba(56, 189, 248, 0.08); padding: 6px; border-radius: 6px;">
+                      ${extractedToken}
+                    </div>
+                    <button type="button" onclick="salinTokenUniversalChat('${escapedToken}')" style="width: 100%; background: #38bdf8; border: none; color: #070b14; padding: 7px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;" title="Salin Token">
+                      <i class="fa-solid fa-copy"></i> Salin Token Sekarang
+                    </button>
+                  </div>
+                `;
+            } else {
+                chatContentHtml = `<div>${m.text}</div>`;
+            }
+
             let tickMark = "";
             if (m.sender === 'staff') {
                 if (m.read) {
@@ -212,12 +251,12 @@ async function muatPesanUniversalChat() {
             }
 
             html += `
-                <div style="max-width: 80% !important; padding: 8px 11px !important; border-radius: 10px !important; ${bubbleStyle} word-break: break-word !important; box-sizing: border-box !important;">
+                <div style="max-width: 85% !important; padding: 8px 11px !important; border-radius: 10px !important; ${bubbleStyle} word-break: break-word !important; box-sizing: border-box !important;">
                     <div style="font-size: 9px; opacity: 0.7; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
                         <span>${m.sender.toUpperCase()}</span>
                         ${deleteBtn}
                     </div>
-                    <div>${m.text}</div>
+                    ${chatContentHtml}
                     <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
                         ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${tickMark}
                     </div>
@@ -245,12 +284,73 @@ async function muatPesanUniversalChat() {
     } catch (e) { console.error(e); }
 }
 
+window.salinTokenUniversalChat = function(kodeToken) {
+    let tokenBersih = kodeToken.trim();
+    navigator.clipboard.writeText(tokenBersih).then(() => {
+        alert("Token berhasil disalin: " + tokenBersih);
+    }).catch(err => {
+        console.error('Gagal menyalin:', err);
+    });
+};
+
+async function kirimPesanurUniversalChatBotLogic(textPesan, currentStaffName) {
+    const textLower = textPesan.toLowerCase();
+    const isKeywordKendala = textLower.includes("token") || textLower.includes("expired") || textLower.includes("habis") || textLower.includes("terkunci") || textLower.includes("mati");
+    const safeStaffKey = getSafeStaffKeyForChat();
+
+    try {
+      const reqRes = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`);
+      const currentReq = await reqRes.json();
+
+      if (isKeywordKendala) {
+        setTimeout(async () => {
+          const botReply = {
+            sender: 'bot',
+            text: `Halo ${currentStaffName}, terdeteksi kendala token/aplikasi terkunci. Butuh perpanjangan masa aktif berapa lama? (Contoh: 1 Minggu, 1 Bulan, atau 1 Tahun)`,
+            time: Date.now(),
+            read: true
+          };
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botReply)
+          });
+          
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ status: "waiting_duration", timestamp: Date.now() })
+          });
+          muatPesanUniversalChat();
+        }, 800);
+
+      } else if (currentReq && currentReq.status === "waiting_duration") {
+        const durasiDiminta = textPesan;
+        setTimeout(async () => {
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ status: "pending", requested_duration: durasiDiminta, timestamp: Date.now() })
+          });
+
+          const botConfirm = {
+            sender: 'bot',
+            text: `Permintaan durasi **${durasiDiminta}** sudah dikirim ke Owner. Mohon tunggu sebentar, Owner sedang meninjau dan memproses persetujuannya ya...`,
+            time: Date.now(),
+            read: true
+          };
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botConfirm)
+          });
+          muatPesanUniversalChat();
+        }, 800);
+      }
+    } catch (err) {}
+}
+
 async function kirimPesanUniversalChat() {
     const input = document.getElementById('universalInputChat');
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
     const safeStaffKey = getSafeStaffKeyForChat();
+    const staffName = localStorage.getItem('gudang_staff_name') || "Staf_General";
 
     const newMsg = {
         sender: 'staff',
@@ -267,6 +367,7 @@ async function kirimPesanUniversalChat() {
         });
         input.value = "";
         muatPesanUniversalChat();
+        kirimPesanurUniversalChatBotLogic(text, staffName);
     } catch (e) { alert("Gagal mengirim pesan!"); }
 }
 
@@ -286,14 +387,7 @@ async function handleStaffTypingUniversal() {
 }
 
 function injectUniversalChatHTML() {
-    // Jika halaman sudah memiliki widget chat sendiri (seperti App PO), jangan inject agar tidak bentrok
-    if (
-        document.getElementById('universalChatWidgetBox') || 
-        document.getElementById('chatWidgetBox') || 
-        document.getElementById('floatingChatBtn')
-    ) {
-        return;
-    }
+    if (document.getElementById('universalChatWrapper')) return;
 
     const wrapper = document.createElement('div');
     wrapper.id = 'universalChatWrapper';
@@ -326,7 +420,7 @@ function injectUniversalChatHTML() {
           </div>
 
           <div style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; padding: 10px !important; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important; box-sizing: border-box !important; width: 100% !important; flex-shrink: 0 !important;">
-              <input type="text" id="universalInputChat" placeholder="Ketik pesan ke owner..." style="flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; padding: 9px 10px !important; background: #020617 !important; border: 1px solid #334155 !important; color: #fff !important; border-radius: 7px !important; font-size: 11.5px !important; outline: none !important; font-family: monospace !important; box-sizing: border-box !important;" oninput="handleStaffTypingUniversal()" onkeypress="if(event.key === 'Enter') kirimPesanUniversalChat()" />
+              <input type="text" id="universalInputChat" placeholder="Ketik pesan atau kendala token..." style="flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; padding: 9px 10px !important; background: #020617 !important; border: 1px solid #334155 !important; color: #fff !important; border-radius: 7px !important; font-size: 11.5px !important; outline: none !important; font-family: monospace !important; box-sizing: border-box !important;" oninput="handleStaffTypingUniversal()" onkeypress="if(event.key === 'Enter') kirimPesanUniversalChat()" />
               <button type="button" onclick="kirimPesanUniversalChat()" style="flex: 0 0 auto !important; width: auto !important; min-width: 65px !important; padding: 9px 12px !important; background: #0284c7 !important; border: 1px solid #38bdf8 !important; color: white !important; border-radius: 7px !important; cursor: pointer !important; font-family: monospace !important; font-weight: bold !important; font-size: 11.5px !important; box-sizing: border-box !important;">Kirim</button>
           </div>
       </div>
@@ -345,10 +439,6 @@ function tampilkanLayarKunciPermanen() {
   if (existing) existing.remove();
 
   document.title = "403 Access Forbidden - Permanent Revocation";
-
-  const nomorWA = "6287762756779"; 
-  const pesanWA = encodeURIComponent("Halo Admin, akses aplikasi Gudang Nuhsantara terkunci permanen. Mohon bantuan pemulihan akses.");
-  const linkWA = "https://wa.me/" + nomorWA + "?text=" + pesanWA;
 
   const lockScreen = document.createElement('div');
   lockScreen.id = 'nx-global-lock-screen';
@@ -369,9 +459,9 @@ function tampilkanLayarKunciPermanen() {
     <h3 style="color: #ef4444; margin: 0 0 6px 0; font-size: 15px; font-weight: 700; letter-spacing: 1px;">AKSES DICABUT PERMANEN</h3>
     <div style="font-size: 10.5px; color: #f87171; margin-bottom: 12px; background: rgba(239, 68, 68, 0.1); padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3);">ERR_LICENSE_REVOKED [ID: 403-REV]</div>
     <p style="color: #cbd5e1; font-size: 12px; margin-bottom: 20px; line-height: 1.4; text-align: left;">Lisensi ekosistem Gudang Nuhsantara pada modul ini telah dinonaktifkan secara permanen oleh Administrator Pusat. Form input token dinonaktifkan.</p>
-    <a href="${linkWA}" target="_blank" style="text-decoration: none; display: block; margin-bottom: 8px;">
-      <button type="button" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace;">💬 HUBUNGI ADMINISTRATOR</button>
-    </a>
+    
+    <button type="button" id="btnHubungiAdminPerm" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace; margin-bottom: 8px;">💬 HUBUNGI ADMINISTRATOR</button>
+    
     <div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core</div>
   `;
 
@@ -381,6 +471,15 @@ function tampilkanLayarKunciPermanen() {
   } else {
     document.addEventListener("DOMContentLoaded", () => document.body.appendChild(lockScreen));
   }
+
+  setTimeout(() => {
+    const btnAdmin = document.getElementById('btnHubungiAdminPerm');
+    if (btnAdmin) {
+      btnAdmin.onclick = function() {
+        toggleUniversalChatWidget();
+      };
+    }
+  }, 100);
 }
 
 // --- TAMPILKAN MODAL LAYAR KUNCI SEMENTARA ---
@@ -390,10 +489,6 @@ function tampilkanLayarKunciMandiri() {
   if (existing) existing.remove();
 
   document.title = "503 Service Unavailable - Gateway Timeout";
-
-  const nomorWA = "6287762756779"; 
-  const pesanWA = encodeURIComponent("Halo Admin, akses aplikasi Gudang Nuhsantara terkunci. Mohon bantuan token aktivasi baru.");
-  const linkWA = "https://wa.me/" + nomorWA + "?text=" + pesanWA;
 
   const lockScreen = document.createElement('div');
   lockScreen.id = 'nx-global-lock-screen';
@@ -419,9 +514,9 @@ function tampilkanLayarKunciMandiri() {
       <div id="tokenErrorMsg" style="color: #ef4444; font-size: 10px; margin-top: 4px; display: none;">Token tidak valid atau format salah!</div>
     </div>
     <button id="btnRedeemToken" type="button" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border: 1px solid #38bdf8; padding: 10px 16px; font-size: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3); font-family: monospace; letter-spacing: 0.5px; margin-bottom: 8px; z-index: 2147483648;">AKTIFKAN TOKEN</button>
-    <a href="${linkWA}" target="_blank" style="text-decoration: none; display: block; margin-bottom: 8px;">
-      <button type="button" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace;">💬 HUBUNGI ADMINISTRATOR</button>
-    </a>
+    
+    <button type="button" id="btnHubungiAdminTemp" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace; margin-bottom: 8px;">💬 HUBUNGI ADMINISTRATOR</button>
+    
     <div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core</div>
   `;
 
@@ -433,6 +528,13 @@ function tampilkanLayarKunciMandiri() {
   }
 
   setTimeout(() => {
+    const btnAdminTemp = document.getElementById('btnHubungiAdminTemp');
+    if (btnAdminTemp) {
+      btnAdminTemp.onclick = function() {
+        toggleUniversalChatWidget();
+      };
+    }
+
     const btnRedeem = document.getElementById('btnRedeemToken');
     if (btnRedeem) {
       btnRedeem.onclick = async function() {
@@ -477,7 +579,7 @@ function tampilkanLayarKunciMandiri() {
           document.getElementById('inputTokenLisensi').style.border = "1px solid #ef4444";
           
           this.style.transform = "translateX(5px)";
-          setTimeout(() => this.style.transform = "translateX(-5px)", 100);
+          setTimeout(() => this.style.transform = "translateX(-50%)", 100);
           setTimeout(() => this.style.transform = "translateX(0)", 200);
         }
       };
