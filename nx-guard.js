@@ -1,5 +1,5 @@
 // =========================================================================
-// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD & PRO LIVE CHAT (v4.5)
+// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD & PRO LIVE CHAT (v4.6)
 // =========================================================================
 
 // 🌐 URL FIREBASE REALTIME DATABASE MILIKMU
@@ -83,12 +83,10 @@ async function inisialisasiUniversalChatData() {
     const staffName = localStorage.getItem('gudang_staff_name') || "Staf_General";
     const safeStaffKey = getSafeStaffKeyForChat();
 
-    // Daftarkan nama staf ke database chat
     await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/staffName.json`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(staffName)
     }).catch(e => {});
 
-    // Cek apakah pesan sudah ada, jika kosong kirim pesan sambutan bot otomatis
     const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`);
     const msgs = await res.json();
     if (!msgs) {
@@ -127,7 +125,6 @@ function toggleUniversalChatWidget() {
     }
 }
 
-// FUNGSI TARIK / HAPUS PESAN SENDIRI
 async function tarikPesanUniversal(messageKey) {
     const safeStaffKey = getSafeStaffKeyForChat();
     if (!confirm("Tarik/hapus pesan ini?")) return;
@@ -141,7 +138,6 @@ async function tarikPesanUniversal(messageKey) {
     } catch (e) { console.error(e); }
 }
 
-// FUNGSI HAPUS SEMUA PERCAKAPAN
 async function hapusSemuaChatUniversal() {
     const safeStaffKey = getSafeStaffKeyForChat();
     if (!confirm("Hapus semua riwayat percakapan ini?")) return;
@@ -207,7 +203,6 @@ async function muatPesanUniversalChat() {
                 }
             }
 
-            // Layout Vertikal Khusus Token (Tombol Salin Full Lebar)
             if (isTokenMessage) {
                 let extractedToken = rawText.trim();
                 const lines = rawText.split('\n');
@@ -391,6 +386,8 @@ function injectUniversalChatHTML() {
 
     const wrapper = document.createElement('div');
     wrapper.id = 'universalChatWrapper';
+    // Diatur z-index 2147483647 agar selalu berada di atas layar kunci
+    wrapper.style.cssText = "position: relative; z-Index: 2147483647 !important;";
     wrapper.innerHTML = `
       <!-- FLOATING CHAT BUTTON UNIVERSAL -->
       <div id="universalFloatingChatBtn" style="position: fixed !important; bottom: 24px !important; right: 24px !important; width: 56px !important; height: 56px !important; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important; border: 1px solid #38bdf8 !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; color: #fff !important; font-size: 24px !important; cursor: pointer !important; z-index: 2147483647 !important; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.5) !important;" onclick="toggleUniversalChatWidget()">
@@ -443,7 +440,8 @@ function tampilkanLayarKunciPermanen() {
   const lockScreen = document.createElement('div');
   lockScreen.id = 'nx-global-lock-screen';
   lockScreen.dataset.mode = 'permanent';
-  lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 5, 5, 0.98); backdrop-filter: blur(16px); z-index: 2147483647; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
+  // Ubah latar belakang jadi semi-transparan agar halaman tidak tertutup blok hitam mati (menggunakan z-index di bawah chat)
+  lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.75); backdrop-filter: blur(12px); z-index: 2147483640; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
 
   const box = document.createElement('div');
   box.style.cssText = "position: relative; background: #1a0f0f; border: 2px solid rgba(239, 68, 68, 0.6); padding: 32px 24px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(239, 68, 68, 0.3); font-family: monospace;";
@@ -493,7 +491,8 @@ function tampilkanLayarKunciMandiri() {
   const lockScreen = document.createElement('div');
   lockScreen.id = 'nx-global-lock-screen';
   lockScreen.dataset.mode = 'temporary';
-  lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.98); backdrop-filter: blur(16px); z-index: 2147483647; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
+  // Ubah latar belakang jadi semi-transparan (z-index di bawah chat) agar ikon chat tetap terlihat melayang
+  lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.75); backdrop-filter: blur(12px); z-index: 2147483640; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
 
   const box = document.createElement('div');
   box.style.cssText = "position: relative; background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.4); padding: 32px 24px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(239, 68, 68, 0.15); font-family: monospace;";
@@ -579,7 +578,7 @@ function tampilkanLayarKunciMandiri() {
           document.getElementById('inputTokenLisensi').style.border = "1px solid #ef4444";
           
           this.style.transform = "translateX(5px)";
-          setTimeout(() => this.style.transform = "translateX(-50%)", 100);
+          setTimeout(() => this.style.transform = "translateX(-5px)", 100);
           setTimeout(() => this.style.transform = "translateX(0)", 200);
         }
       };
