@@ -1,5 +1,5 @@
 // =========================================================================
-// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD & PRO LIVE CHAT (v4.6)
+// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD & PRO LIVE CHAT (v4.7)
 // =========================================================================
 
 // 🌐 URL FIREBASE REALTIME DATABASE MILIKMU
@@ -386,7 +386,6 @@ function injectUniversalChatHTML() {
 
     const wrapper = document.createElement('div');
     wrapper.id = 'universalChatWrapper';
-    // Diatur z-index 2147483647 agar selalu berada di atas layar kunci
     wrapper.style.cssText = "position: relative; z-Index: 2147483647 !important;";
     wrapper.innerHTML = `
       <!-- FLOATING CHAT BUTTON UNIVERSAL -->
@@ -440,7 +439,6 @@ function tampilkanLayarKunciPermanen() {
   const lockScreen = document.createElement('div');
   lockScreen.id = 'nx-global-lock-screen';
   lockScreen.dataset.mode = 'permanent';
-  // Ubah latar belakang jadi semi-transparan agar halaman tidak tertutup blok hitam mati (menggunakan z-index di bawah chat)
   lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.75); backdrop-filter: blur(12px); z-index: 2147483640; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
 
   const box = document.createElement('div');
@@ -491,7 +489,6 @@ function tampilkanLayarKunciMandiri() {
   const lockScreen = document.createElement('div');
   lockScreen.id = 'nx-global-lock-screen';
   lockScreen.dataset.mode = 'temporary';
-  // Ubah latar belakang jadi semi-transparan (z-index di bawah chat) agar ikon chat tetap terlihat melayang
   lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.75); backdrop-filter: blur(12px); z-index: 2147483640; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
 
   const box = document.createElement('div');
@@ -552,6 +549,7 @@ function tampilkanLayarKunciMandiri() {
           }, 300);
 
           try {
+            // FIX UTAMA: Kirim objek JSON standar agar data expiry tertulis bersih dan akurat di Firebase
             await fetch(CLOUD_LICENSE_ENDPOINT, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -564,6 +562,7 @@ function tampilkanLayarKunciMandiri() {
             });
 
             clearInterval(loadingInterval);
+            alert("Aktivasi Berhasil! Masa aktif lisensi telah diperbarui.");
             location.reload(true);
           } catch (e) {
             clearInterval(loadingInterval);
