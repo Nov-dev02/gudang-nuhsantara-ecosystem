@@ -72,7 +72,6 @@
             font-weight: bold !important; font-size: 11.5px !important; box-sizing: border-box !important; margin: 0 !important;
         }
 
-        /* ✨ ANIMASI SHIMMERS / LIGHT SWEEP UNTUK JUDUL APLIKASI */
         @keyframes shimmerEffect {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
@@ -81,9 +80,7 @@
 </head>
 <body>
 
-    <!-- ========================================== -->
-    <!-- ✨ WELCOME POP-UP SAMBUTAN EKOSISTEM BARU    -->
-    <!-- ========================================== -->
+    <!-- WELCOME POP-UP -->
     <div id="welcomeEcosystemModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.95); backdrop-filter: blur(14px); z-index: 2147483646; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; font-family: monospace;">
         <div style="background: linear-gradient(145deg, #0f172a, #1e293b); border: 1.5px solid rgba(56, 189, 248, 0.4); padding: 32px 24px; border-radius: 20px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(56, 189, 248, 0.15);">
             
@@ -108,7 +105,7 @@
         </div>
     </div>
 
-    <!-- Splash Screen / Initial Loading -->
+    <!-- Splash Screen -->
     <div id="appSplashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo-container">
@@ -123,10 +120,8 @@
     <div class="container">
         <!-- Login Section -->
         <div id="loginSection" class="login-box hidden">
-            
             <div class="robot-container" id="robotContainer">
                 <div class="robot-bubble" id="robotBubble">Masukkan akun internal gudang</div>
-                
                 <svg class="robot-svg" width="100" height="90" viewBox="0 0 100 90" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <line x1="50" y1="16" x2="50" y2="8" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>
                     <circle cx="50" cy="6" r="3.5" fill="#38bdf8"/>
@@ -203,7 +198,6 @@
                     <div style="display: inline-flex; align-items: center; background: rgba(56, 189, 248, 0.1); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.2); margin-bottom: 6px;">
                         <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: #38bdf8; font-weight: 700; white-space: nowrap;">Nuhsantara Merchandise</span>
                     </div>
-                    <!-- ✨ JUDUL DENGAN ANIMASI SHIMMER -->
                     <h2 style="margin: 0; font-size: 20px; font-weight: 700; background: linear-gradient(90deg, #38bdf8 0%, #e0f2fe 50%, #38bdf8 100%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shimmerEffect 3s linear infinite;">System PO Gudang</h2>
                     <div id="userGreeting" class="user-greeting"></div>
                 </div>
@@ -263,9 +257,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- WIDGET FLOATING LIVE CHAT CS (DENGAN FITUR HAPUS) -->
-    <!-- ========================================== -->
+    <!-- WIDGET FLOATING LIVE CHAT CS -->
     <div id="floatingChatBtn" class="floating-chat-btn" onclick="toggleChatWidget()" style="display: none;">
         <i class="fa-solid fa-headset"></i>
         <span id="chatUnreadBadgePo" class="chat-badge-po">0</span>
@@ -278,7 +270,6 @@
                 <div id="chatWidgetSub" style="font-size: 9.5px; color: var(--text-desc, #94a3b8);">Terhubung dengan Asisten Virtual</div>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-                <!-- Tombol Hapus Semua Percakapan -->
                 <button onclick="hapusSemuaChatStaf()" title="Hapus Semua Percakapan" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
                 <button onclick="toggleChatWidget()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
             </div>
@@ -436,9 +427,6 @@
       inputEl.addEventListener('keypress', e => { if (e.key === 'Enter') handleSubmission(); });
     }
 
-    // ==========================================
-    // LOGIKA LIVE CHAT STAF & AI AUTO-REPLY BOT
-    // ==========================================
     let chatPollInterval = null;
     let staffTypingTimeout = null;
 
@@ -478,10 +466,19 @@
       }
     };
 
-    // ✨ FUNGSI SALIN TOKEN OTOMATIS KE CLIPBOARD
+    // ✨ FUNGSI SALIN TOKEN BERSIH (Hanya mengambil string token-nya saja)
     window.salinTokenChat = function(textTeks) {
-        const cleanText = textTeks.replace(/<\/?b>/g, '').trim();
-        navigator.clipboard.writeText(cleanText).then(() => {
+        let tokenBersih = textTeks;
+        // Jika ada penanda TOKEN AKSES RESMI atau format token, ambil bagian tokennya saja
+        if (textTeks.includes("TOKEN AKSES RESMI:")) {
+            const parts = textTeks.split("TOKEN AKSES RESMI:");
+            if (parts[1]) tokenBersih = parts[1].trim();
+        } else if (textTeks.includes("NX")) {
+            // Ambil dari kemunculan NX atau bersihkan dari tag HTML
+            tokenBersih = textTeks.replace(/<[^>]*>?/gm, '').trim();
+        }
+        
+        navigator.clipboard.writeText(tokenBersih).then(() => {
             alert("Token berhasil disalin ke clipboard!");
         }).catch(err => {
             console.error('Gagal menyalin:', err);
@@ -546,7 +543,6 @@
           let deleteBtn = "";
           let copyBtnHtml = "";
           
-          // Deteksi apakah pesan dari bot/owner mengandung token (mengandung 'NX' atau teks panjang)
           const isTokenMessage = m.text && (m.text.includes("NX") || m.text.length > 20);
 
           if (m.sender === 'staff') {
@@ -564,23 +560,21 @@
             }
           }
 
-          // Jika pesan terdeteksi token, tampilkan tombol Salin Token
+          // Tombol Salin Token berbentuk Icon kecil minimalis di pojok kanan bawah gelembung chat
           if (isTokenMessage && (m.sender === 'bot' || m.sender === 'owner')) {
               const escapedText = m.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
               copyBtnHtml = `
-                <button type="button" onclick="salinTokenChat('${escapedText}')" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; font-family: monospace; display: inline-flex; align-items: center; gap: 5px; margin-top: 8px;">
-                  <i class="fa-solid fa-copy"></i>
-                </button>
+                <div style="margin-top: 4px; text-align: right;">
+                  <button type="button" onclick="salinTokenChat('${escapedText}')" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; width: 24px; height: 24px; border-radius: 6px; font-size: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;" title="Salin Token">
+                    <i class="fa-solid fa-copy"></i>
+                  </button>
+                </div>
               `;
           }
 
           let tickMark = "";
           if (m.sender === 'staff') {
-            if (m.read) {
-              tickMark = `<span style="color: #38bdf8; font-size: 11px; margin-left: 4px;" title="Dibaca Owner">✓✓</span>`;
-            } else {
-              tickMark = `<span style="color: #94a3b8; font-size: 11px; margin-left: 4px;" title="Terkirim">✓✓</span>`;
-            }
+            tickMark = m.read ? `<span style="color: #38bdf8; font-size: 11px; margin-left: 4px;" title="Dibaca Owner">✓✓</span>` : `<span style="color: #94a3b8; font-size: 11px; margin-left: 4px;" title="Terkirim">✓✓</span>`;
           }
 
           html += `
@@ -616,7 +610,6 @@
       } catch (e) { console.error(e); }
     }
 
-    // 🤖 FUNGSI BOT AI UNTUK MENANGANI KENDALA TOKEN OTOMATIS
     async function cekDanProsesBotAi(textPesan, currentStaffName) {
       const textLower = textPesan.toLowerCase();
       const isKeywordKendala = textLower.includes("token") || textLower.includes("expired") || textLower.includes("habis") || textLower.includes("terkunci") || textLower.includes("mati");
@@ -649,11 +642,7 @@
           setTimeout(async () => {
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
               method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
-              body: JSON.stringify({ 
-                status: "pending", 
-                requested_duration: durasiDiminta, 
-                timestamp: Date.now() 
-              })
+              body: JSON.stringify({ status: "pending", requested_duration: durasiDiminta, timestamp: Date.now() })
             });
 
             const botConfirm = {
@@ -668,9 +657,7 @@
             muatPesanChatStaf();
           }, 800);
         }
-      } catch (err) {
-        console.error("Bot AI Error:", err);
-      }
+      } catch (err) {}
     }
 
     window.kirimPesanStaff = async function() {
@@ -678,24 +665,15 @@
       const text = inputEl.value.trim();
       if (!text || !safeStaffKey) return;
 
-      const newMsg = {
-        sender: 'staff',
-        text: text,
-        time: Date.now(),
-        read: false
-      };
-
+      const newMsg = { sender: 'staff', text: text, time: Date.now(), read: false };
       try {
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newMsg)
         });
         inputEl.value = "";
         muatPesanChatStaf();
-
-        // Panggil AI Bot otomatis
         cekDanProsesBotAi(text, staffName);
-
-      } catch (e) { console.error(e); }
+      } catch (e) {}
     };
 
     window.handleStaffTyping = async function() {
@@ -713,9 +691,7 @@
       } catch (e) {}
     };
 
-    // ==========================================
-    // LIVE BROADCAST PRO: AUDIO, VIBRATE, & INSTANT 1S
-    // ==========================================
+    // Broadcast Pro
     function playAlertSoundAndVibrate() {
         if ("vibrate" in navigator) {
             try { navigator.vibrate([300, 150, 300, 150, 500]); } catch (e) {}
@@ -799,10 +775,7 @@
 
     window.bukaChatDariBroadcast = async function(timestamp, messageText) {
         tandaiBroadcastDibaca(timestamp);
-        
-        if (typeof toggleChatWidget === 'function') {
-            toggleChatWidget();
-        }
+        if (typeof toggleChatWidget === 'function') toggleChatWidget();
 
         if (safeStaffKey) {
             const autoMsg = {
@@ -815,9 +788,7 @@
                 await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(autoMsg)
                 });
-                if (typeof muatPesanChatStaf === 'function') {
-                    muatPesanChatStaf();
-                }
+                if (typeof muatPesanChatStaf === 'function') muatPesanChatStaf();
             } catch (e) {}
         }
     };
