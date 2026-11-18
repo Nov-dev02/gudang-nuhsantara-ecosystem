@@ -899,15 +899,23 @@
       else if (tabId === 'admin') headerTitle.innerText = "Owner Admin & License Hub";
     }
 
-    // --- RIWAYAT LOGIN HARIAN (PERSISTENT & CLEAR-BASED) ---
+        // --- RIWAYAT LOGIN HARIAN (PERSISTENT & OBJECT-SAFE) ---
     async function muatRiwayatLoginHarian() {
       const container = document.getElementById('containerLoginHistory');
       if (!container) return;
       try {
         const res = await fetch(CLOUD_LOGIN_HISTORY_ENDPOINT + "?t=" + Date.now());
-        const data = await res.json() || [];
+        const rawData = await res.json() || {};
         
-        if (!Array.isArray(data) || data.length === 0) {
+        // Ubah data dari Firebase (baik object maupun array) menjadi array murni
+        let data = [];
+        if (Array.isArray(rawData)) {
+          data = rawData.filter(item => item !== null);
+        } else if (typeof rawData === 'object' && rawData !== null) {
+          data = Object.values(rawData);
+        }
+        
+        if (data.length === 0) {
           container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 20px;">Belum ada riwayat sesi login yang tercatat.</div>`;
           return;
         }
@@ -926,8 +934,11 @@
               <tbody>
         `;
 
-        const sortedLogs = [...data].reverse();
+        // Urutkan dari yang paling baru di atas berdasarkan timestamp
+        const sortedLogs = data.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        
         sortedLogs.forEach(item => {
+          if (!item || !item.timestamp) return;
           let tanggalObj = new Date(item.timestamp);
           let tanggalFormatted = tanggalObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
           let jamFormatted = tanggalObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -936,8 +947,8 @@
           html += `
             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
               <td style="padding: 8px; color: #cbd5e1; font-family: monospace;">📅 ${waktuLengkap}</td>
-              <td style="padding: 8px; color: #fff; font-weight: bold;">👤 ${item.name}</td>
-              <td style="padding: 8px; color: #38bdf8;">${item.modul}</td>
+              <td style="padding: 8px; color: #fff; font-weight: bold;">👤 ${item.name || 'Staf'}</td>
+              <td style="padding: 8px; color: #38bdf8;">${item.modul || 'Modul'}</td>
               <td style="padding: 8px; color: #34d399; font-weight: bold;">🟢 Aktif Masuk</td>
             </tr>
           `;
@@ -946,7 +957,8 @@
         html += `</tbody></table></div>`;
         container.innerHTML = html;
       } catch (e) {
-        container.innerHTML = `<div style="color: #ef4444;">Gagal memuat riwayat login dari server.</div>`;
+        console.error("Gagal muat riwayat:", e);
+        container.innerHTML = `<div style="color: #ef4444; text-align: center; padding: 20px;">Gagal memuat riwayat login dari server.</div>`;
       }
     }
 
