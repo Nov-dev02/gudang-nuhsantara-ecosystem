@@ -374,6 +374,35 @@
     let staffName = localStorage.getItem('gudang_staff_name');
     let safeStaffKey = staffName ? staffName.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
     
+    // --- FUNGSI PENCATATAN OTOMATIS LOGIN & RIWAYAT (URL LANGSUNG / DASHBOARD) ---
+    function catatSesiMasukOtomatis(namaStaf) {
+        const currentTime = Date.now();
+        const safeKey = namaStaf.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+        // 1. Kirim presence realtime ke Firebase
+        fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: namaStaf,
+                modul: modulName,
+                loginTime: currentTime,
+                time: currentTime
+            })
+        }).catch(e => {});
+
+        // 2. Kirim riwayat login harian menggunakan POST (agar masuk ke tabel riwayat command center)
+        fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/login_history.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: namaStaf,
+                modul: modulName,
+                timestamp: currentTime
+            })
+        }).catch(e => {});
+    }
+
     // --- SKRIP HEARTBEAT AKTIF 5 DETIK SEKALI ---
     function sendHeartbeat(isOffline = false) {
       let currentStaff = localStorage.getItem('gudang_staff_name');
@@ -386,11 +415,11 @@
         name: currentStaff,
         modul: "Offline",
         loginTime: 0,
-        time: Date.now() - 1000000 // Mundurkan waktu agar langsung terdeteksi mati di dashboard
+        time: Date.now() - 1000000 
       } : {
         name: currentStaff,
         modul: modulName,
-        time: Date.now() // Waktu sekarang (tanda aktif)
+        time: Date.now()
       };
 
       if (isOffline && navigator.sendBeacon) {
@@ -406,11 +435,10 @@
     }
 
     if (staffName && staffName.trim()) {
-      // Kirim detak jantung aktif setiap 5 detik
+      catatSesiMasukOtomatis(staffName.trim());
       sendHeartbeat(false);
       setInterval(() => sendHeartbeat(false), 5000);
 
-      // Backup event penutupan/pindah tab
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
           sendHeartbeat(true);
@@ -453,6 +481,8 @@
         if (!val) { inputEl.style.borderColor = '#ef4444'; return; }
         localStorage.setItem('gudang_staff_name', val);
         modalOverlay.remove();
+        
+        catatSesiMasukOtomatis(val);
         sendHeartbeat(false);
         setInterval(() => sendHeartbeat(false), 5000);
         inisialisasiLiveChatStaf(val);
@@ -501,7 +531,6 @@
       }
     };
 
-    // ✨ FUNGSI SALIN TOKEN BERSIH
     window.salinTokenChat = function(kodeToken) {
         let tokenBersih = kodeToken.trim();
         navigator.clipboard.writeText(tokenBersih).then(() => {
@@ -590,7 +619,6 @@
 
           if (isTokenMessage) {
               let extractedToken = rawText.trim();
-              
               const lines = rawText.split('\n');
               for (let line of lines) {
                   let cleanLine = line.trim();
