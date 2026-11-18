@@ -1296,10 +1296,9 @@
                 })
             });
 
-            // 2. Catat Riwayat Login Harian dan WAJIB di-await agar terkirim tuntas sebelum pindah halaman
-            const historyKey = 'log_' + currentTime + '_' + Math.floor(Math.random() * 10000);
-            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/login_history/${historyKey}.json`, {
-                method: 'PUT', 
+            // 2. Catat Riwayat Login Harian menggunakan metode POST agar Firebase membuatkan unique key otomatis yang valid
+            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/login_history.json`, {
+                method: 'POST', 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: staffName,
