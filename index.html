@@ -649,7 +649,7 @@
       muatDaftarChatStaf();
       mulaiPantauBroadcastRealtime();
 
-      setInterval(muatStaffPresence, 3000); // Diperbarui tiap 3 detik agar hitungan detik durasi real-time lancar
+      setInterval(muatStaffPresence, 3000); // Diperbarui tiap 3 detik untuk respons instan offline
       setInterval(updateRealtimeCountdown, 1000);
       setInterval(muatDaftarChatStaf, 4000);
     });
@@ -967,41 +967,40 @@
       muatDaftarChatStaf();
     }
 
-    // FUNGSI UTAMA ACC / TOLAK DENGAN GENERATOR TOKEN ASLI
     window.prosesResponTokenStaf = async function(staffKey, statusAksi, durasiDiminta) {
-    try {
-        let tokenBaru = "";
-        let pesanBalasan = "";
+      try {
+          let tokenBaru = "";
+          let pesanBalasan = "";
 
-        if (statusAksi === 'acc') {
-            tokenBaru = buatTokenDurasiOtomatis(durasiDiminta);
-            pesanBalasan = `✅ Token Akses Resmi (${durasiDiminta}):\n${tokenBaru}`;
-        } else {
-            pesanBalasan = `❌ Mohon maaf, permintaan perpanjangan durasi **${durasiDiminta}** ditolak oleh Owner.`;
-        }
+          if (statusAksi === 'acc') {
+              tokenBaru = buatTokenDurasiOtomatis(durasiDiminta);
+              pesanBalasan = `✅ Token Akses Resmi (${durasiDiminta}):\n${tokenBaru}`;
+          } else {
+              pesanBalasan = `❌ Mohon maaf, permintaan perpanjangan durasi **${durasiDiminta}** ditolak oleh Owner.`;
+          }
 
-        const replyMsg = {
-            sender: 'owner',
-            text: pesanBalasan,
-            time: Date.now(),
-            read: false
-        };
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/messages.json`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(replyMsg)
-        });
+          const replyMsg = {
+              sender: 'owner',
+              text: pesanBalasan,
+              time: Date.now(),
+              read: false
+          };
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/messages.json`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(replyMsg)
+          });
 
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/token_request.json`, {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ status: statusAksi === 'acc' ? 'approved' : 'rejected', token_generated: tokenBaru })
-        });
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/token_request.json`, {
+              method: 'PATCH', headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify({ status: statusAksi === 'acc' ? 'approved' : 'rejected', token_generated: tokenBaru })
+          });
 
-        showDashboardToast(`Permintaan token berhasil di-${statusAksi.toUpperCase()}!`, true);
-        muatDaftarChatStaf();
-    } catch (err) {
-        console.error("Gagal memproses token:", err);
-        showDashboardToast("Terjadi kesalahan saat memproses token.", false);
-    }
-};
+          showDashboardToast(`Permintaan token berhasil di-${statusAksi.toUpperCase()}!`, true);
+          muatDaftarChatStaf();
+      } catch (err) {
+          console.error("Gagal memproses token:", err);
+          showDashboardToast("Terjadi kesalahan saat memproses token.", false);
+      }
+    };
 
     function buatTokenDurasiOtomatis(durasiString) {
         let bulanTambah = 1;
@@ -1172,7 +1171,6 @@
     function bufferToHex(buffer) { return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join(''); }
     function hexToBuffer(hex) { let matches = hex.match(/.{1,2}/g); return new Uint8Array(matches.map(byte => parseInt(byte, 16))).buffer; }
 
-    // --- MODIFIED: KELOLA JAM MASUK & DURASI REAL-TIME ---
     async function bukaModulDenganIdentitas(event, targetUrl, modulName) {
         event.preventDefault();
         let staffName = localStorage.getItem('gudang_staff_name');
@@ -1187,12 +1185,10 @@
         const currentTime = Date.now();
         
         try {
-            // Ambil data presence sebelumnya untuk mengecek apakah sesi login masih aktif (< 15 menit)
             const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`);
             let existingData = await res.json();
             
-            // Pertahankan loginTime lama jika belum expired, atau buat baru jika sudah lama tidak aktif
-            let loginTime = (existingData && (currentTime - existingData.time < 900000)) ? (existingData.loginTime || currentTime) : currentTime;
+            let loginTime = (existingData && (currentTime - existingData.time < 15000)) ? (existingData.loginTime || currentTime) : currentTime;
 
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
                 method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -1221,7 +1217,7 @@
         try { await fetch(CLOUD_PRESENCE_ENDPOINT, { method: 'DELETE' }); showDashboardToast("Daftar staf dibersihkan!", true); muatStaffPresence(); } catch (e) {}
     }
 
-    // --- MODIFIED: TAMPILAN TAB STAF ONLINE MENJADI TABEL DETAIL & DURASI LIVE ---
+    // --- OPTIMIZED: PEMANTAU STAF ONLINE DENGAN PENDETEKSIAN OFFLINE INSTAN ---
     async function muatStaffPresence() {
         const container = document.getElementById('containerStaffPresence');
         const countOverview = document.getElementById('txtOnlineCountOverview');
@@ -1254,7 +1250,11 @@
 
             Object.keys(data).forEach(id => {
                 const item = data[id];
-                if (now - item.time < 900000) {
+                // Syarat Aktif: Status modul bukan "Offline", dan waktu detak jantung (time) kurang dari 10 detik yang lalu.
+                // Jika aplikasi ditutup/di-close, heartbeat berhenti dan selisih waktu langsung > 10000 ms (10 detik) sehingga langsung masuk kondisi Offline.
+                const isOnline = item.modul !== "Offline" && (now - item.time < 10000);
+
+                if (isOnline) {
                     activeCount++;
                     
                     let loginTimestamp = item.loginTime || item.time;
