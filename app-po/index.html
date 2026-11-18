@@ -383,7 +383,7 @@
       }).catch(e => console.error(e));
     }
 
-    // --- SKRIP INSTANT OFFLINE SAAT TUTUP TAB / PINDAH HALAMAN ---
+    // --- SKRIP INSTANT OFFLINE KHUSUS MOBILE & DESKTOP ---
     function setStafOfflineInstan() {
         let currentStaff = localStorage.getItem('gudang_staff_name');
         if (!currentStaff) return;
@@ -410,8 +410,11 @@
         }
     }
 
+    // Menangani penutupan tab atau navigasi keluar
     window.addEventListener('beforeunload', setStafOfflineInstan);
+    window.addEventListener('pagehide', setStafOfflineInstan);
 
+    // Menangani saat aplikasi diminimalkan, pindah tab, atau masuk ke recent apps di HP
     document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
             setStafOfflineInstan();
