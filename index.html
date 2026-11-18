@@ -673,44 +673,6 @@
       setInterval(muatDaftarChatStaf, 4000);
     });
 
-    // --- ENGINE GENERATOR TOKEN ASLI ---
-    function buatTokenDariDurasi(durasiString) {
-        let bulanTambah = 1;
-        const durLower = (durasiString || "").toLowerCase();
-
-        if (durLower.includes("1 minggu") || durLower.includes("minggu")) {
-            let d = new Date();
-            d.setDate(d.getDate() + 7);
-            return buatTokenDariTanggalObj(d);
-        } else if (durLower.includes("3 bulan")) {
-            bulanTambah = 3;
-        } else if (durLower.includes("6 bulan")) {
-            bulanTambah = 6;
-        } else if (durLower.includes("1 tahun") || durLower.includes("tahun")) {
-            bulanTambah = 12;
-        } else {
-            bulanTambah = 1;
-        }
-
-        let d = new Date();
-        d.setMonth(d.getMonth() + bulanTambah);
-        return buatTokenDariTanggalObj(d);
-    }
-
-    function buatTokenDariTanggalObj(targetDateObj) {
-        targetDateObj.setHours(23, 59, 59, 999);
-        let timeHex = targetDateObj.getTime().toString(16);
-        
-        let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let randomPrefix = '';
-        for (let i = 0; i < 18; i++) randomPrefix += chars.charAt(Math.floor(Math.random() * chars.length));
-        
-        let randomSuffix = '';
-        for (let i = 0; i < 18; i++) randomSuffix += chars.charAt(Math.floor(Math.random() * chars.length));
-
-        return randomPrefix + "NX" + timeHex + randomSuffix;
-    }
-
     // --- FUNGSI SALIN TOKEN BERSIH ---
     window.salinTokenChat = function(textTeks) {
         let tokenBersih = textTeks;
@@ -912,7 +874,6 @@
           return;
         }
 
-        // Parsing data yang aman dari berbagai bentuk format Firebase RTDB
         let data = [];
         if (Array.isArray(rawData)) {
           data = rawData.filter(item => item !== null);
@@ -939,7 +900,6 @@
               <tbody>
         `;
 
-        // Urutkan dari timestamp terbaru
         const sortedLogs = data.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         
         sortedLogs.forEach(item => {
@@ -978,7 +938,7 @@
       }
     }
 
-    // --- LIVE CHAT & ACC / TOLAK TOKEN OTOMATIS ---
+    // --- LIVE CHAT & SETUJUI / TOLAK TOKEN MANUAL ---
     async function muatDaftarChatStaf() {
       try {
         const res = await fetch(CLOUD_CHATS_ENDPOINT + "?t=" + Date.now());
@@ -1066,14 +1026,16 @@
       muatDaftarChatStaf();
     }
 
+    // --- INTEGRASI TOMBOL: SETUJUI & OTOMATIS BUKA WEB GENERATOR DI TAB BARU ---
     window.prosesResponTokenStaf = async function(staffKey, statusAksi, durasiDiminta) {
       try {
-          let tokenBaru = "";
           let pesanBalasan = "";
 
           if (statusAksi === 'acc') {
-              tokenBaru = buatTokenDurasiOtomatis(durasiDiminta);
-              pesanBalasan = `✅ Token Akses Resmi (${durasiDiminta}):\n${tokenBaru}`;
+              pesanBalasan = `✅ Permintaan perpanjangan masa aktif (**${durasiDiminta}**) telah **DISETUJUI** oleh Owner. Token akses resmi sedang disiapkan...`;
+              
+              // Otomatis membuka tab web generator milikmu di tab baru secara sat-set
+              window.open('./nx-generator/index.html', '_blank');
           } else {
               pesanBalasan = `❌ Mohon maaf, permintaan perpanjangan durasi **${durasiDiminta}** ditolak oleh Owner.`;
           }
@@ -1090,31 +1052,19 @@
 
           await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/token_request.json`, {
               method: 'PATCH', headers: { 'Content-Type': 'application/json' }, 
-              body: JSON.stringify({ status: statusAksi === 'acc' ? 'approved' : 'rejected', token_generated: tokenBaru })
+              body: JSON.stringify({ 
+                status: statusAksi === 'acc' ? 'approved' : 'rejected',
+                approved_at: Date.now()
+              })
           });
 
-          showDashboardToast(`Permintaan token berhasil di-${statusAksi.toUpperCase()}!`, true);
+          showDashboardToast(`Permintaan berhasil di-${statusAksi === 'acc' ? 'SETUJUI' : 'TOLAK'}!`, true);
           muatDaftarChatStaf();
       } catch (err) {
-          console.error("Gagal memproses token:", err);
-          showDashboardToast("Terjadi kesalahan saat memproses token.", false);
+          console.error("Gagal memproses persetujuan:", err);
+          showDashboardToast("Terjadi kesalahan saat memproses persetujuan.", false);
       }
     };
-
-    function buatTokenDurasiOtomatis(durasiString) {
-        let bulanTambah = 1;
-        const durLower = (durasiString || "").toLowerCase();
-        if (durLower.includes("minggu")) {
-            let d = new Date(); d.setDate(d.getDate() + 7);
-            return buatTokenDariTanggalObj(d);
-        } else if (durLower.includes("3 bulan")) { bulanTambah = 3; }
-        else if (durLower.includes("6 bulan")) { bulanTambah = 6; }
-        else if (durLower.includes("tahun")) { bulanTambah = 12; }
-        
-        let d = new Date();
-        d.setMonth(d.getMonth() + bulanTambah);
-        return buatTokenDariTanggalObj(d);
-    }
 
     async function hapusRoomChatStaf(staffId, staffName) {
       if (!confirm(`Hapus seluruh ruang chat dan riwayat untuk "${staffName}" secara permanen?`)) return;
@@ -1221,7 +1171,7 @@
               </div>
               <div style="display: flex; gap: 8px;">
                 <button onclick="prosesResponTokenStaf('${staffId}', 'acc', '${durasiReq}')" style="flex: 1; background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #4ade80; padding: 7px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;">
-                  ✔ ACC & Generate Token
+                  ✅ Setujui & Beritahu Staf
                 </button>
                 <button onclick="prosesResponTokenStaf('${staffId}', 'reject', '${durasiReq}')" style="flex: 1; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; padding: 7px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;">
                   ✖ Tolak
@@ -1284,7 +1234,6 @@
         const currentTime = Date.now();
         
         try {
-            // 1. Catat presence realtime dulu dan tunggu sampai selesai
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
                 method: 'PUT', 
                 headers: { 'Content-Type': 'application/json' },
@@ -1296,7 +1245,6 @@
                 })
             });
 
-            // 2. Catat Riwayat Login Harian menggunakan metode POST agar Firebase membuatkan unique key otomatis yang valid
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/login_history.json`, {
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' },
@@ -1310,7 +1258,6 @@
             console.error("Gagal mencatat log riwayat:", e);
         }
 
-        // Pindah halaman baru dijalankan setelah data history dipastikan terkirim ke Firebase
         window.location.href = targetUrl;
     }
 
@@ -1328,7 +1275,6 @@
         try { await fetch(CLOUD_PRESENCE_ENDPOINT, { method: 'DELETE' }); showDashboardToast("Daftar staf dibersihkan!", true); muatStaffPresence(); } catch (e) {}
     }
 
-    // --- OPTIMIZED: PEMANTAU STAF ONLINE DENGAN PENDETEKSIAN OFFLINE INSTAN ---
     async function muatStaffPresence() {
         const container = document.getElementById('containerStaffPresence');
         const countOverview = document.getElementById('txtOnlineCountOverview');
@@ -1443,9 +1389,9 @@
 
     function ubahTemaDashboard(warna) {
         let hexColor = "#38bdf8", borderColor = "rgba(56, 189, 248, 0.2)";
-        if (warna === 'purple') { hexColor = "#c084fc"; borderColor = "rgba(192, 132, 252, 0.25)"; }
-        else if (warna === 'green') { hexColor = "#22c55e"; borderColor = "rgba(34, 197, 94, 0.25)"; }
-        else if (warna === 'gold') { hexColor = "#fbbf24"; borderColor = "rgba(251, 191, 36, 0.25)"; }
+        if (warna === 'purple') { hexColor = "#c084fc"; borderColor = "rgba(192, 132, 252, 0.25);"; }
+        else if (warna === 'green') { hexColor = "#22c55e"; borderColor = "rgba(34, 197, 94, 0.25);"; }
+        else if (warna === 'gold') { hexColor = "#fbbf24"; borderColor = "rgba(251, 191, 36, 0.25);"; }
         document.documentElement.style.setProperty('--accent-blue', hexColor);
         document.documentElement.style.setProperty('--card-border', borderColor);
         localStorage.setItem('gudang_admin_theme', warna);
