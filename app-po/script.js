@@ -1,18 +1,18 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPE82yBEktcrtxrbNS2nAwQCVGVYTVnQu-DJR3ZqicXRA2q0DUJ6FPfOhNNC6rJA5YZw/exec";
-const CURRENT_APP_VERSION = "v1.2.2"; // 🚀 Update versi terbaru
+const FIREBASE_RTDB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
+const CURRENT_APP_VERSION = "v1.2.3"; // 🚀 Update versi dengan Banner Rekap Harian
 
 let masterBarang = [];
 let html5QrCode = null;
 let isScannerActive = false;
 
 // ==========================================
-// 🚀 AUTO-UPDATE & FORCE REFRESH SYSTEM (FINAL FIX)
+// 🚀 AUTO-UPDATE & FORCE REFRESH SYSTEM
 // ==========================================
 async function cekPembaruanAplikasi() {
     try {
         const response = await fetch('./version.json?v=' + Date.now(), { cache: 'no-store' });
         const data = await response.json();
-        
         const versiTersimpan = localStorage.getItem('gudang_skip_version');
 
         if (data.version && data.version !== CURRENT_APP_VERSION && versiTersimpan !== data.version) {
@@ -64,25 +64,16 @@ function tampilkanModalPaksaUpdate(targetVersion) {
 
         try {
             localStorage.setItem('gudang_skip_version', targetVersion);
-
             if ('serviceWorker' in navigator) {
                 const regs = await navigator.serviceWorker.getRegistrations();
-                for (let reg of regs) {
-                    await reg.unregister();
-                }
+                for (let reg of regs) await reg.unregister();
             }
-
             if ('caches' in window) {
                 const keys = await caches.keys();
-                for (let key of keys) {
-                    await caches.delete(key);
-                }
+                for (let key of keys) await caches.delete(key);
             }
-
             await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (e) {
-            console.log("Cleanup error:", e);
-        }
+        } catch (e) {}
 
         modal.style.display = 'none';
         window.location.reload(true);
@@ -90,7 +81,7 @@ function tampilkanModalPaksaUpdate(targetVersion) {
 }
 
 // ==========================================
-// 🎨 CUSTOM MODERN MODAL HELPER (Aman dari Null Error)
+// 🎨 CUSTOM MODERN MODAL HELPER
 // ==========================================
 function showCustomModal({ title = "Informasi", message = "", type = "info", showCancel = false, confirmText = "OK", cancelText = "Batal" }) {
     return new Promise((resolve) => {
@@ -103,10 +94,7 @@ function showCustomModal({ title = "Informasi", message = "", type = "info", sho
         const btnConfirm = document.getElementById('modalBtnConfirm');
         const btnCancel = document.getElementById('modalBtnCancel');
 
-        if (!modalBox || !wrapper) {
-            resolve(true);
-            return;
-        }
+        if (!modalBox || !wrapper) { resolve(true); return; }
 
         if (titleEl) titleEl.textContent = title;
         if (msgEl) msgEl.textContent = message;
@@ -145,9 +133,7 @@ function showCustomModal({ title = "Informasi", message = "", type = "info", sho
             }
         }
 
-        if (btnCancel) {
-            btnCancel.style.display = showCancel ? "block" : "none";
-        }
+        if (btnCancel) btnCancel.style.display = showCancel ? "block" : "none";
 
         modalBox.style.display = "flex";
         setTimeout(() => {
@@ -226,10 +212,7 @@ function updateRealTimeClock() {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
     const timeString = `${hours}:${minutes}:${seconds}`;
-    
-    document.querySelectorAll('.real-time-clock').forEach(el => {
-        el.textContent = timeString;
-    });
+    document.querySelectorAll('.real-time-clock').forEach(el => { el.textContent = timeString; });
 }
 setInterval(updateRealTimeClock, 1000);
 
@@ -237,8 +220,7 @@ function setDynamicGreeting(username) {
     const greetingEl = document.getElementById('userGreeting');
     if (!greetingEl) return;
     
-    const now = new Date();
-    const hour = now.getHours();
+    const hour = new Date().getHours();
     let waktu = "Malam";
     let daftarMotivasi = [];
     
@@ -299,7 +281,8 @@ window.onload = function() {
         if (savedUser && loginDate === today) {
             tampilkanFormPO(savedUser);
         } else {
-            localStorage.clear();
+            localStorage.removeItem('po_user');
+            localStorage.removeItem('po_login_date');
             tampilkanLogin();
         }
     }, 800);
@@ -325,13 +308,11 @@ function tampilkanFormPO(username) {
     setDynamicGreeting(username);
     loadMasterBarang();
     cekRekapOtomatis();
-    
-    // Panggil pengecekan/pendaftaran FCM token otomatis berdasarkan user yang login
     setTimeout(checkAndForceNotification, 1500);
 }
 
 // ==========================================
-// 🟢 PERBAIKAN UTAMA: HANDLE LOGIN (ANTI INFINITE LOADING)
+// 🟢 HANDLE LOGIN (SINKRON DENGAN IDENTITAS DASHBOARD)
 // ==========================================
 async function handleLogin() {
     const usernameInput = document.getElementById('username');
@@ -365,15 +346,10 @@ async function handleLogin() {
         
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
-            body: JSON.stringify({
-                action: 'login',
-                username: user,
-                password: pass
-            })
+            body: JSON.stringify({ action: 'login', username: user, password: pass })
         });
         const result = await response.json();
 
-        // Selalu kembalikan tombol ke kondisi normal sebelum berpindah/menampilkan pesan
         if (btnLogin) {
             btnLogin.innerHTML = "Login";
             btnLogin.disabled = false;
@@ -390,6 +366,9 @@ async function handleLogin() {
             const today = getLocalDateString();
             localStorage.setItem('po_user', user);
             localStorage.setItem('po_login_date', today);
+            if (!localStorage.getItem('gudang_staff_name')) {
+                localStorage.setItem('gudang_staff_name', user);
+            }
             
             if (errDiv) errDiv.innerText = "";
             tampilkanFormPO(user);
@@ -400,7 +379,6 @@ async function handleLogin() {
             }
         }
     } catch (err) {
-        // Pastikan tombol di-reset kembali meski terjadi error jaringan
         if (btnLogin) {
             btnLogin.innerHTML = "Login";
             btnLogin.disabled = false;
@@ -410,11 +388,9 @@ async function handleLogin() {
             errDiv.style.color = "#ef4444";
             errDiv.innerText = "Gagal terhubung ke server Apps Script!";
         }
-        console.error(err);
     }
 }
 
-// --- GOOGLE OAUTH LOGIN HANDLER ---
 function handleGoogleLogin(response) {
     const responsePayload = parseJwt(response.credential);
     const operatorName = responsePayload.name;
@@ -431,6 +407,9 @@ function handleGoogleLogin(response) {
         localStorage.setItem('po_user', operatorName);
         localStorage.setItem('po_email', operatorEmail);
         localStorage.setItem('po_login_date', today);
+        if (!localStorage.getItem('gudang_staff_name')) {
+            localStorage.setItem('gudang_staff_name', operatorName);
+        }
         
         if (errDiv) errDiv.innerText = "";
         tampilkanFormPO(operatorName);
@@ -518,9 +497,7 @@ function pilihBarang(kode, nama, pic) {
 
     setTimeout(() => {
         const submitBtn = document.querySelector('#poSection button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        if (submitBtn) submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 150);
 }
 
@@ -599,7 +576,6 @@ async function loadRiwayatPOData() {
             tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #ef4444;">Gagal memuat data dari spreadsheet.</td></tr>`;
         }
     } catch (err) {
-        console.error(err);
         tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #ef4444;">Terjadi kesalahan koneksi internet.</td></tr>`;
     }
 }
@@ -637,9 +613,6 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ==========================================
-// 🗑️ FUNGSI HAPUS DATA PO (Auto-Close & Auto-Refresh)
-// ==========================================
 async function hapusDataPO(rowIndex) {
     const isConfirmed = await showCustomModal({
         title: "Konfirmasi Hapus",
@@ -650,9 +623,7 @@ async function hapusDataPO(rowIndex) {
         cancelText: "Batal"
     });
 
-    if (!isConfirmed) {
-        return;
-    }
+    if (!isConfirmed) return;
 
     const modalBox = document.getElementById('customModalBox');
     const wrapper = document.getElementById('modalContentWrapper');
@@ -684,10 +655,7 @@ async function hapusDataPO(rowIndex) {
     try {
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
-            body: JSON.stringify({
-                action: 'deletePO',
-                rowIndex: rowIndex
-            })
+            body: JSON.stringify({ action: 'deletePO', rowIndex: rowIndex })
         });
         const result = await response.json();
 
@@ -712,10 +680,7 @@ async function hapusDataPO(rowIndex) {
 
             loadRiwayatPOData();
         } else {
-            if (wrapper) {
-                wrapper.style.transform = "scale(0.9)";
-                wrapper.style.opacity = "0";
-            }
+            if (wrapper) { wrapper.style.transform = "scale(0.9)"; wrapper.style.opacity = "0"; }
             await new Promise(resolve => setTimeout(resolve, 200));
             if (modalBox) modalBox.style.display = "none";
 
@@ -728,12 +693,7 @@ async function hapusDataPO(rowIndex) {
             });
         }
     } catch (err) {
-        console.error(err);
-        
-        if (wrapper) {
-            wrapper.style.transform = "scale(0.9)";
-            wrapper.style.opacity = "0";
-        }
+        if (wrapper) { wrapper.style.transform = "scale(0.9)"; wrapper.style.opacity = "0"; }
         await new Promise(resolve => setTimeout(resolve, 200));
         if (modalBox) modalBox.style.display = "none";
 
@@ -790,11 +750,8 @@ function initEventListeners() {
 
     if (btnToggleScanner) {
         btnToggleScanner.addEventListener('click', function() {
-            if (!isScannerActive) {
-                startCameraScanner();
-            } else {
-                stopCameraScanner();
-            }
+            if (!isScannerActive) startCameraScanner();
+            else stopCameraScanner();
         });
     }
 
@@ -817,9 +774,7 @@ function initEventListeners() {
     }
 
     if (poJumlahInput) {
-        poJumlahInput.addEventListener('input', function() {
-            checkFormValidity();
-        });
+        poJumlahInput.addEventListener('input', function() { checkFormValidity(); });
     }
 }
 
@@ -852,26 +807,17 @@ async function startCameraScanner() {
     if (btnToggleScanner) btnToggleScanner.style.borderColor = '#f59e0b';
     isScannerActive = true;
 
-    if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode("reader");
-    }
+    if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
 
     try {
-        if (html5QrCode.isScanning) {
-            await html5QrCode.stop();
-        }
-
+        if (html5QrCode.isScanning) await html5QrCode.stop();
         await html5QrCode.start(
             { facingMode: "environment" },
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 250 }
-            },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
             onScanSuccess, 
             onScanFailure
         );
     } catch (err) {
-        console.error("Gagal membuka kamera:", err);
         showCustomModal({
             title: "Akses Kamera",
             message: "Tidak dapat mengakses kamera: " + (err.message || err),
@@ -890,13 +836,7 @@ async function stopCameraScanner() {
     const titleScanner = document.getElementById('scannerTextTitle');
 
     if (html5QrCode) {
-        try {
-            if (html5QrCode.isScanning) {
-                await html5QrCode.stop();
-            }
-        } catch (err) {
-            console.log("Gagal stop scanner:", err);
-        }
+        try { if (html5QrCode.isScanning) await html5QrCode.stop(); } catch (err) {}
     }
 
     if (readerDiv) readerDiv.style.display = 'none';
@@ -905,7 +845,7 @@ async function stopCameraScanner() {
     isScannerActive = false;
 }
 
-async function onScanSuccess(decodedText, decodedResult) {
+async function onScanSuccess(decodedText) {
     const found = masterBarang.find(item => {
         let kode = '', nama = '';
         if (Array.isArray(item)) {
@@ -943,9 +883,7 @@ async function onScanSuccess(decodedText, decodedResult) {
 
         setTimeout(() => {
             const submitBtn = document.querySelector('#poSection button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            if (submitBtn) submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 150);
     }
 }
@@ -989,6 +927,22 @@ async function submitPO(e) {
         const result = await response.json();
 
         if (result.status === 'success') {
+            if (!isEditMode) {
+                // Catat juga log input PO ke Firebase sebagai cadangan hitungan cepat
+                const namaStafAktif = localStorage.getItem('po_user') || localStorage.getItem('gudang_staff_name') || dataPO.pic || 'Staf';
+                fetch(`${FIREBASE_RTDB_URL}/gudang_nuhsantara/po_history.json`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pic: namaStafAktif,
+                        kode: dataPO.kodeBarang,
+                        barang: dataPO.namaBarang,
+                        jumlah: dataPO.jumlah,
+                        timestamp: Date.now()
+                    })
+                }).catch(err => {});
+            }
+
             if (btn) {
                 btn.innerHTML = `✨ Berhasil!`;
                 btn.style.backgroundColor = "#10b981";
@@ -1031,7 +985,6 @@ async function submitPO(e) {
         setTimeout(() => { if (msg) msg.innerText = ""; }, 3000);
 
     } catch (err) {
-        console.error("Gagal mengirim:", err);
         if (msg) {
             msg.style.color = "#ef4444";
             msg.innerText = "Terjadi kendala koneksi internet!";
@@ -1079,22 +1032,16 @@ function initRobotAnimation() {
 function togglePasswordVisibility() {
     const passwordInput = document.getElementById('password');
     const eyeIconToggle = document.getElementById('eyeIconToggle');
-    
     if (!passwordInput || !eyeIconToggle) return;
 
     const isPassword = passwordInput.getAttribute('type') === 'password';
-    
-    if (isPassword) {
-        passwordInput.setAttribute('type', 'text');
-        eyeIconToggle.className = "fa-solid fa-eye";
-    } else {
-        passwordInput.setAttribute('type', 'password');
-        eyeIconToggle.className = "fa-solid fa-eye-slash";
-    }
+    passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+    eyeIconToggle.className = isPassword ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
 }
 
 function handleLogout() {
-    localStorage.clear();
+    localStorage.removeItem('po_user');
+    localStorage.removeItem('po_login_date');
     tampilkanLogin();
 }
 
@@ -1134,65 +1081,46 @@ function initRealTimeWeather() {
     if (!tempEl) return;
 
     const fetchWeatherByGPS = () => {
-        if (!navigator.geolocation) {
-            fetchDefaultWeather(-7.275, 112.793);
-            return;
-        }
-
+        if (!navigator.geolocation) { fetchDefaultWeather(-7.275, 112.793); return; }
         if(locEl) locEl.textContent = "Menemukan lokasi...";
         if(condEl) condEl.textContent = "Memuat Cuaca...";
 
         let gpsResolved = false;
-
-        const fallbackTimer = setTimeout(() => {
-            if (!gpsResolved) {
-                fetchDefaultWeather(-7.275, 112.793);
-            }
-        }, 4000);
+        const fallbackTimer = setTimeout(() => { if (!gpsResolved) fetchDefaultWeather(-7.275, 112.793); }, 4000);
 
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 gpsResolved = true;
                 clearTimeout(fallbackTimer);
-                
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
 
                 try {
                     const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`);
                     const geoData = await geoRes.json();
-                    
                     const address = geoData.address || {};
                     const wilayah = address.village || address.suburb || address.city_district || address.city || "Lokasi Anda";
                     if(locEl) locEl.textContent = wilayah;
 
                     const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
                     const weatherData = await weatherRes.json();
-
                     const temp = Math.round(weatherData.current.temperature_2m);
                     const wCode = weatherData.current.weather_code;
 
                     if(tempEl) tempEl.textContent = `${temp}°C`;
-                    
                     const weatherInfo = getWeatherDescription(wCode);
                     if(condEl) condEl.textContent = weatherInfo.text;
                     if(iconEl) iconEl.innerHTML = `<i class="${weatherInfo.icon}"></i>`;
-
                 } catch (err) {
-                    console.error("Gagal mengambil data cuaca:", err);
                     fetchDefaultWeather(lat, lon);
                 }
             }, 
-            (error) => {
+            () => {
                 gpsResolved = true;
                 clearTimeout(fallbackTimer);
                 fetchDefaultWeather(-7.275, 112.793);
             }, 
-            { 
-                enableHighAccuracy: false, 
-                timeout: 3500, 
-                maximumAge: 60000 
-            }
+            { enableHighAccuracy: false, timeout: 3500, maximumAge: 60000 }
         );
     };
 
@@ -1210,7 +1138,6 @@ async function fetchDefaultWeather(lat, lon) {
     try {
         const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
         const weatherData = await weatherRes.json();
-        
         const tempEl = document.getElementById('weatherTemp');
         const condEl = document.getElementById('weatherCondition');
         const locEl = document.getElementById('weatherLocation');
@@ -1239,95 +1166,164 @@ function getWeatherDescription(code) {
 }
 
 // =========================================================================
-// 🔔 CEK REKAP & NOTIFIKASI PIC OTOMATIS (REKAP KEMARIN - PAGI HARI)
+// 🔔 POP-UP BANNER REKAP HARIAN DI DALAM APLIKASI (GABUNGAN LOGIN & INPUT PO)
 // =========================================================================
 async function cekRekapOtomatis() {
-  const namaPicLogin = localStorage.getItem('po_user') || "";
+  const namaPicLogin = localStorage.getItem('po_user') || localStorage.getItem('gudang_staff_name') || "";
   if (!namaPicLogin) return;
 
+  const kemarin = new Date();
+  kemarin.setDate(kemarin.getDate() - 1);
+  const tanggalKemarin = kemarin.toISOString().split('T')[0];
+  const tanggalKemarinFormatted = kemarin.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  const kunciKemarin = `banner_rekap_shown_${tanggalKemarin}_${namaPicLogin}`;
+  if (localStorage.getItem(kunciKemarin)) return;
+
   try {
-    // Mengambil tanggal kemarin secara otomatis (format YYYY-MM-DD)
-    const kemarin = new Date();
-    kemarin.setDate(kemarin.getDate() - 1);
-    const tanggalKemarin = kemarin.toISOString().split('T')[0];
-
-    const response = await fetch(`${WEB_APP_URL}?action=getRekap&pic=${encodeURIComponent(namaPicLogin)}&tanggal=${tanggalKemarin}`);
-    const hasil = await response.json();
-    
-    if (hasil.status === "success") {
-      // Menggunakan kunci berdasarkan tanggal kemarin agar tidak bentrok
-      const kunciKemarin = `notif_rekap_${tanggalKemarin}_${namaPicLogin}`;
-      const sudahMuncul = localStorage.getItem(kunciKemarin);
-
-      if (!sudahMuncul) {
-        let pesanNotifikasi = "";
-        
-        if (hasil.totalPO > 0) {
-          pesanNotifikasi = `Kemarin kamu berhasil melakukan ${hasil.totalPO} kali input PO! Kerja bagus! 📦✨`;
-        } else {
-          pesanNotifikasi = `Belum ada catatan PO atas namamu kemarin.`;
-        }
-        
-        // 🟢 Memicu Banner Notifikasi Sistem HP Asli di Atas Layar
-        if (Notification.permission === "granted") {
-            const judulNotif = "Rekap Gudang Nuhsantara";
-            
-            if ("serviceWorker" in navigator) {
-                const registration = await navigator.serviceWorker.ready;
-                registration.showNotification(judulNotif, {
-                    body: pesanNotifikasi,
-                    icon: "Favicon/Logo.png",
-                    badge: "Favicon/Logo.png",
-                    vibrate: [200, 100, 200],
-                    tag: "rekap-harian"
-                });
-            } else {
-                new Notification(judulNotif, {
-                    body: pesanNotifikasi,
-                    icon: "Favicon/Logo.png"
-                });
-            }
-        }
-        
-        localStorage.setItem(kunciKemarin, "true");
+    // 1. Ambil Total Input PO Kemarin dari Apps Script (getRekap)
+    let totalPO = 0;
+    try {
+      const response = await fetch(`${WEB_APP_URL}?action=getRekap&pic=${encodeURIComponent(namaPicLogin)}&tanggal=${tanggalKemarin}`);
+      const hasil = await response.json();
+      if (hasil.status === "success" && typeof hasil.totalPO === 'number') {
+        totalPO = hasil.totalPO;
       }
-    }
+    } catch (e) { console.log("Skip getRekap Apps Script:", e); }
+
+    // 2. Ambil Riwayat Login Kemarin dari Firebase
+    const startYesterday = new Date(kemarin.getFullYear(), kemarin.getMonth(), kemarin.getDate(), 0, 0, 0).getTime();
+    const endYesterday = new Date(kemarin.getFullYear(), kemarin.getMonth(), kemarin.getDate(), 23, 59, 59, 999).getTime();
+
+    const historyRes = await fetch(`${FIREBASE_RTDB_URL}/gudang_nuhsantara/login_history.json?t=${Date.now()}`);
+    const historyData = await historyRes.json() || {};
+    let loginList = [];
+
+    Object.values(historyData).forEach(item => {
+      if (!item || !item.timestamp) return;
+      const itemName = (item.name || "").toLowerCase();
+      const targetName = namaPicLogin.toLowerCase();
+
+      // Cocokkan nama staf (fleksibel untuk format "Dwi" atau "Dwi - PO")
+      if ((itemName.includes(targetName) || targetName.includes(itemName)) && item.timestamp >= startYesterday && item.timestamp <= endYesterday) {
+        const d = new Date(Number(item.timestamp));
+        const jamStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        loginList.push({
+          jam: `${jamStr} WIB`,
+          modul: item.modul || 'Aplikasi'
+        });
+      }
+    });
+
+    // Urutkan dari yang paling pagi
+    loginList.sort((a, b) => a.jam.localeCompare(b.jam));
+
+    // Munculkan Pop-up Banner di layar utama aplikasi
+    tampilkanBannerRekapHarian({
+      nama: namaPicLogin,
+      tanggalLabel: tanggalKemarinFormatted,
+      loginList: loginList,
+      totalPO: totalPO,
+      storageKey: kunciKemarin
+    });
+
   } catch (err) {
-    console.error("Gagal memuat rekap otomatis PIC:", err);
+    console.error("Gagal memuat rekap otomatis:", err);
   }
 }
+
+function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, storageKey }) {
+  const existing = document.getElementById('bannerRekapHarianModal');
+  if (existing) existing.remove();
+
+  let listHtml = "";
+  if (loginList.length > 0) {
+    listHtml = loginList.map(log => `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11px;">
+        <span style="color: #cbd5e1;">📅 ${log.jam}</span>
+        <span style="color: #38bdf8; font-weight: 600;">${log.modul}</span>
+        <span style="color: #34d399; font-size: 10px;">🟢 Masuk</span>
+      </div>
+    `).join('');
+  } else {
+    listHtml = `<div style="padding: 10px; text-align: center; color: #64748b; font-size: 11px;">Tidak ada riwayat sesi login tercatat kemarin.</div>`;
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'bannerRekapHarianModal';
+  modal.style.cssText = `
+    position: fixed; inset: 0; background: rgba(7, 11, 20, 0.92);
+    backdrop-filter: blur(12px); display: flex; justify-content: center;
+    align-items: center; z-index: 2147483647; padding: 18px; box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  `;
+
+  modal.innerHTML = `
+    <div style="background: linear-gradient(145deg, #0f172a, #1e293b); border: 1.5px solid rgba(56, 189, 248, 0.45); border-radius: 20px; width: 100%; max-width: 420px; padding: 24px 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); color: #f8fafc;">
+      
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 12px;">
+        <div style="width: 42px; height: 42px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: #38bdf8; font-size: 18px; flex-shrink: 0;">
+          <i class="fa-solid fa-clipboard-check"></i>
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #fff;">REKAP AKTIVITAS KEMARIN</h3>
+          <div style="font-size: 11px; color: #38bdf8;">${tanggalLabel}</div>
+        </div>
+      </div>
+
+      <p style="font-size: 12.5px; color: #cbd5e1; margin: 0 0 14px 0; line-height: 1.5;">
+        Halo <b style="color: #38bdf8;">${nama}</b>, berikut catatan kehadiran aplikasi dan produktivitas PO kamu kemarin:
+      </p>
+
+      <!-- Kotak Ringkasan Input PO -->
+      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 12px; color: #cbd5e1;">
+          <i class="fa-solid fa-file-invoice" style="color: #34d399; margin-right: 6px;"></i> Total Input PO Kemarin
+        </div>
+        <div style="font-size: 16px; font-weight: 800; color: #34d399; font-family: monospace;">
+          ${totalPO} Kali
+        </div>
+      </div>
+
+      <!-- Tabel Riwayat Sesi Login Kemarin -->
+      <div style="font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+        <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Sesi Login (${loginList.length}x)
+      </div>
+      <div style="background: rgba(2, 6, 23, 0.65); border: 1px solid #334155; border-radius: 10px; max-height: 165px; overflow-y: auto; margin-bottom: 18px; font-family: monospace;">
+        ${listHtml}
+      </div>
+
+      <button type="button" id="btnConfirmRekapHarian" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: #fff; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 12.5px; cursor: pointer; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+        ✔ MENGERTI, MULAI KERJA HARI INI
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document.getElementById('btnConfirmRekapHarian').addEventListener('click', () => {
+    localStorage.setItem(storageKey, 'true');
+    modal.remove();
+  });
+}
+
 // ==========================================
 // 🔔 MODAL PAKSA IZIN NOTIFIKASI & REGISTRASI FCM TOKEN
 // ==========================================
 async function registerFCMTokenToServer(tokenValue) {
-    // 🟢 Mengambil nama user asli yang sedang aktif login dari localStorage
     const currentUser = localStorage.getItem('po_user');
-    
-    if (!tokenValue || !currentUser) {
-        console.log("Token atau user belum siap, pendaftaran FCM ditunda.");
-        return;
-    }
+    if (!tokenValue || !currentUser) return;
 
     try {
         await fetch(WEB_APP_URL, {
             method: 'POST',
-            body: JSON.stringify({
-                action: 'saveFCMToken',
-                user: currentUser, // Terkirim akurat sesuai nama user yang login!
-                token: tokenValue
-            })
+            body: JSON.stringify({ action: 'saveFCMToken', user: currentUser, token: tokenValue })
         });
-        console.log("Token perangkat berhasil didaftarkan ke server atas nama:", currentUser);
-    } catch (err) {
-        console.error("Gagal mendaftarkan token FCM:", err);
-    }
+    } catch (err) {}
 }
 
 function checkAndForceNotification() {
-    if (!("Notification" in window)) {
-        console.log("Browser ini tidak mendukung sistem notifikasi.");
-        return;
-    }
+    if (!("Notification" in window)) return;
 
     if (Notification.permission === "granted" || localStorage.getItem("gudang_notif_allowed") === "true") {
         let deviceToken = localStorage.getItem("gudang_device_token");
@@ -1389,13 +1385,7 @@ function showForceNotificationModal() {
                     deviceToken = "token_" + Math.random().toString(36).substring(2) + "_" + Date.now();
                     localStorage.setItem("gudang_device_token", deviceToken);
                 }
-                
                 registerFCMTokenToServer(deviceToken);
-
-                new Notification("Sistem PO Gudang 📦", {
-                    body: "Terima kasih! Notifikasi berhasil diaktifkan dan siap menerima rekap harian.",
-                    icon: "Favicon/Logo.png"
-                });
             } else {
                 await showCustomModal({
                     title: "Izin Ditolak",
@@ -1403,24 +1393,12 @@ function showForceNotificationModal() {
                     type: "error"
                 });
             }
-        } catch (error) {
-            console.error("Gagal meminta izin notifikasi:", error);
-        }
+        } catch (error) {}
     };
 }
 
-// Pendaftaran Service Worker untuk PWA & Push Notification
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./firebase-messaging-sw.js')
-            .then((registration) => {
-                console.log('Service Worker berhasil didaftarkan dengan scope: ', registration.scope);
-            })
-            .catch((err) => {
-                console.log('Gagal mendaftarkan Service Worker: ', err);
-            });
+        navigator.serviceWorker.register('./firebase-messaging-sw.js').catch(() => {});
     });
 }
-window.addEventListener('DOMContentLoaded', () => {
-    cekRekapOtomatis();
-});
