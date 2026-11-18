@@ -361,6 +361,7 @@
         <nav class="nav-menu">
           <a class="nav-item active" onclick="switchTab('overview', this)"><div class="nav-item-left"><i class="fa-solid fa-gauge-high"></i> Overview & Apps</div></a>
           <a class="nav-item" onclick="switchTab('presence', this)"><div class="nav-item-left"><i class="fa-solid fa-users-viewfinder"></i> Live Staf Online</div></a>
+          <a class="nav-item" onclick="switchTab('history', this)"><div class="nav-item-left"><i class="fa-solid fa-clipboard-user"></i> Riwayat Login Harian</div></a>
           <a class="nav-item" onclick="switchTab('logs', this)"><div class="nav-item-left"><i class="fa-solid fa-clock-rotate-left"></i> Audit & Broadcast</div></a>
           <a class="nav-item" onclick="switchTab('chat', this)">
             <div class="nav-item-left"><i class="fa-solid fa-headset"></i> Live Chat CS</div>
@@ -399,6 +400,7 @@
       <div class="mobile-nav-bar">
         <div class="mobile-nav-item active" onclick="switchTab('overview', null, this)"><i class="fa-solid fa-gauge-high"></i> Overview</div>
         <div class="mobile-nav-item" onclick="switchTab('presence', null, this)"><i class="fa-solid fa-users-viewfinder"></i> Staf Online</div>
+        <div class="mobile-nav-item" onclick="switchTab('history', null, this)"><i class="fa-solid fa-clipboard-user"></i> Riwayat</div>
         <div class="mobile-nav-item" onclick="switchTab('logs', null, this)"><i class="fa-solid fa-clock-rotate-left"></i> Audit</div>
         <div class="mobile-nav-item" onclick="switchTab('chat', null, this)"><i class="fa-solid fa-headset"></i> Live Chat <span id="mobileChatBadge" class="chat-badge">0</span></div>
         <div class="mobile-nav-item" onclick="switchTab('admin', null, this)"><i class="fa-solid fa-user-gear"></i> Admin</div>
@@ -483,7 +485,21 @@
         </div>
       </div>
 
-      <!-- ================= TAB 3: AUDIT LOGS & BROADCAST ================= -->
+      <!-- ================= TAB 3: RIWAYAT LOGIN HARIAN (PERSISTENT & CLEAR-BASED) ================= -->
+      <div id="tab-history" class="tab-pane">
+        <div class="section-box">
+          <div class="section-title" style="justify-content: space-between;">
+            <span><i class="fa-solid fa-clipboard-user" style="color: #38bdf8;"></i> RIWAYAT SESI LOGIN & BUKA APLIKASI HARIAN</span>
+            <button onclick="bersihkanRiwayatLogin()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 10.5px; font-family: monospace; font-weight: bold;"><i class="fa-solid fa-trash-can"></i> Clear Riwayat</button>
+          </div>
+          <p style="font-size: 11px; color: var(--text-desc); margin: 0 0 14px 0;">Catatan lengkap tanggal & jam staf membuka modul aplikasi tertentu. Riwayat ini tersimpan aman dan tidak akan terhapus otomatis kecuali kamu menekan tombol Clear di atas.</p>
+          <div id="containerLoginHistory" style="font-family: monospace; font-size: 11.5px; color: #94a3b8; max-height: 400px; overflow-y: auto;">
+            <span>Memuat riwayat login...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 4: AUDIT LOGS & BROADCAST ================= -->
       <div id="tab-logs" class="tab-pane">
         <div class="section-box">
           <div class="section-title" style="justify-content: space-between;">
@@ -508,7 +524,7 @@
         </div>
       </div>
 
-      <!-- ================= TAB 4: LIVE CHAT CS CENTER ================= -->
+      <!-- ================= TAB 5: LIVE CHAT CS CENTER ================= -->
       <div id="tab-chat" class="tab-pane">
         <div class="section-box">
           <div class="section-title"><i class="fa-solid fa-headset"></i> PUSAT LIVE CHAT BANTUAN STAF (CS CENTER)</div>
@@ -543,7 +559,7 @@
         </div>
       </div>
 
-      <!-- ================= TAB 5: OWNER ADMIN HUB ================= -->
+      <!-- ================= TAB 6: OWNER ADMIN HUB ================= -->
       <div id="tab-admin" class="tab-pane">
         <div class="section-box" style="border-color: rgba(168, 85, 247, 0.4);">
           <div class="section-title" style="color: #a855f7;"><i class="fa-solid fa-user-gear"></i> OWNER / SUPER ADMIN CONTROLS</div>
@@ -633,6 +649,7 @@
     const CLOUD_LOGS_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/logs.json`;
     const CLOUD_PRESENCE_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/presence.json`;
     const CLOUD_CHATS_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/chats.json`;
+    const CLOUD_LOGIN_HISTORY_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/login_history.json`;
 
     let targetAksiAdmin = "";
     let globalExpiryDate = null;
@@ -646,10 +663,12 @@
       initCommandCenterHUD();
       muatAuditLogs();
       muatStaffPresence();
+      muatRiwayatLoginHarian();
       muatDaftarChatStaf();
       mulaiPantauBroadcastRealtime();
 
-      setInterval(muatStaffPresence, 3000); // Diperbarui tiap 3 detik untuk respons instan offline
+      setInterval(muatStaffPresence, 3000); 
+      setInterval(muatRiwayatLoginHarian, 5000);
       setInterval(updateRealtimeCountdown, 1000);
       setInterval(muatDaftarChatStaf, 4000);
     });
@@ -692,7 +711,7 @@
         return randomPrefix + "NX" + timeHex + randomSuffix;
     }
 
-    // --- FUNGSI SALIN TOKEN BERSIH (HANYA KODENYA SAJA) ---
+    // --- FUNGSI SALIN TOKEN BERSIH ---
     window.salinTokenChat = function(textTeks) {
         let tokenBersih = textTeks;
         if (textTeks.includes("Token Akses Resmi Anda:")) {
@@ -874,9 +893,72 @@
       const headerTitle = document.getElementById('headerTitleText');
       if (tabId === 'overview') headerTitle.innerText = "Enterprise Command Center";
       else if (tabId === 'presence') headerTitle.innerText = "Live Staff Monitor (Real-Time)";
+      else if (tabId === 'history') { headerTitle.innerText = "Riwayat Login Staf Harian"; muatRiwayatLoginHarian(); }
       else if (tabId === 'logs') headerTitle.innerText = "Audit Logs & Broadcast Center";
       else if (tabId === 'chat') { headerTitle.innerText = "Pusat Live Chat Bantuan Staf"; muatDaftarChatStaf(); }
       else if (tabId === 'admin') headerTitle.innerText = "Owner Admin & License Hub";
+    }
+
+    // --- RIWAYAT LOGIN HARIAN (PERSISTENT & CLEAR-BASED) ---
+    async function muatRiwayatLoginHarian() {
+      const container = document.getElementById('containerLoginHistory');
+      if (!container) return;
+      try {
+        const res = await fetch(CLOUD_LOGIN_HISTORY_ENDPOINT + "?t=" + Date.now());
+        const data = await res.json() || [];
+        
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 20px;">Belum ada riwayat sesi login yang tercatat.</div>`;
+          return;
+        }
+
+        let html = `
+          <div style="width: 100%; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11.5px;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent-blue);">
+                  <th style="padding: 8px;">Tanggal & Waktu Login</th>
+                  <th style="padding: 8px;">Nama Staf</th>
+                  <th style="padding: 8px;">Modul / Aplikasi</th>
+                  <th style="padding: 8px;">Status Sesi</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        const sortedLogs = [...data].reverse();
+        sortedLogs.forEach(item => {
+          let tanggalObj = new Date(item.timestamp);
+          let tanggalFormatted = tanggalObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          let jamFormatted = tanggalObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          let waktuLengkap = `${tanggalFormatted} — ${jamFormatted} WIB`;
+
+          html += `
+            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+              <td style="padding: 8px; color: #cbd5e1; font-family: monospace;">📅 ${waktuLengkap}</td>
+              <td style="padding: 8px; color: #fff; font-weight: bold;">👤 ${item.name}</td>
+              <td style="padding: 8px; color: #38bdf8;">${item.modul}</td>
+              <td style="padding: 8px; color: #34d399; font-weight: bold;">🟢 Aktif Masuk</td>
+            </tr>
+          `;
+        });
+
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+      } catch (e) {
+        container.innerHTML = `<div style="color: #ef4444;">Gagal memuat riwayat login dari server.</div>`;
+      }
+    }
+
+    async function bersihkanRiwayatLogin() {
+      if (!confirm("⚠️ Apakah kamu yakin ingin menghapus seluruh riwayat login ini secara permanen? Data riwayat tidak akan kembali setelah dihapus.")) return;
+      try {
+        await fetch(CLOUD_LOGIN_HISTORY_ENDPOINT, { method: 'DELETE' });
+        showDashboardToast("Riwayat login berhasil dikosongkan!", true);
+        muatRiwayatLoginHarian();
+      } catch (e) {
+        showDashboardToast("Gagal mengosongkan riwayat!", false);
+      }
     }
 
     // --- LIVE CHAT & ACC / TOLAK TOKEN OTOMATIS ---
@@ -1199,6 +1281,16 @@
                     time: currentTime 
                 })
             });
+
+            // Catat Riwayat Login Harian ke Cloud (Persistent & Tidak Terhapus Sendiri)
+            await fetch(CLOUD_LOGIN_HISTORY_ENDPOINT, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: staffName,
+                    modul: modulName,
+                    timestamp: currentTime
+                })
+            });
         } catch (e) {}
         window.location.href = targetUrl;
     }
@@ -1250,8 +1342,6 @@
 
             Object.keys(data).forEach(id => {
                 const item = data[id];
-                // Syarat Aktif: Status modul bukan "Offline", dan waktu detak jantung (time) kurang dari 10 detik yang lalu.
-                // Jika aplikasi ditutup/di-close, heartbeat berhenti dan selisih waktu langsung > 10000 ms (10 detik) sehingga langsung masuk kondisi Offline.
                 const isOnline = item.modul !== "Offline" && (now - item.time < 10000);
 
                 if (isOnline) {
