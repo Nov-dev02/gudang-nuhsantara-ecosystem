@@ -1224,7 +1224,7 @@
           `;
       }
 
-      container.innerHTML = html || `<div style="color: var(--text-desc); text-align: center; margin: auto;">Belum ada pesan.</div>`;
+      container.innerHTML = html || `<div style="color: var(--text-desc); text-align: center; margin: auto;">Belum ada ruang chat yang dipilih.</div>`;
       container.scrollTop = container.scrollHeight;
     }
 
@@ -1292,16 +1292,19 @@
                 })
             });
 
-            // Catat Riwayat Login Harian ke Cloud (Persistent & Tidak Terhapus Sendiri)
-            await fetch(CLOUD_LOGIN_HISTORY_ENDPOINT, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+            // Catat Riwayat Login Harian menggunakan key unik berbasis timestamp (Aman & Pasti Masuk)
+            const historyKey = 'log_' + currentTime + '_' + Math.floor(Math.random() * 1000);
+            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/login_history/${historyKey}.json`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: staffName,
                     modul: modulName,
                     timestamp: currentTime
                 })
             });
-        } catch (e) {}
+        } catch (e) {
+            console.error("Gagal mencatat log riwayat:", e);
+        }
         window.location.href = targetUrl;
     }
 
