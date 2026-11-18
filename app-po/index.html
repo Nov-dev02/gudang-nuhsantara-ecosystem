@@ -581,16 +581,16 @@
         if (!data) return;
 
         const messages = data.messages || {};
-        const isOwnerTyping = data.typingOwner || false;
+        const isSystemTyping = data.typingSystem || data.typingOwner || false;
         const container = document.getElementById('chatWidgetMessagesContainer');
         const typingEl = document.getElementById('typingIndicatorPo');
         const badgeEl = document.getElementById('chatUnreadBadgePo');
 
-        typingEl.style.display = isOwnerTyping ? 'block' : 'none';
+        typingEl.style.display = isSystemTyping ? 'block' : 'none';
 
         let html = "";
-        let unreadFromOwner = 0;
-        let ownerUpdates = {};
+        let unreadFromSystem = 0;
+        let systemUpdates = {};
 
         Object.keys(messages).forEach(k => {
           const m = messages[k];
@@ -599,7 +599,7 @@
           let chatContentHtml = "";
           
           const rawText = m.text || "";
-          const isTokenMessage = (m.sender === 'bot' || m.sender === 'owner') && 
+          const isTokenMessage = (m.sender === 'bot' || m.sender === 'system' || m.sender === 'owner') && 
                                  (rawText.includes("NX") || (rawText.length > 25 && (rawText.includes("Token") || rawText.includes("🔑") || rawText.includes("aktif"))));
 
           if (m.sender === 'staff') {
@@ -612,8 +612,8 @@
           } else {
             bubbleClass = "left";
             if (!m.read) {
-              unreadFromOwner++;
-              ownerUpdates[`${k}/read`] = true;
+              unreadFromSystem++;
+              systemUpdates[`${k}/read`] = true;
             }
           }
 
@@ -672,16 +672,16 @@
         container.innerHTML = html || `<div style="color: #94a3b8; text-align: center; margin: auto;">Mulai percakapan...</div>`;
         container.scrollTop = container.scrollHeight;
 
-        if (unreadFromOwner > 0 && document.getElementById('chatWidgetBox').style.display !== 'flex') {
-          badgeEl.innerText = unreadFromOwner;
+        if (unreadFromSystem > 0 && document.getElementById('chatWidgetBox').style.display !== 'flex') {
+          badgeEl.innerText = unreadFromSystem;
           badgeEl.style.display = 'inline-block';
         } else {
           badgeEl.style.display = 'none';
         }
 
-        if (document.getElementById('chatWidgetBox').style.display === 'flex' && Object.keys(ownerUpdates).length > 0) {
+        if (document.getElementById('chatWidgetBox').style.display === 'flex' && Object.keys(systemUpdates).length > 0) {
           await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ownerUpdates)
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(systemUpdates)
           });
         }
       } catch (e) { console.error(e); }
@@ -856,7 +856,7 @@
 
         if (safeStaffKey) {
             const autoMsg = {
-                sender: 'owner',
+                sender: 'system',
                 text: `📢 [Broadcast System]: "${messageText || 'Pengumuman penting sistem.'}"`,
                 time: Date.now(),
                 read: true
