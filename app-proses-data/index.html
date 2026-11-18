@@ -679,6 +679,46 @@
         }).catch(e => console.error(e));
       }
 
+      // --- SKRIP INSTANT OFFLINE SAAT TUTUP TAB / PINDAH HALAMAN ---
+      function setStafOfflineInstan() {
+          let currentStaff = localStorage.getItem('gudang_staff_name');
+          if (!currentStaff) return;
+          
+          const safeKey = currentStaff.replace(/[^a-zA-Z0-9_-]/g, '_');
+          const endpoint = `${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`;
+          
+          const dataOffline = JSON.stringify({
+              name: currentStaff,
+              modul: "Offline",
+              loginTime: 0,
+              time: Date.now() - 1000000 
+          });
+          
+          if (navigator.sendBeacon) {
+              navigator.sendBeacon(endpoint, dataOffline);
+          } else {
+              fetch(endpoint, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: dataOffline,
+                  keepalive: true
+              }).catch(e => {});
+          }
+      }
+
+      window.addEventListener('beforeunload', setStafOfflineInstan);
+
+      document.addEventListener('visibilitychange', function() {
+          if (document.visibilityState === 'hidden') {
+              setStafOfflineInstan();
+          } else if (document.visibilityState === 'visible') {
+              let currentStaff = localStorage.getItem('gudang_staff_name');
+              if (currentStaff) {
+                  registerPresence(currentStaff);
+              }
+          }
+      });
+
       if (staffName && staffName.trim()) {
         registerPresence(staffName.trim());
         setInterval(() => registerPresence(staffName.trim()), 30000);
