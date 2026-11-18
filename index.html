@@ -1292,8 +1292,8 @@
                 })
             });
 
-            // Catat Riwayat Login Harian menggunakan key unik berbasis timestamp (Aman & Pasti Masuk)
-            const historyKey = 'log_' + currentTime + '_' + Math.floor(Math.random() * 1000);
+            // PERBAIKAN UTAMA: Menggunakan key unik berbasis timestamp langsung via PUT ke login_history
+            const historyKey = 'log_' + currentTime + '_' + Math.floor(Math.random() * 10000);
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/login_history/${historyKey}.json`, {
                 method: 'PUT', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
