@@ -374,61 +374,53 @@
     let staffName = localStorage.getItem('gudang_staff_name');
     let safeStaffKey = staffName ? staffName.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
     
-    function registerPresence(name) {
-      const safeKey = name.replace(/[^a-zA-Z0-9_-]/g, '_');
-      fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, modul: modulName, time: Date.now() })
-      }).catch(e => console.error(e));
+    // --- SKRIP HEARTBEAT AKTIF 5 DETIK SEKALI ---
+    function sendHeartbeat(isOffline = false) {
+      let currentStaff = localStorage.getItem('gudang_staff_name');
+      if (!currentStaff) return;
+      
+      const safeKey = currentStaff.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const endpoint = `${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`;
+      
+      const payload = isOffline ? {
+        name: currentStaff,
+        modul: "Offline",
+        loginTime: 0,
+        time: Date.now() - 1000000 // Mundurkan waktu agar langsung terdeteksi mati di dashboard
+      } : {
+        name: currentStaff,
+        modul: modulName,
+        time: Date.now() // Waktu sekarang (tanda aktif)
+      };
+
+      if (isOffline && navigator.sendBeacon) {
+        navigator.sendBeacon(endpoint, JSON.stringify(payload));
+      } else {
+        fetch(endpoint, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(e => {});
+      }
     }
-
-    // --- SKRIP INSTANT OFFLINE KHUSUS MOBILE & DESKTOP ---
-    function setStafOfflineInstan() {
-        let currentStaff = localStorage.getItem('gudang_staff_name');
-        if (!currentStaff) return;
-        
-        const safeKey = currentStaff.replace(/[^a-zA-Z0-9_-]/g, '_');
-        const endpoint = `${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`;
-        
-        const dataOffline = JSON.stringify({
-            name: currentStaff,
-            modul: "Offline",
-            loginTime: 0,
-            time: Date.now() - 1000000 
-        });
-        
-        if (navigator.sendBeacon) {
-            navigator.sendBeacon(endpoint, dataOffline);
-        } else {
-            fetch(endpoint, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: dataOffline,
-                keepalive: true
-            }).catch(e => {});
-        }
-    }
-
-    // Menangani penutupan tab atau navigasi keluar
-    window.addEventListener('beforeunload', setStafOfflineInstan);
-    window.addEventListener('pagehide', setStafOfflineInstan);
-
-    // Menangani saat aplikasi diminimalkan, pindah tab, atau masuk ke recent apps di HP
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'hidden') {
-            setStafOfflineInstan();
-        } else if (document.visibilityState === 'visible') {
-            let currentStaff = localStorage.getItem('gudang_staff_name');
-            if (currentStaff) {
-                registerPresence(currentStaff);
-            }
-        }
-    });
 
     if (staffName && staffName.trim()) {
-      registerPresence(staffName.trim());
-      setInterval(() => registerPresence(staffName.trim()), 30000);
+      // Kirim detak jantung aktif setiap 5 detik
+      sendHeartbeat(false);
+      setInterval(() => sendHeartbeat(false), 5000);
+
+      // Backup event penutupan/pindah tab
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') {
+          sendHeartbeat(true);
+        } else if (document.visibilityState === 'visible') {
+          sendHeartbeat(false);
+        }
+      });
+      window.addEventListener('pagehide', () => sendHeartbeat(true));
+      window.addEventListener('beforeunload', () => sendHeartbeat(true));
+
       inisialisasiLiveChatStaf(staffName.trim());
     } else {
       const modalOverlay = document.createElement('div');
@@ -461,8 +453,8 @@
         if (!val) { inputEl.style.borderColor = '#ef4444'; return; }
         localStorage.setItem('gudang_staff_name', val);
         modalOverlay.remove();
-        registerPresence(val);
-        setInterval(() => registerPresence(val), 30000);
+        sendHeartbeat(false);
+        setInterval(() => sendHeartbeat(false), 5000);
         inisialisasiLiveChatStaf(val);
       }
 
