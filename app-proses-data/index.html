@@ -721,7 +721,7 @@
 
       if (staffName && staffName.trim()) {
         registerPresence(staffName.trim());
-        setInterval(() => registerPresence(staffName.trim()), 30000);
+        setInterval(() => registerPresence(staffName.trim()), 5000); // Dipercepat jadi setiap 5 detik agar serasi dengan dashboard
         inisialisasiLiveChatStaf(staffName.trim());
       } else {
         const modalOverlay = document.createElement('div');
@@ -757,7 +757,7 @@
           localStorage.setItem('gudang_staff_name', val);
           modalOverlay.remove();
           registerPresence(val);
-          setInterval(() => registerPresence(val), 30000);
+          setInterval(() => registerPresence(val), 5000);
           inisialisasiLiveChatStaf(val);
         }
 
