@@ -581,7 +581,7 @@
         if (!data) return;
 
         const messages = data.messages || {};
-        const isSystemTyping = data.typingSystem || data.typingOwner || false;
+        const isSystemTyping = data.typingSystem || false;
         const container = document.getElementById('chatWidgetMessagesContainer');
         const typingEl = document.getElementById('typingIndicatorPo');
         const badgeEl = document.getElementById('chatUnreadBadgePo');
