@@ -649,7 +649,7 @@
       muatDaftarChatStaf();
       mulaiPantauBroadcastRealtime();
 
-      setInterval(muatStaffPresence, 10000);
+      setInterval(muatStaffPresence, 3000); // Diperbarui tiap 3 detik agar hitungan detik durasi real-time lancar
       setInterval(updateRealtimeCountdown, 1000);
       setInterval(muatDaftarChatStaf, 4000);
     });
@@ -975,7 +975,6 @@
 
         if (statusAksi === 'acc') {
             tokenBaru = buatTokenDurasiOtomatis(durasiDiminta);
-            // Format dibuat bersih agar mudah diparsing dan disalin murni kodenya
             pesanBalasan = `✅ Token Akses Resmi (${durasiDiminta}):\n${tokenBaru}`;
         } else {
             pesanBalasan = `❌ Mohon maaf, permintaan perpanjangan durasi **${durasiDiminta}** ditolak oleh Owner.`;
@@ -1003,7 +1002,6 @@
         showDashboardToast("Terjadi kesalahan saat memproses token.", false);
     }
 };
-
 
     function buatTokenDurasiOtomatis(durasiString) {
         let bulanTambah = 1;
@@ -1085,7 +1083,6 @@
           }
         } else if (m.sender === 'bot') { bubbleClass = "bot"; }
 
-        // Tombol Salin Token Berbentuk Icon Kecil Minimalis
         if (isTokenMessage && (m.sender === 'owner' || m.sender === 'bot')) {
             const escapedText = m.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             copyBtnHtml = `
@@ -1117,7 +1114,6 @@
         `;
       });
 
-      // Tampilkan Tombol ACC / Tolak jika staf meminta perpanjangan token dan statusnya pending
       if (tokenReq && tokenReq.status === 'pending') {
           const durasiReq = tokenReq.requested_duration || "1 Bulan";
           html += `
@@ -1176,6 +1172,7 @@
     function bufferToHex(buffer) { return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join(''); }
     function hexToBuffer(hex) { let matches = hex.match(/.{1,2}/g); return new Uint8Array(matches.map(byte => parseInt(byte, 16))).buffer; }
 
+    // --- MODIFIED: KELOLA JAM MASUK & DURASI REAL-TIME ---
     async function bukaModulDenganIdentitas(event, targetUrl, modulName) {
         event.preventDefault();
         let staffName = localStorage.getItem('gudang_staff_name');
@@ -1185,11 +1182,26 @@
             staffName = inputNama.trim();
             localStorage.setItem('gudang_staff_name', staffName);
         }
+        
         const safeKey = staffName.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const currentTime = Date.now();
+        
         try {
+            // Ambil data presence sebelumnya untuk mengecek apakah sesi login masih aktif (< 15 menit)
+            const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`);
+            let existingData = await res.json();
+            
+            // Pertahankan loginTime lama jika belum expired, atau buat baru jika sudah lama tidak aktif
+            let loginTime = (existingData && (currentTime - existingData.time < 900000)) ? (existingData.loginTime || currentTime) : currentTime;
+
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
                 method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: staffName, modul: modulName, time: Date.now() })
+                body: JSON.stringify({ 
+                    name: staffName, 
+                    modul: modulName, 
+                    loginTime: loginTime, 
+                    time: currentTime 
+                })
             });
         } catch (e) {}
         window.location.href = targetUrl;
@@ -1209,6 +1221,7 @@
         try { await fetch(CLOUD_PRESENCE_ENDPOINT, { method: 'DELETE' }); showDashboardToast("Daftar staf dibersihkan!", true); muatStaffPresence(); } catch (e) {}
     }
 
+    // --- MODIFIED: TAMPILAN TAB STAF ONLINE MENJADI TABEL DETAIL & DURASI LIVE ---
     async function muatStaffPresence() {
         const container = document.getElementById('containerStaffPresence');
         const countOverview = document.getElementById('txtOnlineCountOverview');
@@ -1216,16 +1229,57 @@
         try {
             const res = await fetch(CLOUD_PRESENCE_ENDPOINT + "?t=" + Date.now());
             const data = await res.json();
-            if (!data) { container.innerHTML = `<span style="color: #64748b;">Tidak ada staf online saat ini.</span>`; if (countOverview) countOverview.innerText = "0 Aktif"; return; }
+            
+            if (!data) { 
+                container.innerHTML = `<span style="color: #64748b;">Tidak ada staf online saat ini.</span>`; 
+                if (countOverview) countOverview.innerText = "0 Aktif"; 
+                return; 
+            }
+
             const now = Date.now();
-            let activeCount = 0, htmlContent = "";
+            let activeCount = 0;
+            let htmlContent = `
+                <div style="width: 100%; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11.5px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent-blue);">
+                                <th style="padding: 8px;">Nama Staf</th>
+                                <th style="padding: 8px;">Modul Aktif</th>
+                                <th style="padding: 8px;">Jam Masuk</th>
+                                <th style="padding: 8px;">Durasi Aktif</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
             Object.keys(data).forEach(id => {
                 const item = data[id];
                 if (now - item.time < 900000) {
                     activeCount++;
-                    htmlContent += `<span style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 5px 10px; border-radius: 6px; color: #38bdf8;">🟢 ${item.name || id} (${item.modul})</span>`;
+                    
+                    let loginTimestamp = item.loginTime || item.time;
+                    let diffMs = now - loginTimestamp;
+                    let totalSec = Math.floor(diffMs / 1000);
+                    let hours = Math.floor(totalSec / 3600);
+                    let minutes = Math.floor((totalSec % 3600) / 60);
+                    let seconds = totalSec % 60;
+                    
+                    let durasiStr = `${hours > 0 ? hours + 'j ' : ''}${minutes}m ${seconds}d`;
+                    let jamMasukStr = new Date(loginTimestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                    htmlContent += `
+                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <td style="padding: 8px; color: #fff; font-weight: bold;">🟢 ${item.name || id}</td>
+                            <td style="padding: 8px; color: #38bdf8;">${item.modul}</td>
+                            <td style="padding: 8px; color: #cbd5e1;">${jamMasukStr} WIB</td>
+                            <td style="padding: 8px; color: #34d399; font-family: monospace; font-weight: bold;">${durasiStr}</td>
+                        </tr>
+                    `;
                 }
             });
+
+            htmlContent += `</tbody></table></div>`;
+
             container.innerHTML = activeCount > 0 ? htmlContent : `<span style="color: #64748b;">Tidak ada staf online saat ini.</span>`;
             if (countOverview) countOverview.innerText = `${activeCount} Aktif`;
         } catch (e) {}
