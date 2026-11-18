@@ -899,19 +899,25 @@
       else if (tabId === 'admin') headerTitle.innerText = "Owner Admin & License Hub";
     }
 
-    // --- RIWAYAT LOGIN HARIAN (PERSISTENT & OBJECT-SAFE) ---
+    // --- RIWAYAT LOGIN HARIAN (FULL SECURE & ROBUST PARSER) ---
     async function muatRiwayatLoginHarian() {
       const container = document.getElementById('containerLoginHistory');
       if (!container) return;
       try {
         const res = await fetch(CLOUD_LOGIN_HISTORY_ENDPOINT + "?t=" + Date.now());
-        const rawData = await res.json() || {};
+        const rawData = await res.json();
         
+        if (!rawData) {
+          container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 20px;">Belum ada riwayat sesi login yang tercatat.</div>`;
+          return;
+        }
+
+        // Parsing data yang aman dari berbagai bentuk format Firebase RTDB
         let data = [];
         if (Array.isArray(rawData)) {
           data = rawData.filter(item => item !== null);
         } else if (typeof rawData === 'object' && rawData !== null) {
-          data = Object.values(rawData);
+          data = Object.values(rawData).filter(item => item !== null && typeof item === 'object');
         }
         
         if (data.length === 0) {
@@ -933,11 +939,12 @@
               <tbody>
         `;
 
+        // Urutkan dari timestamp terbaru
         const sortedLogs = data.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         
         sortedLogs.forEach(item => {
           if (!item || !item.timestamp) return;
-          let tanggalObj = new Date(item.timestamp);
+          let tanggalObj = new Date(Number(item.timestamp));
           let tanggalFormatted = tanggalObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
           let jamFormatted = tanggalObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
           let waktuLengkap = `${tanggalFormatted} — ${jamFormatted} WIB`;
@@ -955,7 +962,7 @@
         html += `</tbody></table></div>`;
         container.innerHTML = html;
       } catch (e) {
-        console.error("Gagal muat riwayat:", e);
+        console.error("Gagal memuat riwayat:", e);
         container.innerHTML = `<div style="color: #ef4444; text-align: center; padding: 20px;">Gagal memuat riwayat login dari server.</div>`;
       }
     }
