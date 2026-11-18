@@ -1173,7 +1173,7 @@ async function cekRekapOtomatis() {
   if (!namaPicLogin) return;
 
   const kemarin = new Date();
-  kemarin.setDate(kemarin.getDate() - 1);
+  //kemarin.setDate(kemarin.getDate() - 1);
   const tanggalKemarin = kemarin.toISOString().split('T')[0];
   const tanggalKemarinFormatted = kemarin.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
