@@ -599,7 +599,7 @@
           let chatContentHtml = "";
           
           const rawText = m.text || "";
-          const isTokenMessage = (m.sender === 'bot' || m.sender === 'system' || m.sender === 'owner') && 
+          const isTokenMessage = (m.sender === 'bot' || m.sender === 'system' || m.sender === 'system_admin') && 
                                  (rawText.includes("NX") || (rawText.length > 25 && (rawText.includes("Token") || rawText.includes("🔑") || rawText.includes("aktif"))));
 
           if (m.sender === 'staff') {
