@@ -1263,7 +1263,7 @@
     function bufferToHex(buffer) { return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join(''); }
     function hexToBuffer(hex) { let matches = hex.match(/.{1,2}/g); return new Uint8Array(matches.map(byte => parseInt(byte, 16))).buffer; }
 
-    async function bukaModulDenganIdentitas(event, targetUrl, modulName) {
+        async function bukaModulDenganIdentitas(event, targetUrl, modulName) {
         event.preventDefault();
         let staffName = localStorage.getItem('gudang_staff_name');
         if (!staffName) {
@@ -1277,20 +1277,37 @@
         const currentTime = Date.now();
         
         try {
-            const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`);
-            let existingData = await res.json();
-            
-            let loginTime = (existingData && (currentTime - existingData.time < 15000)) ? (existingData.loginTime || currentTime) : currentTime;
-
+            // 1. Catat presence realtime dulu
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                method: 'PUT', 
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     name: staffName, 
                     modul: modulName, 
-                    loginTime: loginTime, 
+                    loginTime: currentTime, 
                     time: currentTime 
                 })
             });
+
+            // 2. Catat Riwayat Login Harian dan WAJIB di-await agar terkirim tuntas sebelum pindah halaman
+            const historyKey = 'log_' + currentTime + '_' + Math.floor(Math.random() * 10000);
+            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/login_history/${historyKey}.json`, {
+                method: 'PUT', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: staffName,
+                    modul: modulName,
+                    timestamp: currentTime
+                })
+            });
+        } catch (e) {
+            console.error("Gagal mencatat log riwayat:", e);
+        }
+
+        // Pindah halaman baru dijalankan setelah data history dipastikan terkirim ke Firebase
+        window.location.href = targetUrl;
+    }
+
 
             // PERBAIKAN UTAMA: Menggunakan key unik berbasis timestamp langsung via PUT ke login_history
             const historyKey = 'log_' + currentTime + '_' + Math.floor(Math.random() * 10000);
