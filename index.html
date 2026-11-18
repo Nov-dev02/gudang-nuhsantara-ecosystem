@@ -319,7 +319,7 @@
 </head>
 <body>
 
-  <!-- INITIAL SPLASH SCREEN & OWNER SECURITY GATE -->
+  <!-- INITIAL SPLASH SCREEN & SYSTEM SECURITY GATE -->
   <div id="splashScreen">
     <div class="splash-box" id="splashLoadingState">
       <div class="splash-spinner"></div>
@@ -329,14 +329,14 @@
 
     <div class="splash-box" id="splashLoginState" style="display: none;">
       <div style="font-size: 26px; color: var(--accent-blue); margin-bottom: 8px;"><i class="fa-solid fa-shield-halved"></i></div>
-      <h3 style="color: #fff; margin: 0 0 4px 0; font-size: 14px;">OWNER ACCESS GATE</h3>
+      <h3 style="color: #fff; margin: 0 0 4px 0; font-size: 14px;">SYSTEM ACCESS GATE</h3>
       <p style="font-size: 10.5px; color: var(--text-desc); margin-bottom: 10px;">Masukkan PIN Akses Privat</p>
       
       <input type="password" id="splashPinInput" maxlength="6" placeholder="••••">
       <div id="splashPinError" style="color: #ef4444; font-size: 10px; margin-bottom: 10px; display: none;">PIN Akses Salah!</div>
       
       <button onclick="loginSplashBiometrik()" style="width: 100%; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 9px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11px; margin-bottom: 8px;">
-        <i class="fa-solid fa-fingerprint"></i> Scan Sidik Jari Owner
+        <i class="fa-solid fa-fingerprint"></i> Scan Sidik Jari System
       </button>
 
       <button onclick="verifikasiSplashPin()" style="width: 100%; background: #0284c7; border: 1px solid var(--accent-blue); color: white; padding: 9px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11px;">
@@ -367,7 +367,7 @@
             <div class="nav-item-left"><i class="fa-solid fa-headset"></i> Live Chat CS</div>
             <span id="sidebarChatBadge" class="chat-badge">0</span>
           </a>
-          <a class="nav-item" onclick="switchTab('admin', this)"><div class="nav-item-left"><i class="fa-solid fa-user-gear"></i> Owner Admin Hub</div></a>
+          <a class="nav-item" onclick="switchTab('admin', this)"><div class="nav-item-left"><i class="fa-solid fa-user-gear"></i> System Admin Hub</div></a>
         </nav>
       </div>
 
@@ -391,7 +391,7 @@
         </div>
         <div class="header-actions">
           <div class="owner-badge">
-            <i class="fa-solid fa-shield-halved" style="color: #a855f7;"></i> NOVAN
+            <i class="fa-solid fa-shield-halved" style="color: #a855f7;"></i> SYSTEM
           </div>
         </div>
       </header>
@@ -550,7 +550,7 @@
               </div>
 
               <div class="chat-input-row">
-                <input type="text" id="inputOwnerChat" placeholder="Ketik balasan sebagai Owner..." oninput="handleOwnerTyping()" onkeypress="if(event.key === 'Enter') kirimBalasanOwner()" />
+                <input type="text" id="inputOwnerChat" placeholder="Ketik balasan sebagai System..." oninput="handleOwnerTyping()" onkeypress="if(event.key === 'Enter') kirimBalasanOwner()" />
                 <button onclick="kirimBalasanOwner()" style="background: #0284c7; border: 1px solid var(--accent-blue); color: white; padding: 9px 16px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11.5px;">Kirim</button>
               </div>
             </div>
@@ -559,10 +559,10 @@
         </div>
       </div>
 
-      <!-- ================= TAB 6: OWNER ADMIN HUB ================= -->
+      <!-- ================= TAB 6: SYSTEM ADMIN HUB ================= -->
       <div id="tab-admin" class="tab-pane">
         <div class="section-box" style="border-color: rgba(168, 85, 247, 0.4);">
-          <div class="section-title" style="color: #a855f7;"><i class="fa-solid fa-user-gear"></i> OWNER / SUPER ADMIN CONTROLS</div>
+          <div class="section-title" style="color: #a855f7;"><i class="fa-solid fa-user-gear"></i> SYSTEM / SUPER ADMIN CONTROLS</div>
           <p style="font-size: 11.5px; color: var(--text-desc); margin: 0 0 16px 0; line-height: 1.4;">Kelola token lisensi NX pusat, buat token baru, atau paksa pembaruan aplikasi di seluruh perangkat staf.</p>
           <div class="admin-controls">
             <button class="btn-admin" onclick="bukaModalAdmin('lisensi')" style="background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%); border-color: #c084fc;"><i class="fa-solid fa-key"></i> Panel Lisensi</button>
@@ -734,7 +734,7 @@
         banner.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(239, 68, 68, 0.3); padding-bottom: 8px;">
             <span style="font-size: 11.5px; color: #ef4444; font-weight: bold; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-triangle-exclamation fa-bounce"><b> PENGUMUMAN PENTING OWNER</b></i>
+              <i class="fa-solid fa-triangle-exclamation fa-bounce"><b> PENGUMUMAN PENTING SYSTEM</b></i>
             </span>
             <span style="font-size: 10px; color: #94a3b8;">${waktuPesan} WIB</span>
           </div>
@@ -818,10 +818,10 @@
           const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
           const userId = new Uint8Array(16); window.crypto.getRandomValues(userId);
           const newCred = await navigator.credentials.create({
-            publicKey: { challenge, rp: { name: "Gudang Nuhsantara" }, user: { id: userId, name: "novan@admin", displayName: "Novan" }, pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }], timeout: 60000, authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" } }
+            publicKey: { challenge, rp: { name: "Gudang Nuhsantara" }, user: { id: userId, name: "novan@admin", displayName: "System" }, pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }], timeout: 60000, authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" } }
           });
           localStorage.setItem('nx_admin_cred_id', bufferToHex(newCred.rawId));
-          showDashboardToast("Sidik jari owner terdaftar! Tap sekali lagi.", true);
+          showDashboardToast("Sidik jari system terdaftar! Tap sekali lagi.", true);
           return;
         }
         const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
@@ -834,7 +834,7 @@
       const splash = document.getElementById('splashScreen');
       splash.style.opacity = '0';
       setTimeout(() => { splash.style.display = 'none'; }, 400);
-      showDashboardToast("Akses Owner Diterima. Selamat bekerja, Bro!", true);
+      showDashboardToast("Akses System Diterima. Selamat bekerja, Bro!", true);
     }
 
     function switchTab(tabId, desktopEl, mobileEl) {
@@ -858,7 +858,7 @@
       else if (tabId === 'history') { headerTitle.innerText = "Riwayat Login Staf Harian"; muatRiwayatLoginHarian(); }
       else if (tabId === 'logs') headerTitle.innerText = "Audit Logs & Broadcast Center";
       else if (tabId === 'chat') { headerTitle.innerText = "Pusat Live Chat Bantuan Staf"; muatDaftarChatStaf(); }
-      else if (tabId === 'admin') headerTitle.innerText = "Owner Admin & License Hub";
+      else if (tabId === 'admin') headerTitle.innerText = "System Admin & License Hub";
     }
 
     // --- RIWAYAT LOGIN HARIAN (FULL SECURE & ROBUST PARSER) ---
@@ -1032,12 +1032,12 @@
           let pesanBalasan = "";
 
           if (statusAksi === 'acc') {
-              pesanBalasan = `✅ Permintaan perpanjangan masa aktif (**${durasiDiminta}**) telah **DISETUJUI** oleh Owner. Token akses resmi sedang disiapkan...`;
+              pesanBalasan = `✅ Permintaan perpanjangan masa aktif (**${durasiDiminta}**) telah **DISETUJUI** oleh System. Token akses resmi sedang disiapkan...`;
               
               // Otomatis membuka tab web generator milikmu di tab baru secara sat-set
               window.open('./nx-generator/index.html', '_blank');
           } else {
-              pesanBalasan = `❌ Mohon maaf, permintaan perpanjangan durasi **${durasiDiminta}** ditolak oleh Owner.`;
+              pesanBalasan = `❌ Mohon maaf, permintaan perpanjangan durasi **${durasiDiminta}** ditolak oleh System.`;
           }
 
           const replyMsg = {
@@ -1096,7 +1096,7 @@
       if (!confirm("Hapus seluruh riwayat percakapan dengan staf ini?")) return;
       try {
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages.json`, { method: 'DELETE' });
-        const botWelcome = { sender: 'bot', text: `Riwayat percakapan telah dibersihkan oleh Owner.`, time: Date.now(), read: true };
+        const botWelcome = { sender: 'bot', text: `Riwayat percakapan telah dibersihkan oleh System.`, time: Date.now(), read: true };
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages.json`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
         });
@@ -1150,7 +1150,7 @@
         html += `
           <div class="chat-bubble ${bubbleClass}">
             <div style="font-size: 9.5px; opacity: 0.7; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
-              <span>${m.sender.toUpperCase()}</span>
+              <span>${m.sender === 'owner' ? 'SYSTEM' : m.sender.toUpperCase()}</span>
               ${deleteBtn}
             </div>
             <div>${m.text}</div>
@@ -1376,7 +1376,7 @@
             if (!storedCredIdHex) {
                 const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
                 const userId = new Uint8Array(16); window.crypto.getRandomValues(userId);
-                const newCred = await navigator.credentials.create({ publicKey: { challenge, rp: { name: "Gudang Nuhsantara" }, user: { id: userId, name: "novan@admin", displayName: "Novan" }, pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }], timeout: 60000, authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" } } });
+                const newCred = await navigator.credentials.create({ publicKey: { challenge, rp: { name: "Gudang Nuhsantara" }, user: { id: userId, name: "system@admin", displayName: "System" }, pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }], timeout: 60000, authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" } } });
                 localStorage.setItem('nx_admin_cred_id', bufferToHex(newCred.rawId));
                 showDashboardToast("Sidik jari terdaftar! Tap sekali lagi.", true);
                 return;
@@ -1404,7 +1404,7 @@
     async function eksekusiKirimBroadcastAktif() {
         const msg = document.getElementById('inputBroadcastMsg').value.trim();
         if (!msg) { showDashboardToast("Ketik pesan broadcast!", false); return; }
-        await fetch(CLOUD_BROADCAST_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg, sender: "Novan", timestamp: Date.now() }) });
+        await fetch(CLOUD_BROADCAST_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg, sender: "System", timestamp: Date.now() }) });
         await catatLogAktivitas(`Broadcast: "${msg}"`);
         showDashboardToast("Broadcast terkirim!", true);
         document.getElementById('inputBroadcastMsg').value = "";
