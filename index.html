@@ -657,6 +657,136 @@
     let activeStaffRoom = null;
     let typingTimeout = null;
 
+    // --- HELPER MODAL KONFIRMASI & INPUT KUSTOM (PENGGANTI confirm() & prompt() BROWSER) ---
+    function tampilkanDashboardConfirm(options = {}) {
+      const {
+        title = "KONFIRMASI TINDAKAN",
+        message = "Apakah Anda yakin ingin melanjutkan?",
+        confirmText = "Ya, Lanjutkan",
+        cancelText = "Batal",
+        danger = true
+      } = options;
+
+      return new Promise((resolve) => {
+        const existing = document.getElementById("dashboard-confirm-modal");
+        if (existing) existing.remove();
+
+        const accentColor = danger ? "#ef4444" : "#38bdf8";
+        const confirmBg = danger
+          ? "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"
+          : "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)";
+
+        const overlay = document.createElement("div");
+        overlay.id = "dashboard-confirm-modal";
+        overlay.style.cssText = `
+          position: fixed; inset: 0; width: 100vw; height: 100vh;
+          background: rgba(7, 11, 20, 0.82); backdrop-filter: blur(10px);
+          z-index: 2147483647; display: flex; justify-content: center; align-items: center;
+          padding: 20px; box-sizing: border-box;
+        `;
+
+        overlay.innerHTML = `
+          <div style="width: min(100%, 370px); background: #0f172a; border: 1.5px solid ${danger ? "rgba(239, 68, 68, 0.55)" : "rgba(56, 189, 248, 0.45)"}; border-radius: 18px; padding: 22px 20px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9); font-family: monospace; color: #f8fafc; text-align: center; box-sizing: border-box;">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: ${danger ? "rgba(239, 68, 68, 0.14)" : "rgba(56, 189, 248, 0.14)"}; border: 1px solid ${accentColor}; color: ${accentColor}; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; font-size: 18px;">
+              <i class="fa-solid ${danger ? "fa-trash-can" : "fa-circle-question"}"></i>
+            </div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; margin-bottom: 8px;">${title}</div>
+            <div style="font-size: 11.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 18px;">${message}</div>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" id="dashConfirmCancel" style="flex: 1; padding: 9px 12px; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">${cancelText}</button>
+              <button type="button" id="dashConfirmOk" style="flex: 1; padding: 9px 12px; background: ${confirmBg}; border: 1px solid ${accentColor}; color: #fff; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">${confirmText}</button>
+            </div>
+          </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        const finish = (val) => {
+          document.removeEventListener("keydown", onKey);
+          overlay.remove();
+          resolve(val);
+        };
+        const onKey = (e) => {
+          if (e.key === "Escape") finish(false);
+        };
+        document.addEventListener("keydown", onKey);
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) finish(false);
+        });
+        overlay.querySelector("#dashConfirmCancel").addEventListener("click", () => finish(false));
+        overlay.querySelector("#dashConfirmOk").addEventListener("click", () => finish(true));
+      });
+    }
+
+    function tampilkanDashboardPrompt(options = {}) {
+      const {
+        title = "IDENTIFIKASI STAF",
+        message = "Masukkan nama staf:",
+        placeholder = "Contoh: Siti - Admin",
+        defaultValue = "",
+        confirmText = "Simpan",
+        cancelText = "Batal"
+      } = options;
+
+      return new Promise((resolve) => {
+        const existing = document.getElementById("dashboard-prompt-modal");
+        if (existing) existing.remove();
+
+        const overlay = document.createElement("div");
+        overlay.id = "dashboard-prompt-modal";
+        overlay.style.cssText = `
+          position: fixed; inset: 0; width: 100vw; height: 100vh;
+          background: rgba(7, 11, 20, 0.85); backdrop-filter: blur(12px);
+          z-index: 2147483647; display: flex; justify-content: center; align-items: center;
+          padding: 20px; box-sizing: border-box;
+        `;
+
+        overlay.innerHTML = `
+          <div style="width: min(100%, 380px); background: #0f172a; border: 1.5px solid var(--accent-blue); border-radius: 18px; padding: 22px 20px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.92); font-family: monospace; color: #f8fafc; text-align: center; box-sizing: border-box;">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(56, 189, 248, 0.14); border: 1px solid var(--accent-blue); color: var(--accent-blue); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; font-size: 18px;">
+              <i class="fa-solid fa-user-check"></i>
+            </div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; margin-bottom: 6px;">${title}</div>
+            <div style="font-size: 11.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">${message}</div>
+            <input type="text" id="dashPromptInput" placeholder="${placeholder}" style="width: 100%; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: var(--accent-blue); font-size: 12.5px; border-radius: 9px; outline: none; text-align: center; margin-bottom: 14px; box-sizing: border-box; font-family: monospace;" />
+            <div style="display: flex; gap: 10px;">
+              <button type="button" id="dashPromptCancel" style="flex: 1; padding: 9px 12px; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">${cancelText}</button>
+              <button type="button" id="dashPromptOk" style="flex: 1; padding: 9px 12px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid var(--accent-blue); color: #fff; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">${confirmText}</button>
+            </div>
+          </div>
+        `;
+
+        document.body.appendChild(overlay);
+        const inputEl = overlay.querySelector("#dashPromptInput");
+        inputEl.value = defaultValue || "";
+        setTimeout(() => inputEl.focus(), 80);
+
+        const finish = (val) => {
+          document.removeEventListener("keydown", onKey);
+          overlay.remove();
+          resolve(val);
+        };
+        const submitVal = () => {
+          const trimmed = inputEl.value.trim();
+          if (!trimmed) {
+            inputEl.style.borderColor = "#ef4444";
+            return;
+          }
+          finish(trimmed);
+        };
+        const onKey = (e) => {
+          if (e.key === "Escape") finish(null);
+          if (e.key === "Enter") submitVal();
+        };
+        document.addEventListener("keydown", onKey);
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) finish(null);
+        });
+        overlay.querySelector("#dashPromptCancel").addEventListener("click", () => finish(null));
+        overlay.querySelector("#dashPromptOk").addEventListener("click", submitVal);
+      });
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
       initSplashScreenFlow();
       muatTemaDashboard();
@@ -717,9 +847,10 @@
         }
 
         navigator.clipboard.writeText(tokenBersih).then(() => {
-            alert("Token bersih berhasil disalin ke clipboard!");
+            showDashboardToast("Token bersih berhasil disalin ke clipboard!", true);
         }).catch(err => {
             console.error('Gagal menyalin:', err);
+            showDashboardToast("Gagal menyalin token ke clipboard!", false);
         });
     };
 
@@ -1036,7 +1167,14 @@
     }
 
     async function bersihkanRiwayatLogin() {
-      if (!confirm("⚠️ Apakah kamu yakin ingin menghapus seluruh riwayat login ini secara permanen? Data riwayat tidak akan kembali setelah dihapus.")) return;
+      const yakin = await tampilkanDashboardConfirm({
+        title: "HAPUS RIWAYAT LOGIN",
+        message: "Apakah kamu yakin ingin menghapus seluruh riwayat login ini secara permanen? Data riwayat tidak akan kembali setelah dihapus.",
+        confirmText: "Hapus Riwayat",
+        cancelText: "Batal",
+        danger: true
+      });
+      if (!yakin) return;
       try {
         await fetch(CLOUD_LOGIN_HISTORY_ENDPOINT, { method: 'DELETE' });
         showDashboardToast("Riwayat login berhasil dikosongkan!", true);
@@ -1135,7 +1273,14 @@
     }
 
     async function hapusRoomChatStaf(staffId, staffName) {
-      if (!confirm(`Hapus seluruh ruang chat dan riwayat untuk "${staffName}" secara permanen?`)) return;
+      const yakin = await tampilkanDashboardConfirm({
+        title: "HAPUS ROOM CHAT",
+        message: `Hapus seluruh ruang chat dan riwayat untuk "${staffName}" secara permanen?`,
+        confirmText: "Hapus Room",
+        cancelText: "Batal",
+        danger: true
+      });
+      if (!yakin) return;
       try {
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffId}.json`, { method: 'DELETE' });
         if (activeStaffRoom === staffId) {
@@ -1150,7 +1295,14 @@
 
     async function tarikPesanOwner(messageKey) {
       if (!activeStaffRoom) return;
-      if (!confirm("Tarik/hapus pesan ini?")) return;
+      const yakin = await tampilkanDashboardConfirm({
+        title: "TARIK PESAN",
+        message: "Tarik atau hapus pesan ini dari percakapan?",
+        confirmText: "Tarik Pesan",
+        cancelText: "Batal",
+        danger: true
+      });
+      if (!yakin) return;
       try {
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages/${messageKey}.json`, {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: "🚫 Pesan ini telah ditarik" })
@@ -1161,7 +1313,14 @@
 
     async function hapusSemuaChatOwner() {
       if (!activeStaffRoom) { showDashboardToast("Pilih ruang chat staf terlebih dahulu!", false); return; }
-      if (!confirm("Hapus seluruh riwayat percakapan dengan staf ini?")) return;
+      const yakin = await tampilkanDashboardConfirm({
+        title: "HAPUS RIWAYAT CHAT",
+        message: "Hapus seluruh riwayat percakapan dengan staf ini?",
+        confirmText: "Hapus Semua",
+        cancelText: "Batal",
+        danger: true
+      });
+      if (!yakin) return;
       try {
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages.json`, { method: 'DELETE' });
         const botWelcome = { sender: 'bot', text: `Riwayat percakapan telah dibersihkan oleh System.`, time: Date.now(), read: true };
@@ -1281,7 +1440,12 @@
         event.preventDefault();
         let staffName = localStorage.getItem('gudang_staff_name');
         if (!staffName) {
-            const inputNama = prompt(`👋 Selamat datang di ${modulName}!\nMasukkan Nama Anda (contoh: Siti - Admin):`);
+            const inputNama = await tampilkanDashboardPrompt({
+              title: `MASUK ${modulName.toUpperCase()}`,
+              message: `Masukkan Nama Anda untuk absensi modul (contoh: Siti - Admin):`,
+              placeholder: "Contoh: Siti - Admin",
+              confirmText: "Simpan & Buka"
+            });
             if (!inputNama || !inputNama.trim()) { showDashboardToast("Nama staf wajib diisi!", false); return; }
             staffName = inputNama.trim();
             localStorage.setItem('gudang_staff_name', staffName);
@@ -1318,9 +1482,15 @@
         window.location.href = targetUrl;
     }
 
-    function gantiNamaStafLokal() {
+    async function gantiNamaStafLokal() {
         const namaLama = localStorage.getItem('gudang_staff_name') || "";
-        const namaBaru = prompt("✏️ Ubah Nama Staf di perangkat ini:", namaLama);
+        const namaBaru = await tampilkanDashboardPrompt({
+          title: "UBAH NAMA STAF",
+          message: "Masukkan nama staf baru untuk perangkat ini:",
+          placeholder: "Contoh: Budi - Admin",
+          defaultValue: namaLama,
+          confirmText: "Simpan Nama"
+        });
         if (namaBaru && namaBaru.trim()) {
             localStorage.setItem('gudang_staff_name', namaBaru.trim());
             showDashboardToast(`Nama staf diperbarui: ${namaBaru.trim()}`, true);
@@ -1328,7 +1498,14 @@
     }
 
     async function bersihkanDataPresence() {
-        if (!confirm("Hapus seluruh riwayat staf online?")) return;
+        const yakin = await tampilkanDashboardConfirm({
+          title: "RESET STAF ONLINE",
+          message: "Hapus seluruh riwayat staf online saat ini?",
+          confirmText: "Reset",
+          cancelText: "Batal",
+          danger: true
+        });
+        if (!yakin) return;
         try { await fetch(CLOUD_PRESENCE_ENDPOINT, { method: 'DELETE' }); showDashboardToast("Daftar staf dibersihkan!", true); muatStaffPresence(); } catch (e) {}
     }
 
@@ -1492,7 +1669,17 @@
     }
 
     function tandaiSemuaDibaca() { localStorage.setItem('gudang_last_read_audit', String(Date.now())); muatAuditLogs(); showDashboardToast("Ditandai dibaca!", true); }
-    async function bersihkanSemuaLog() { if (!confirm("Hapus log?")) return; try { await fetch(CLOUD_LOGS_ENDPOINT, { method: 'DELETE' }); muatAuditLogs(); } catch(e){} }
+    async function bersihkanSemuaLog() {
+      const yakin = await tampilkanDashboardConfirm({
+        title: "BERSIHKAN LOG AUDIT",
+        message: "Hapus seluruh log aktivitas & audit trail?",
+        confirmText: "Hapus Log",
+        cancelText: "Batal",
+        danger: true
+      });
+      if (!yakin) return;
+      try { await fetch(CLOUD_LOGS_ENDPOINT, { method: 'DELETE' }); muatAuditLogs(); showDashboardToast("Log audit dibersihkan!", true); } catch(e){}
+    }
     async function eksekusiForceUpdateAktif() { await fetch(FIREBASE_DB_URL + "/gudang_nuhsantara/version.json", { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ forceReloadTimestamp: Date.now() }) }); showDashboardToast("Perintah update dikirim!", true); }
 
     async function initCommandCenterHUD() {
