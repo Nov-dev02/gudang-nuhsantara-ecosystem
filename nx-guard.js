@@ -12,6 +12,36 @@ let secretClickTimer = null;
 let universalChatPollInterval = null;
 let staffTypingTimeout = null;
 
+// --- HELPER FORMAT TEKS CHAT (MARKDOWN SEDERHANA KE HTML BERSIH) ---
+function formatChatTextHtml(text) {
+  let clean = String(text || "");
+  // Ubah **teks** menjadi <b>teks</b>
+  clean = clean.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+  return clean;
+}
+
+// --- HELPER EKSTRAK TOKEN MURNI ---
+function extractPureToken(rawText) {
+  const text = String(rawText || "");
+  // Cari pola token khas seperti ...NX<hex/alphanumeric>
+  const nxMatch = text.match(/[A-Za-z0-9_-]*NX[A-Za-z0-9_-]{8,}/);
+  if (nxMatch && nxMatch[0]) {
+    return nxMatch[0].trim();
+  }
+
+  // Fallback jika ada baris yang menyerupai token panjang tanpa spasi
+  const lines = text.split(/\r?\n/);
+  for (let line of lines) {
+    let cleaned = line.replace(/[`*"]/g, "").trim();
+    const tokenCandidate = cleaned.match(/[A-Za-z0-9_-]{16,}/);
+    if (tokenCandidate && tokenCandidate[0]) {
+      return tokenCandidate[0].trim();
+    }
+  }
+
+  return text.replace(/[`*"]/g, "").trim();
+}
+
 // --- DECODER TOKEN NX ---
 function decodeTokenToDate(token) {
   try {
@@ -166,7 +196,7 @@ async function muatPesanUniversalChat() {
         if (!data) return;
 
         const messages = data.messages || {};
-        const isSystemTyping = data.typingSystem || data.typingAdmin || data.typingOwner || false;
+        const isSystemTyping = data.typingSystem || data.typingAdmin || false;
         const container = document.getElementById('universalChatMessagesContainer');
         const typingEl = document.getElementById('typingIndicatorUniversal');
         const badge = document.getElementById('universalChatBadge');
@@ -185,7 +215,7 @@ async function muatPesanUniversalChat() {
             let chatContentHtml = "";
             
             const rawText = m.text || "";
-            const isTokenMessage = (m.sender === 'bot' || m.sender === 'system' || m.sender === 'admin' || m.sender === 'owner') && 
+            const isTokenMessage = (m.sender === 'bot' || m.sender === 'system' || m.sender === 'admin') && 
                                    (rawText.includes("NX") || (rawText.length > 25 && (rawText.includes("Token") || rawText.includes("🔑") || rawText.includes("aktif"))));
 
             if (m.sender === 'staff') {
@@ -204,25 +234,13 @@ async function muatPesanUniversalChat() {
             }
 
             if (isTokenMessage) {
-                let extractedToken = rawText.trim();
-                const lines = rawText.split('\n');
-                for (let line of lines) {
-                    let cleanLine = line.trim();
-                    if (cleanLine.length > 8 && !cleanLine.toLowerCase().includes("akses") && !cleanLine.toLowerCase().includes("token resmi")) {
-                        extractedToken = cleanLine;
-                        break;
-                    }
-                }
-                if (extractedToken.includes('\n')) {
-                    const subLines = extractedToken.split('\n');
-                    extractedToken = subLines[subLines.length - 1].trim();
-                }
-
-                const escapedToken = extractedToken.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const extractedToken = extractPureToken(rawText);
+                const escapedToken = extractedToken.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const formattedMessage = formatChatTextHtml(rawText);
 
                 chatContentHtml = `
                   <div style="font-weight: 600; margin-bottom: 4px; color: #38bdf8;"><i class="fa-solid fa-key"></i> Akses Token Resmi</div>
-                  <div style="font-size: 11px; margin-bottom: 8px; opacity: 0.9; word-break: break-all;">${rawText}</div>
+                  <div style="font-size: 11px; margin-bottom: 8px; opacity: 0.9; word-break: break-word;">${formattedMessage}</div>
                   <div style="font-family: monospace; width: 100%; background: #020617; border: 1px solid #38bdf8; border-radius: 8px; padding: 8px; box-sizing: border-box;">
                     <div style="color: #38bdf8; font-size: 11.5px; font-family: monospace; word-break: break-all; margin-bottom: 8px; user-select: all; background: rgba(56, 189, 248, 0.08); padding: 6px; border-radius: 6px;">
                       ${extractedToken}
@@ -233,7 +251,7 @@ async function muatPesanUniversalChat() {
                   </div>
                 `;
             } else {
-                chatContentHtml = `<div>${m.text}</div>`;
+                chatContentHtml = `<div>${formatChatTextHtml(rawText)}</div>`;
             }
 
             let tickMark = "";
@@ -280,7 +298,7 @@ async function muatPesanUniversalChat() {
 }
 
 window.salinTokenUniversalChat = function(kodeToken) {
-    let tokenBersih = kodeToken.trim();
+    let tokenBersih = extractPureToken(kodeToken);
     navigator.clipboard.writeText(tokenBersih).then(() => {
         alert("Token berhasil disalin: " + tokenBersih);
     }).catch(err => {
@@ -326,7 +344,7 @@ async function kirimPesanurUniversalChatBotLogic(textPesan, currentStaffName) {
 
           const botConfirm = {
             sender: 'bot',
-            text: `Permintaan durasi **${durasiDiminta}** sudah dikirim ke System. Mohon tunggu sebentar, System sedang meninjau dan memproses persetujuannya ya...`,
+            text: `Permintaan durasi <b>${durasiDiminta}</b> sudah dikirim ke System. Mohon tunggu sebentar, System sedang meninjau dan memproses persetujuannya ya...`,
             time: Date.now(),
             read: true
           };
