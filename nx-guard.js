@@ -1,5 +1,5 @@
 // =========================================================================
-// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD & PRO LIVE CHAT (v4.8)
+// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD & PRO LIVE CHAT (v4.9)
 // =========================================================================
 
 // 🌐 URL FIREBASE REALTIME DATABASE MILIKMU
@@ -7,6 +7,7 @@ const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southe
 const CLOUD_LICENSE_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/license.json`;
 
 const ADMIN_NX_PIN = "2026";
+const NX_RANDOM_CHAR_LEN = 18;
 let secretClickCount = 0;
 let secretClickTimer = null;
 let universalChatPollInterval = null;
@@ -15,12 +16,11 @@ let staffTypingTimeout = null;
 // --- HELPER FORMAT TEKS CHAT (MARKDOWN SEDERHANA KE HTML BERSIH) ---
 function formatChatTextHtml(text) {
   let clean = String(text || "");
-  // Ubah **teks** menjadi <b>teks</b>
   clean = clean.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
   return clean;
 }
 
-// --- HELPER EKSTRAK TOKEN MURNI (HANYA MENGEMBALIKAN JIKA ADA TOKEN VALID) ---
+// --- HELPER EKSTRAK TOKEN MURNI (SESUAI POLA 18 CHAR + NX + HEX + 18 CHAR) ---
 function extractPureToken(rawText) {
   if (!rawText) return null;
 
@@ -31,48 +31,43 @@ function extractPureToken(rawText) {
 
   if (!cleaned) return null;
 
-  // 1. Pola token NX utama (contoh: Qna2GXgCLmkuTopqsaNX1a218ccba7fxMV5dKnYh83F480po7)
-  const nxMatch = cleaned.match(/[A-Za-z0-9_-]{8,}NX[A-Za-z0-9_-]{6,}/);
-  if (nxMatch && nxMatch[0]) {
-    return nxMatch[0].trim();
+  // Pola token NX: 18 char prefix + NX + timeHex + 18 char suffix
+  const nxExactMatch = cleaned.match(/[A-Za-z0-9]{18}NX[0-9a-fA-F]+[A-Za-z0-9]{18}/);
+  if (nxExactMatch && nxExactMatch[0]) {
+    return nxExactMatch[0].trim();
   }
 
-  // 2. Cek per baris/potongan jika ada string kode panjang tanpa spasi (minimal 20 karakter)
-  const parts = cleaned.split(/[\s\r\n]+/);
-  for (let part of parts) {
-    const tokenCandidate = part.replace(/^[^A-Za-z0-9_-]+|[^A-Za-z0-9_-]+$/g, "");
-    if (
-      tokenCandidate.length >= 20 &&
-      /^[A-Za-z0-9_-]+$/.test(tokenCandidate) &&
-      /[A-Za-z]/.test(tokenCandidate) &&
-      /[0-9]/.test(tokenCandidate)
-    ) {
-      return tokenCandidate;
-    }
+  // Fallback jika ada variasi karakter _ atau - pada prefix/suffix
+  const nxLooseMatch = cleaned.match(/[A-Za-z0-9_-]{8,}NX[0-9a-fA-F]+[A-Za-z0-9_-]{6,}/);
+  if (nxLooseMatch && nxLooseMatch[0]) {
+    return nxLooseMatch[0].trim();
   }
 
   return null;
 }
 
-// --- DECODER TOKEN NX ---
+// --- DECODER TOKEN NX (BUANG 18 CHAR SUFFIX SETELAH "NX") ---
 function decodeTokenToDate(token) {
   try {
-    if (!token || token.length < 15) return null;
-    let cleanToken = token.trim();
-    if (!cleanToken.includes('NX')) return null;
-    
-    let parts = cleanToken.split('NX');
+    if (!token || typeof token !== "string") return null;
+    const cleanToken = token.trim();
+    if (!cleanToken.includes("NX")) return null;
+
+    const parts = cleanToken.split("NX");
     if (parts.length < 2) return null;
-    
-    let hexPart = parts[1].match(/^[0-9a-fA-F]+/);
-    if (!hexPart) return null;
-    
-    let timestamp = parseInt(hexPart[0], 16);
-    if (isNaN(timestamp)) return null;
-    
-    let targetDate = new Date(timestamp);
-    if (isNaN(targetDate.getTime())) return null;
-    
+
+    const afterNx = parts[1];
+    if (afterNx.length <= NX_RANDOM_CHAR_LEN) return null;
+
+    const hexPart = afterNx.slice(0, -NX_RANDOM_CHAR_LEN);
+    if (!/^[0-9a-fA-F]+$/.test(hexPart)) return null;
+
+    const timestamp = parseInt(hexPart, 16);
+    if (Number.isNaN(timestamp)) return null;
+
+    const targetDate = new Date(timestamp);
+    if (Number.isNaN(targetDate.getTime())) return null;
+
     return targetDate;
   } catch (e) {
     return null;
@@ -84,7 +79,7 @@ async function cekStatusCloud() {
   try {
     const response = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
     if (!response.ok) return;
-    
+
     const data = await response.json();
     if (!data) return;
 
@@ -95,11 +90,11 @@ async function cekStatusCloud() {
     // 1. Prioritas Utama: Cek apakah dikunci permanen
     if (data.permanent === true) {
       tampilkanLayarKunciPermanen();
-    } 
+    }
     // 2. Cek apakah dikunci sementara atau kedaluwarsa
     else if (data.locked === true || isExpired) {
       tampilkanLayarKunciMandiri();
-    } 
+    }
     // 3. Jika normal, hapus layar kunci & reload jika sebelumnya terkunci
     else {
       const lockScreen = document.getElementById('nx-global-lock-screen');
@@ -117,345 +112,345 @@ async function cekStatusCloud() {
 // 💬 PRO LIVE CHAT WIDGET (SETARA APP PO - DENGAN FITUR LENGKAP)
 // =========================================================================
 function getSafeStaffKeyForChat() {
-    let name = localStorage.getItem('gudang_staff_name') || "Staf_General";
-    return name.replace(/[^a-zA-Z0-9_-]/g, '_');
+  let name = localStorage.getItem('gudang_staff_name') || "Staf_General";
+  return name.replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
 async function inisialisasiUniversalChatData() {
-    const staffName = localStorage.getItem('gudang_staff_name') || "Staf_General";
-    const safeStaffKey = getSafeStaffKeyForChat();
+  const staffName = localStorage.getItem('gudang_staff_name') || "Staf_General";
+  const safeStaffKey = getSafeStaffKeyForChat();
 
-    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/staffName.json`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(staffName)
+  await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/staffName.json`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(staffName)
+  }).catch(e => {});
+
+  const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`);
+  const msgs = await res.json();
+  if (!msgs) {
+    const botWelcome = {
+      sender: 'bot',
+      text: `Halo ${staffName}, saya Asisten Virtual Gudang Nuhsantara. Ada kendala operasional atau token yang bisa saya bantu?`,
+      time: Date.now(),
+      read: true
+    };
+    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
     }).catch(e => {});
-
-    const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`);
-    const msgs = await res.json();
-    if (!msgs) {
-        const botWelcome = {
-          sender: 'bot',
-          text: `Halo ${staffName}, saya Asisten Virtual Gudang Nuhsantara. Ada kendala operasional atau token yang bisa saya bantu?`,
-          time: Date.now(),
-          read: true
-        };
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
-        }).catch(e => {});
-    }
+  }
 }
 
 function toggleUniversalChatWidget() {
-    let box = document.getElementById('universalChatWidgetBox');
-    if (!box) {
-        injectUniversalChatHTML();
-        box = document.getElementById('universalChatWidgetBox');
-    }
-    
-    if (box.style.display === 'flex') {
-        box.style.display = 'none';
-        clearInterval(universalChatPollInterval);
-    } else {
-        box.style.display = 'flex';
-        inisialisasiUniversalChatData().then(() => {
-            muatPesanUniversalChat();
-            universalChatPollInterval = setInterval(muatPesanUniversalChat, 3000);
-        });
-        setTimeout(() => {
-            const inputEl = document.getElementById('universalInputChat');
-            if (inputEl) inputEl.focus();
-        }, 100);
-    }
+  let box = document.getElementById('universalChatWidgetBox');
+  if (!box) {
+    injectUniversalChatHTML();
+    box = document.getElementById('universalChatWidgetBox');
+  }
+
+  if (box.style.display === 'flex') {
+    box.style.display = 'none';
+    clearInterval(universalChatPollInterval);
+  } else {
+    box.style.display = 'flex';
+    inisialisasiUniversalChatData().then(() => {
+      muatPesanUniversalChat();
+      universalChatPollInterval = setInterval(muatPesanUniversalChat, 3000);
+    });
+    setTimeout(() => {
+      const inputEl = document.getElementById('universalInputChat');
+      if (inputEl) inputEl.focus();
+    }, 100);
+  }
 }
 
 async function tarikPesanUniversal(messageKey) {
-    const safeStaffKey = getSafeStaffKeyForChat();
-    if (!confirm("Tarik/hapus pesan ini?")) return;
-    try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages/${messageKey}.json`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: "🚫 Pesan ini telah ditarik" })
-        });
-        muatPesanUniversalChat();
-    } catch (e) { console.error(e); }
+  const safeStaffKey = getSafeStaffKeyForChat();
+  if (!confirm("Tarik/hapus pesan ini?")) return;
+  try {
+    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages/${messageKey}.json`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: "🚫 Pesan ini telah ditarik" })
+    });
+    muatPesanUniversalChat();
+  } catch (e) { console.error(e); }
 }
 
 async function hapusSemuaChatUniversal() {
-    const safeStaffKey = getSafeStaffKeyForChat();
-    if (!confirm("Hapus semua riwayat percakapan ini?")) return;
-    try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-            method: 'DELETE'
-        });
-        const botWelcome = {
+  const safeStaffKey = getSafeStaffKeyForChat();
+  if (!confirm("Hapus semua riwayat percakapan ini?")) return;
+  try {
+    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+      method: 'DELETE'
+    });
+    const botWelcome = {
+      sender: 'bot',
+      text: `Riwayat dibersihkan. Halo, ada yang bisa dibantu?`,
+      time: Date.now(),
+      read: true
+    };
+    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
+    });
+    muatPesanUniversalChat();
+  } catch (e) { console.error(e); }
+}
+
+async function muatPesanUniversalChat() {
+  const safeStaffKey = getSafeStaffKeyForChat();
+  try {
+    const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}.json?t=` + Date.now());
+    const data = await res.json();
+    if (!data) return;
+
+    const messages = data.messages || {};
+    const isSystemTyping = data.typingSystem || data.typingAdmin || false;
+    const container = document.getElementById('universalChatMessagesContainer');
+    const typingEl = document.getElementById('typingIndicatorUniversal');
+    const badge = document.getElementById('universalChatBadge');
+    if (!container) return;
+
+    if (typingEl) typingEl.style.display = isSystemTyping ? 'block' : 'none';
+
+    let html = "";
+    let unreadFromSystem = 0;
+    let systemUpdates = {};
+
+    Object.keys(messages).forEach(k => {
+      const m = messages[k];
+      let bubbleStyle = "";
+      let deleteBtn = "";
+      let chatContentHtml = "";
+
+      const rawText = m.text || "";
+      const extractedToken = (m.sender !== 'staff') ? extractPureToken(rawText) : null;
+      const isTokenMessage = Boolean(extractedToken);
+
+      if (m.sender === 'staff') {
+        bubbleStyle = "background: #0284c7 !important; color: #fff !important; align-self: flex-end !important; border-bottom-right-radius: 2px !important;";
+        if (m.text !== "🚫 Pesan ini telah ditarik") {
+          deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanUniversal('${k}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
+        }
+      } else if (m.sender === 'bot') {
+        bubbleStyle = "background: rgba(168, 85, 247, 0.15) !important; border: 1px solid rgba(168, 85, 247, 0.3) !important; color: #d8b4fe !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important;";
+      } else {
+        bubbleStyle = "background: #1e293b !important; color: #f8fafc !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important;";
+        if (!m.read) {
+          unreadFromSystem++;
+          systemUpdates[`${k}/read`] = true;
+        }
+      }
+
+      if (isTokenMessage) {
+        const escapedToken = extractedToken.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const formattedMessage = formatChatTextHtml(rawText);
+
+        chatContentHtml = `
+          <div style="font-weight: 600; margin-bottom: 4px; color: #38bdf8;"><i class="fa-solid fa-key"></i> Akses Token Resmi</div>
+          <div style="font-size: 11px; margin-bottom: 8px; opacity: 0.9; word-break: break-word;">${formattedMessage}</div>
+          <div style="font-family: monospace; width: 100%; background: #020617; border: 1px solid #38bdf8; border-radius: 8px; padding: 8px; box-sizing: border-box;">
+            <div style="color: #38bdf8; font-size: 11.5px; font-family: monospace; word-break: break-all; margin-bottom: 8px; user-select: all; background: rgba(56, 189, 248, 0.08); padding: 6px; border-radius: 6px;">
+              ${extractedToken}
+            </div>
+            <button type="button" onclick="salinTokenUniversalChat('${escapedToken}')" style="width: 100%; background: #38bdf8; border: none; color: #070b14; padding: 7px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;" title="Salin Token">
+              <i class="fa-solid fa-copy"></i> Salin Token Sekarang
+            </button>
+          </div>
+        `;
+      } else {
+        chatContentHtml = `<div>${formatChatTextHtml(rawText)}</div>`;
+      }
+
+      let tickMark = "";
+      if (m.sender === 'staff') {
+        if (m.read) {
+          tickMark = `<span style="color: #38bdf8; font-size: 11px; margin-left: 4px;" title="Dibaca System">✓✓</span>`;
+        } else {
+          tickMark = `<span style="color: #94a3b8; font-size: 11px; margin-left: 4px;" title="Terkirim">✓✓</span>`;
+        }
+      }
+
+      html += `
+        <div style="max-width: 85% !important; padding: 8px 11px !important; border-radius: 10px !important; ${bubbleStyle} word-break: break-word !important; box-sizing: border-box !important;">
+          <div style="font-size: 9px; opacity: 0.7; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
+            <span>${m.sender.toUpperCase()}</span>
+            ${deleteBtn}
+          </div>
+          ${chatContentHtml}
+          <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
+            ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${tickMark}
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html || `<div style="color: #94a3b8; text-align: center; margin: auto;">Mulai percakapan...</div>`;
+    container.scrollTop = container.scrollHeight;
+
+    if (badge) {
+      if (unreadFromSystem > 0 && document.getElementById('universalChatWidgetBox').style.display !== 'flex') {
+        badge.innerText = unreadFromSystem;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    if (document.getElementById('universalChatWidgetBox').style.display === 'flex' && Object.keys(systemUpdates).length > 0) {
+      await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(systemUpdates)
+      });
+    }
+  } catch (e) { console.error(e); }
+}
+
+window.salinTokenUniversalChat = function(kodeToken) {
+  let tokenBersih = extractPureToken(kodeToken);
+  if (!tokenBersih) return;
+  navigator.clipboard.writeText(tokenBersih).then(() => {
+    alert("Token berhasil disalin: " + tokenBersih);
+  }).catch(err => {
+    console.error('Gagal menyalin:', err);
+  });
+};
+
+async function kirimPesanurUniversalChatBotLogic(textPesan, currentStaffName) {
+  const textLower = textPesan.toLowerCase();
+  const isKeywordKendala = textLower.includes("token") || textLower.includes("expired") || textLower.includes("habis") || textLower.includes("terkunci") || textLower.includes("mati");
+  const safeStaffKey = getSafeStaffKeyForChat();
+
+  try {
+    const reqRes = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`);
+    const currentReq = await reqRes.json();
+
+    if (isKeywordKendala) {
+      setTimeout(async () => {
+        const botReply = {
           sender: 'bot',
-          text: `Riwayat dibersihkan. Halo, ada yang bisa dibantu?`,
+          text: `Halo ${currentStaffName}, terdeteksi kendala token/aplikasi terkunci. Butuh perpanjangan masa aktif berapa lama? (Contoh: 1 Minggu, 1 Bulan, atau 1 Tahun)`,
           time: Date.now(),
           read: true
         };
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botReply)
+        });
+
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: "waiting_duration", timestamp: Date.now() })
         });
         muatPesanUniversalChat();
-    } catch (e) { console.error(e); }
-}
+      }, 800);
 
-async function muatPesanUniversalChat() {
-    const safeStaffKey = getSafeStaffKeyForChat();
-    try {
-        const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}.json?t=` + Date.now());
-        const data = await res.json();
-        if (!data) return;
-
-        const messages = data.messages || {};
-        const isSystemTyping = data.typingSystem || data.typingAdmin || false;
-        const container = document.getElementById('universalChatMessagesContainer');
-        const typingEl = document.getElementById('typingIndicatorUniversal');
-        const badge = document.getElementById('universalChatBadge');
-        if (!container) return;
-
-        if (typingEl) typingEl.style.display = isSystemTyping ? 'block' : 'none';
-
-        let html = "";
-        let unreadFromSystem = 0;
-        let systemUpdates = {};
-
-        Object.keys(messages).forEach(k => {
-            const m = messages[k];
-            let bubbleStyle = "";
-            let deleteBtn = "";
-            let chatContentHtml = "";
-            
-            const rawText = m.text || "";
-            const extractedToken = (m.sender !== 'staff') ? extractPureToken(rawText) : null;
-            const isTokenMessage = Boolean(extractedToken);
-
-            if (m.sender === 'staff') {
-                bubbleStyle = "background: #0284c7 !important; color: #fff !important; align-self: flex-end !important; border-bottom-right-radius: 2px !important;";
-                if (m.text !== "🚫 Pesan ini telah ditarik") {
-                    deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanUniversal('${k}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
-                }
-            } else if (m.sender === 'bot') {
-                bubbleStyle = "background: rgba(168, 85, 247, 0.15) !important; border: 1px solid rgba(168, 85, 247, 0.3) !important; color: #d8b4fe !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important;";
-            } else {
-                bubbleStyle = "background: #1e293b !important; color: #f8fafc !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important;";
-                if (!m.read) {
-                    unreadFromSystem++;
-                    systemUpdates[`${k}/read`] = true;
-                }
-            }
-
-            if (isTokenMessage) {
-                const escapedToken = extractedToken.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                const formattedMessage = formatChatTextHtml(rawText);
-
-                chatContentHtml = `
-                  <div style="font-weight: 600; margin-bottom: 4px; color: #38bdf8;"><i class="fa-solid fa-key"></i> Akses Token Resmi</div>
-                  <div style="font-size: 11px; margin-bottom: 8px; opacity: 0.9; word-break: break-word;">${formattedMessage}</div>
-                  <div style="font-family: monospace; width: 100%; background: #020617; border: 1px solid #38bdf8; border-radius: 8px; padding: 8px; box-sizing: border-box;">
-                    <div style="color: #38bdf8; font-size: 11.5px; font-family: monospace; word-break: break-all; margin-bottom: 8px; user-select: all; background: rgba(56, 189, 248, 0.08); padding: 6px; border-radius: 6px;">
-                      ${extractedToken}
-                    </div>
-                    <button type="button" onclick="salinTokenUniversalChat('${escapedToken}')" style="width: 100%; background: #38bdf8; border: none; color: #070b14; padding: 7px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;" title="Salin Token">
-                      <i class="fa-solid fa-copy"></i> Salin Token Sekarang
-                    </button>
-                  </div>
-                `;
-            } else {
-                chatContentHtml = `<div>${formatChatTextHtml(rawText)}</div>`;
-            }
-
-            let tickMark = "";
-            if (m.sender === 'staff') {
-                if (m.read) {
-                    tickMark = `<span style="color: #38bdf8; font-size: 11px; margin-left: 4px;" title="Dibaca System">✓✓</span>`;
-                } else {
-                    tickMark = `<span style="color: #94a3b8; font-size: 11px; margin-left: 4px;" title="Terkirim">✓✓</span>`;
-                }
-            }
-
-            html += `
-                <div style="max-width: 85% !important; padding: 8px 11px !important; border-radius: 10px !important; ${bubbleStyle} word-break: break-word !important; box-sizing: border-box !important;">
-                    <div style="font-size: 9px; opacity: 0.7; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
-                        <span>${m.sender.toUpperCase()}</span>
-                        ${deleteBtn}
-                    </div>
-                    ${chatContentHtml}
-                    <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
-                        ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${tickMark}
-                    </div>
-                </div>
-            `;
+    } else if (currentReq && currentReq.status === "waiting_duration") {
+      const durasiDiminta = textPesan;
+      setTimeout(async () => {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: "pending", requested_duration: durasiDiminta, timestamp: Date.now() })
         });
 
-        container.innerHTML = html || `<div style="color: #94a3b8; text-align: center; margin: auto;">Mulai percakapan...</div>`;
-        container.scrollTop = container.scrollHeight;
-
-        if (badge) {
-            if (unreadFromSystem > 0 && document.getElementById('universalChatWidgetBox').style.display !== 'flex') {
-                badge.innerText = unreadFromSystem;
-                badge.style.display = 'inline-block';
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-
-        if (document.getElementById('universalChatWidgetBox').style.display === 'flex' && Object.keys(systemUpdates).length > 0) {
-            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(systemUpdates)
-            });
-        }
-    } catch (e) { console.error(e); }
-}
-
-window.salinTokenUniversalChat = function(kodeToken) {
-    let tokenBersih = extractPureToken(kodeToken);
-    if (!tokenBersih) return;
-    navigator.clipboard.writeText(tokenBersih).then(() => {
-        alert("Token berhasil disalin: " + tokenBersih);
-    }).catch(err => {
-        console.error('Gagal menyalin:', err);
-    });
-};
-
-async function kirimPesanurUniversalChatBotLogic(textPesan, currentStaffName) {
-    const textLower = textPesan.toLowerCase();
-    const isKeywordKendala = textLower.includes("token") || textLower.includes("expired") || textLower.includes("habis") || textLower.includes("terkunci") || textLower.includes("mati");
-    const safeStaffKey = getSafeStaffKeyForChat();
-
-    try {
-      const reqRes = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`);
-      const currentReq = await reqRes.json();
-
-      if (isKeywordKendala) {
-        setTimeout(async () => {
-          const botReply = {
-            sender: 'bot',
-            text: `Halo ${currentStaffName}, terdeteksi kendala token/aplikasi terkunci. Butuh perpanjangan masa aktif berapa lama? (Contoh: 1 Minggu, 1 Bulan, atau 1 Tahun)`,
-            time: Date.now(),
-            read: true
-          };
-          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botReply)
-          });
-          
-          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ status: "waiting_duration", timestamp: Date.now() })
-          });
-          muatPesanUniversalChat();
-        }, 800);
-
-      } else if (currentReq && currentReq.status === "waiting_duration") {
-        const durasiDiminta = textPesan;
-        setTimeout(async () => {
-          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ status: "pending", requested_duration: durasiDiminta, timestamp: Date.now() })
-          });
-
-          const botConfirm = {
-            sender: 'bot',
-            text: `Permintaan durasi <b>${durasiDiminta}</b> sudah dikirim ke System. Mohon tunggu sebentar, System sedang meninjau dan memproses persetujuannya ya...`,
-            time: Date.now(),
-            read: true
-          };
-          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botConfirm)
-          });
-          muatPesanUniversalChat();
-        }, 800);
-      }
-    } catch (err) {}
+        const botConfirm = {
+          sender: 'bot',
+          text: `Permintaan durasi <b>${durasiDiminta}</b> sudah dikirim ke System. Mohon tunggu sebentar, System sedang meninjau dan memproses persetujuannya ya...`,
+          time: Date.now(),
+          read: true
+        };
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botConfirm)
+        });
+        muatPesanUniversalChat();
+      }, 800);
+    }
+  } catch (err) {}
 }
 
 async function kirimPesanUniversalChat() {
-    const input = document.getElementById('universalInputChat');
-    if (!input) return;
-    const text = input.value.trim();
-    if (!text) return;
-    const safeStaffKey = getSafeStaffKeyForChat();
-    const staffName = localStorage.getItem('gudang_staff_name') || "Staf_General";
+  const input = document.getElementById('universalInputChat');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  const safeStaffKey = getSafeStaffKeyForChat();
+  const staffName = localStorage.getItem('gudang_staff_name') || "Staf_General";
 
-    const newMsg = {
-        sender: 'staff',
-        text: text,
-        time: Date.now(),
-        read: false
-    };
+  const newMsg = {
+    sender: 'staff',
+    text: text,
+    time: Date.now(),
+    read: false
+  };
 
-    try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newMsg)
-        });
-        input.value = "";
-        muatPesanUniversalChat();
-        kirimPesanurUniversalChatBotLogic(text, staffName);
-    } catch (e) { alert("Gagal mengirim pesan!"); }
+  try {
+    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newMsg)
+    });
+    input.value = "";
+    muatPesanUniversalChat();
+    kirimPesanurUniversalChatBotLogic(text, staffName);
+  } catch (e) { alert("Gagal mengirim pesan!"); }
 }
 
 async function handleStaffTypingUniversal() {
-    const safeStaffKey = getSafeStaffKeyForChat();
-    try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typingStaff.json`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(true)
-        });
-        clearTimeout(staffTypingTimeout);
-        staffTypingTimeout = setTimeout(async () => {
-            await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typingStaff.json`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(false)
-            });
-        }, 1500);
-    } catch (e) {}
+  const safeStaffKey = getSafeStaffKeyForChat();
+  try {
+    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typingStaff.json`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(true)
+    });
+    clearTimeout(staffTypingTimeout);
+    staffTypingTimeout = setTimeout(async () => {
+      await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typingStaff.json`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(false)
+      });
+    }, 1500);
+  } catch (e) {}
 }
 
 function injectUniversalChatHTML() {
-    if (document.getElementById('universalChatWrapper')) return;
+  if (document.getElementById('universalChatWrapper')) return;
 
-    const wrapper = document.createElement('div');
-    wrapper.id = 'universalChatWrapper';
-    wrapper.style.cssText = "position: relative; z-Index: 2147483647 !important;";
-    wrapper.innerHTML = `
-      <!-- FLOATING CHAT BUTTON UNIVERSAL -->
-      <div id="universalFloatingChatBtn" style="position: fixed !important; bottom: 24px !important; right: 24px !important; width: 56px !important; height: 56px !important; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important; border: 1px solid #38bdf8 !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; color: #fff !important; font-size: 24px !important; cursor: pointer !important; z-index: 2147483647 !important; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.5) !important;" onclick="toggleUniversalChatWidget()">
-          <i class="fa-solid fa-headset"></i>
-          <span id="universalChatBadge" style="position: absolute !important; top: -2px !important; right: -2px !important; background: #ef4444 !important; color: #fff !important; font-size: 10px !important; font-weight: bold !important; padding: 2px 6px !important; border-radius: 10px !important; display: none; font-family: monospace !important; border: 1px solid #0f172a !important;">0</span>
+  const wrapper = document.createElement('div');
+  wrapper.id = 'universalChatWrapper';
+  wrapper.style.cssText = "position: relative; z-Index: 2147483647 !important;";
+  wrapper.innerHTML = `
+    <!-- FLOATING CHAT BUTTON UNIVERSAL -->
+    <div id="universalFloatingChatBtn" style="position: fixed !important; bottom: 24px !important; right: 24px !important; width: 56px !important; height: 56px !important; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important; border: 1px solid #38bdf8 !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; color: #fff !important; font-size: 24px !important; cursor: pointer !important; z-index: 2147483647 !important; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.5) !important;" onclick="toggleUniversalChatWidget()">
+      <i class="fa-solid fa-headset"></i>
+      <span id="universalChatBadge" style="position: absolute !important; top: -2px !important; right: -2px !important; background: #ef4444 !important; color: #fff !important; font-size: 10px !important; font-weight: bold !important; padding: 2px 6px !important; border-radius: 10px !important; display: none; font-family: monospace !important; border: 1px solid #0f172a !important;">0</span>
+    </div>
+
+    <!-- KOTAK WIDGET CHAT UNIVERSAL (PRO VERSION) -->
+    <div id="universalChatWidgetBox" style="position: fixed !important; bottom: 90px !important; right: 24px !important; width: 350px !important; max-width: calc(100vw - 48px) !important; height: 420px !important; background: #0f172a !important; border: 1px solid rgba(56, 189, 248, 0.4) !important; border-radius: 16px !important; box-shadow: 0 25px 50px rgba(0,0,0,0.9) !important; z-index: 2147483648 !important; display: none; flex-direction: column !important; overflow: hidden !important; font-family: monospace !important; box-sizing: border-box !important;">
+      <div style="background: rgba(15, 23, 42, 0.95) !important; padding: 10px 14px !important; border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important; display: flex !important; justify-content: space-between !important; align-items: center !important; box-sizing: border-box !important; flex-shrink: 0 !important;">
+        <div>
+          <b style="color: #fff; font-size: 12px;"><i class="fa-solid fa-robot" style="color: #38bdf8;"></i> CS Asisten Nuhsantara</b>
+          <div style="font-size: 9.5px; color: #94a3b8;">Live Chat Staf & System</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button onclick="hapusSemuaChatUniversal()" title="Hapus Semua Percakapan" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
+          <button onclick="toggleUniversalChatWidget()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
+        </div>
       </div>
 
-      <!-- KOTAK WIDGET CHAT UNIVERSAL (PRO VERSION) -->
-      <div id="universalChatWidgetBox" style="position: fixed !important; bottom: 90px !important; right: 24px !important; width: 350px !important; max-width: calc(100vw - 48px) !important; height: 420px !important; background: #0f172a !important; border: 1px solid rgba(56, 189, 248, 0.4) !important; border-radius: 16px !important; box-shadow: 0 25px 50px rgba(0,0,0,0.9) !important; z-index: 2147483648 !important; display: none; flex-direction: column !important; overflow: hidden !important; font-family: monospace !important; box-sizing: border-box !important;">
-          <div style="background: rgba(15, 23, 42, 0.95) !important; padding: 10px 14px !important; border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important; display: flex !important; justify-content: space-between !important; align-items: center !important; box-sizing: border-box !important; flex-shrink: 0 !important;">
-              <div>
-                  <b style="color: #fff; font-size: 12px;"><i class="fa-solid fa-robot" style="color: #38bdf8;"></i> CS Asisten Nuhsantara</b>
-                  <div style="font-size: 9.5px; color: #94a3b8;">Live Chat Staf & System</div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                  <button onclick="hapusSemuaChatUniversal()" title="Hapus Semua Percakapan" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
-                  <button onclick="toggleUniversalChatWidget()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
-              </div>
-          </div>
-
-          <div id="universalChatMessagesContainer" style="flex: 1 1 auto !important; padding: 12px !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 8px !important; font-size: 11.5px !important; background: #070b14; box-sizing: border-box !important; min-height: 0 !important;">
-              <div style="color: #94a3b8; text-align: center; margin: auto;">Memuat pesan...</div>
-          </div>
-
-          <div style="padding: 4px 12px; background: rgba(15, 23, 42, 0.95); flex-shrink: 0;">
-              <span id="typingIndicatorUniversal" style="color: #38bdf8; font-size: 10px; font-style: italic; display: none;">System sedang mengetik...</span>
-          </div>
-
-          <div style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; padding: 10px !important; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important; box-sizing: border-box !important; width: 100% !important; flex-shrink: 0 !important;">
-              <input type="text" id="universalInputChat" placeholder="Ketik pesan atau kendala..." style="flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; padding: 9px 10px !important; background: #020617 !important; border: 1px solid #334155 !important; color: #fff !important; border-radius: 7px !important; font-size: 11.5px !important; outline: none !important; font-family: monospace !important; box-sizing: border-box !important;" oninput="handleStaffTypingUniversal()" onkeypress="if(event.key === 'Enter') kirimPesanUniversalChat()" />
-              <button type="button" onclick="kirimPesanUniversalChat()" style="flex: 0 0 auto !important; width: auto !important; min-width: 65px !important; padding: 9px 12px !important; background: #0284c7 !important; border: 1px solid #38bdf8 !important; color: white !important; border-radius: 7px !important; cursor: pointer !important; font-family: monospace !important; font-weight: bold !important; font-size: 11.5px !important; box-sizing: border-box !important;">Kirim</button>
-          </div>
+      <div id="universalChatMessagesContainer" style="flex: 1 1 auto !important; padding: 12px !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 8px !important; font-size: 11.5px !important; background: #070b14; box-sizing: border-box !important; min-height: 0 !important;">
+        <div style="color: #94a3b8; text-align: center; margin: auto;">Memuat pesan...</div>
       </div>
-    `;
-    document.body.appendChild(wrapper);
+
+      <div style="padding: 4px 12px; background: rgba(15, 23, 42, 0.95); flex-shrink: 0;">
+        <span id="typingIndicatorUniversal" style="color: #38bdf8; font-size: 10px; font-style: italic; display: none;">System sedang mengetik...</span>
+      </div>
+
+      <div style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; padding: 10px !important; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important; box-sizing: border-box !important; width: 100% !important; flex-shrink: 0 !important;">
+        <input type="text" id="universalInputChat" placeholder="Ketik pesan atau kendala..." style="flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; padding: 9px 10px !important; background: #020617 !important; border: 1px solid #334155 !important; color: #fff !important; border-radius: 7px !important; font-size: 11.5px !important; outline: none !important; font-family: monospace !important; box-sizing: border-box !important;" oninput="handleStaffTypingUniversal()" onkeypress="if(event.key === 'Enter') kirimPesanUniversalChat()" />
+        <button type="button" onclick="kirimPesanUniversalChat()" style="flex: 0 0 auto !important; width: auto !important; min-width: 65px !important; padding: 9px 12px !important; background: #0284c7 !important; border: 1px solid #38bdf8 !important; color: white !important; border-radius: 7px !important; cursor: pointer !important; font-family: monospace !important; font-weight: bold !important; font-size: 11.5px !important; box-sizing: border-box !important;">Kirim</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrapper);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    injectUniversalChatHTML();
+  injectUniversalChatHTML();
 });
 
 // --- TAMPILKAN LAYAR KUNCI PERMANEN (KILL SWITCH) ---
@@ -571,7 +566,7 @@ function tampilkanLayarKunciMandiri() {
         if (decodedDate && decodedDate > new Date()) {
           this.style.opacity = "0.8";
           this.style.pointerEvents = "none";
-          
+
           let dotCount = 0;
           let loadingInterval = setInterval(() => {
             dotCount = (dotCount + 1) % 4;
@@ -579,7 +574,6 @@ function tampilkanLayarKunciMandiri() {
           }, 300);
 
           try {
-            // FIX UTAMA: Kirim objek JSON standar agar data expiry tertulis bersih dan akurat di Firebase
             await fetch(CLOUD_LICENSE_ENDPOINT, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -605,7 +599,7 @@ function tampilkanLayarKunciMandiri() {
         } else {
           errorMsg.style.display = 'block';
           document.getElementById('inputTokenLisensi').style.border = "1px solid #ef4444";
-          
+
           this.style.transform = "translateX(5px)";
           setTimeout(() => this.style.transform = "translateX(-5px)", 100);
           setTimeout(() => this.style.transform = "translateX(0)", 200);
