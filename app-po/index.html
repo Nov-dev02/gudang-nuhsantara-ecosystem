@@ -373,6 +373,21 @@
     
     let staffName = localStorage.getItem('gudang_staff_name');
     let safeStaffKey = staffName ? staffName.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
+
+    function notifPo(pesan, tipe = "info", durasi = 2400) {
+      if (typeof tampilkanGuardToast === "function") {
+        tampilkanGuardToast(pesan, tipe, durasi);
+      } else {
+        alert(pesan.replace(/<[^>]*>/g, ""));
+      }
+    }
+
+    async function konfirmasiPo(options) {
+      if (typeof tampilkanGuardConfirm === "function") {
+        return await tampilkanGuardConfirm(options);
+      }
+      return confirm(options.message || "Apakah Anda yakin?");
+    }
     
     // --- FUNGSI PENCATATAN OTOMATIS LOGIN & RIWAYAT (URL LANGSUNG / DASHBOARD) ---
     function catatSesiMasukOtomatis(namaStaf) {
@@ -533,29 +548,53 @@
 
     window.salinTokenChat = function(kodeToken) {
         let tokenBersih = kodeToken.trim();
-        navigator.clipboard.writeText(tokenBersih).then(() => {
-            alert("Token berhasil disalin: " + tokenBersih);
-        }).catch(err => {
+        const beriNotif = () => {
+          notifPo(
+            `<b style="color:#38bdf8;">Token berhasil disalin</b><div style="margin-top:3px; font-size:10.5px; color:#cbd5e1; word-break:break-all;">${tokenBersih}</div>`,
+            "info",
+            2800
+          );
+        };
+        navigator.clipboard.writeText(tokenBersih).then(beriNotif).catch(err => {
             console.error('Gagal menyalin:', err);
+            notifPo("Gagal menyalin token ke clipboard.", "error");
         });
     };
 
     window.tarikPesanStaf = async function(messageKey) {
       if (!safeStaffKey) return;
-      if (!confirm("Tarik/hapus pesan ini?")) return;
+      const yakin = await konfirmasiPo({
+        title: "TARIK PESAN",
+        message: "Tarik atau hapus pesan ini dari percakapan?",
+        confirmText: "Tarik Pesan",
+        cancelText: "Batal",
+        danger: true
+      });
+      if (!yakin) return;
       try {
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages/${messageKey}.json`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: "🚫 Pesan ini telah ditarik" })
         });
+        notifPo("Pesan berhasil ditarik.", "info", 2000);
         muatPesanChatStaf();
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error(e);
+        notifPo("Gagal menarik pesan.", "error");
+      }
     };
 
     window.hapusSemuaChatStaf = async function() {
       if (!safeStaffKey) return;
-      if (!confirm("Hapus semua riwayat percakapan ini?")) return;
+      const yakin = await konfirmasiPo({
+        title: "HAPUS RIWAYAT CHAT",
+        message: "Hapus semua riwayat percakapan ini?",
+        confirmText: "Hapus Semua",
+        cancelText: "Batal",
+        danger: true
+      });
+      if (!yakin) return;
       try {
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
           method: 'DELETE'
@@ -569,8 +608,12 @@
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
         });
+        notifPo("Semua riwayat percakapan berhasil dihapus.", "success", 2200);
         muatPesanChatStaf();
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error(e);
+        notifPo("Gagal menghapus riwayat percakapan.", "error");
+      }
     };
 
     async function muatPesanChatStaf() {
