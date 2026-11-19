@@ -78,6 +78,113 @@ function tampilkanGuardToast(pesan, type = "success", duration = 2600) {
   }, duration);
 }
 
+// --- HELPER MODAL KONFIRMASI ESTETIK (PENGGANTI confirm() BAWAAN BROWSER) ---
+function tampilkanGuardConfirm(options = {}) {
+  const {
+    title = "KONFIRMASI TINDAKAN",
+    message = "Apakah Anda yakin ingin melanjutkan?",
+    confirmText = "Ya, Hapus",
+    cancelText = "Batal",
+    danger = true
+  } = options;
+
+  return new Promise((resolve) => {
+    const existing = document.getElementById("nx-guard-confirm-modal");
+    if (existing) existing.remove();
+
+    const accentColor = danger ? "#ef4444" : "#38bdf8";
+    const confirmBg = danger
+      ? "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"
+      : "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)";
+
+    const overlay = document.createElement("div");
+    overlay.id = "nx-guard-confirm-modal";
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(7, 11, 20, 0.78);
+      backdrop-filter: blur(10px);
+      z-index: 2147483647;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    `;
+
+    const modalBox = document.createElement("div");
+    modalBox.style.cssText = `
+      position: relative;
+      width: min(100%, 360px);
+      background: #0f172a;
+      border: 1.5px solid ${danger ? "rgba(239, 68, 68, 0.55)" : "rgba(56, 189, 248, 0.45)"};
+      border-radius: 18px;
+      padding: 22px 20px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 32px rgba(239, 68, 68, 0.14);
+      font-family: monospace;
+      color: #f8fafc;
+      text-align: center;
+      transform: scale(0.95);
+      transition: transform 0.2s ease;
+      box-sizing: border-box;
+    `;
+
+    modalBox.innerHTML = `
+      <div style="width: 44px; height: 44px; border-radius: 50%; background: ${danger ? "rgba(239, 68, 68, 0.14)" : "rgba(56, 189, 248, 0.14)"}; border: 1px solid ${accentColor}; color: ${accentColor}; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; font-size: 18px;">
+        <i class="fa-solid ${danger ? "fa-trash-can" : "fa-circle-question"}"></i>
+      </div>
+      <div style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; margin-bottom: 8px;">
+        ${title}
+      </div>
+      <div style="font-size: 11.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 18px;">
+        ${message}
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" id="nxConfirmCancelBtn" style="flex: 1; padding: 9px 12px; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">
+          ${cancelText}
+        </button>
+        <button type="button" id="nxConfirmOkBtn" style="flex: 1; padding: 9px 12px; background: ${confirmBg}; border: 1px solid ${accentColor}; color: #fff; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);">
+          ${confirmText}
+        </button>
+      </div>
+    `;
+
+    overlay.appendChild(modalBox);
+    const parentTarget = document.body || document.documentElement;
+    parentTarget.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+      overlay.style.opacity = "1";
+      modalBox.style.transform = "scale(1)";
+    });
+
+    const cleanup = (result) => {
+      document.removeEventListener("keydown", onKeyDown);
+      overlay.style.opacity = "0";
+      modalBox.style.transform = "scale(0.95)";
+      setTimeout(() => {
+        if (overlay.parentNode) overlay.remove();
+        resolve(result);
+      }, 180);
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") cleanup(false);
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) cleanup(false);
+    });
+    modalBox.querySelector("#nxConfirmCancelBtn").addEventListener("click", () => cleanup(false));
+    modalBox.querySelector("#nxConfirmOkBtn").addEventListener("click", () => cleanup(true));
+  });
+}
+
 // --- HELPER FORMAT TEKS CHAT (MARKDOWN SEDERHANA KE HTML BERSIH) ---
 function formatChatTextHtml(text) {
   let clean = String(text || "");
@@ -229,20 +336,40 @@ function toggleUniversalChatWidget() {
 
 async function tarikPesanUniversal(messageKey) {
   const safeStaffKey = getSafeStaffKeyForChat();
-  if (!confirm("Tarik/hapus pesan ini?")) return;
+  const yakin = await tampilkanGuardConfirm({
+    title: "TARIK PESAN",
+    message: "Tarik atau hapus pesan ini dari percakapan?",
+    confirmText: "Tarik Pesan",
+    cancelText: "Batal",
+    danger: true
+  });
+  if (!yakin) return;
+
   try {
     await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages/${messageKey}.json`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: "🚫 Pesan ini telah ditarik" })
     });
+    tampilkanGuardToast("Pesan berhasil ditarik.", "info", 2000);
     muatPesanUniversalChat();
-  } catch (e) { console.error(e); }
+  } catch (e) {
+    console.error(e);
+    tampilkanGuardToast("Gagal menarik pesan.", "error");
+  }
 }
 
 async function hapusSemuaChatUniversal() {
   const safeStaffKey = getSafeStaffKeyForChat();
-  if (!confirm("Hapus semua riwayat percakapan ini?")) return;
+  const yakin = await tampilkanGuardConfirm({
+    title: "HAPUS RIWAYAT CHAT",
+    message: "Hapus semua riwayat percakapan ini?",
+    confirmText: "Hapus Semua",
+    cancelText: "Batal",
+    danger: true
+  });
+  if (!yakin) return;
+
   try {
     await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
       method: 'DELETE'
@@ -256,8 +383,12 @@ async function hapusSemuaChatUniversal() {
     await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botWelcome)
     });
+    tampilkanGuardToast("Semua riwayat percakapan berhasil dihapus.", "success", 2200);
     muatPesanUniversalChat();
-  } catch (e) { console.error(e); }
+  } catch (e) {
+    console.error(e);
+    tampilkanGuardToast("Gagal menghapus riwayat percakapan.", "error");
+  }
 }
 
 async function muatPesanUniversalChat() {
