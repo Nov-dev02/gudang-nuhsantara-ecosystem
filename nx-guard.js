@@ -166,17 +166,17 @@ async function muatPesanUniversalChat() {
         if (!data) return;
 
         const messages = data.messages || {};
-        const isOwnerTyping = data.typingOwner || false;
+        const isSystemTyping = data.typingSystem || data.typingAdmin || data.typingOwner || false;
         const container = document.getElementById('universalChatMessagesContainer');
         const typingEl = document.getElementById('typingIndicatorUniversal');
         const badge = document.getElementById('universalChatBadge');
         if (!container) return;
 
-        if (typingEl) typingEl.style.display = isOwnerTyping ? 'block' : 'none';
+        if (typingEl) typingEl.style.display = isSystemTyping ? 'block' : 'none';
 
         let html = "";
-        let unreadFromOwner = 0;
-        let ownerUpdates = {};
+        let unreadFromSystem = 0;
+        let systemUpdates = {};
 
         Object.keys(messages).forEach(k => {
             const m = messages[k];
@@ -185,7 +185,7 @@ async function muatPesanUniversalChat() {
             let chatContentHtml = "";
             
             const rawText = m.text || "";
-            const isTokenMessage = (m.sender === 'bot' || m.sender === 'owner') && 
+            const isTokenMessage = (m.sender === 'bot' || m.sender === 'system' || m.sender === 'admin' || m.sender === 'owner') && 
                                    (rawText.includes("NX") || (rawText.length > 25 && (rawText.includes("Token") || rawText.includes("🔑") || rawText.includes("aktif"))));
 
             if (m.sender === 'staff') {
@@ -198,8 +198,8 @@ async function muatPesanUniversalChat() {
             } else {
                 bubbleStyle = "background: #1e293b !important; color: #f8fafc !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important;";
                 if (!m.read) {
-                    unreadFromOwner++;
-                    ownerUpdates[`${k}/read`] = true;
+                    unreadFromSystem++;
+                    systemUpdates[`${k}/read`] = true;
                 }
             }
 
@@ -239,7 +239,7 @@ async function muatPesanUniversalChat() {
             let tickMark = "";
             if (m.sender === 'staff') {
                 if (m.read) {
-                    tickMark = `<span style="color: #38bdf8; font-size: 11px; margin-left: 4px;" title="Dibaca Owner">✓✓</span>`;
+                    tickMark = `<span style="color: #38bdf8; font-size: 11px; margin-left: 4px;" title="Dibaca System">✓✓</span>`;
                 } else {
                     tickMark = `<span style="color: #94a3b8; font-size: 11px; margin-left: 4px;" title="Terkirim">✓✓</span>`;
                 }
@@ -263,17 +263,17 @@ async function muatPesanUniversalChat() {
         container.scrollTop = container.scrollHeight;
 
         if (badge) {
-            if (unreadFromOwner > 0 && document.getElementById('universalChatWidgetBox').style.display !== 'flex') {
-                badge.innerText = unreadFromOwner;
+            if (unreadFromSystem > 0 && document.getElementById('universalChatWidgetBox').style.display !== 'flex') {
+                badge.innerText = unreadFromSystem;
                 badge.style.display = 'inline-block';
             } else {
                 badge.style.display = 'none';
             }
         }
 
-        if (document.getElementById('universalChatWidgetBox').style.display === 'flex' && Object.keys(ownerUpdates).length > 0) {
+        if (document.getElementById('universalChatWidgetBox').style.display === 'flex' && Object.keys(systemUpdates).length > 0) {
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ownerUpdates)
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(systemUpdates)
             });
         }
     } catch (e) { console.error(e); }
@@ -326,7 +326,7 @@ async function kirimPesanurUniversalChatBotLogic(textPesan, currentStaffName) {
 
           const botConfirm = {
             sender: 'bot',
-            text: `Permintaan durasi **${durasiDiminta}** sudah dikirim ke Owner. Mohon tunggu sebentar, Owner sedang meninjau dan memproses persetujuannya ya...`,
+            text: `Permintaan durasi **${durasiDiminta}** sudah dikirim ke System. Mohon tunggu sebentar, System sedang meninjau dan memproses persetujuannya ya...`,
             time: Date.now(),
             read: true
           };
@@ -399,7 +399,7 @@ function injectUniversalChatHTML() {
           <div style="background: rgba(15, 23, 42, 0.95) !important; padding: 10px 14px !important; border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important; display: flex !important; justify-content: space-between !important; align-items: center !important; box-sizing: border-box !important; flex-shrink: 0 !important;">
               <div>
                   <b style="color: #fff; font-size: 12px;"><i class="fa-solid fa-robot" style="color: #38bdf8;"></i> CS Asisten Nuhsantara</b>
-                  <div style="font-size: 9.5px; color: #94a3b8;">Live Chat Staf & Owner</div>
+                  <div style="font-size: 9.5px; color: #94a3b8;">Live Chat Staf & System</div>
               </div>
               <div style="display: flex; align-items: center; gap: 8px;">
                   <button onclick="hapusSemuaChatUniversal()" title="Hapus Semua Percakapan" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
@@ -412,11 +412,11 @@ function injectUniversalChatHTML() {
           </div>
 
           <div style="padding: 4px 12px; background: rgba(15, 23, 42, 0.95); flex-shrink: 0;">
-              <span id="typingIndicatorUniversal" style="color: #38bdf8; font-size: 10px; font-style: italic; display: none;">Owner sedang mengetik...</span>
+              <span id="typingIndicatorUniversal" style="color: #38bdf8; font-size: 10px; font-style: italic; display: none;">System sedang mengetik...</span>
           </div>
 
           <div style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; padding: 10px !important; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important; box-sizing: border-box !important; width: 100% !important; flex-shrink: 0 !important;">
-              <input type="text" id="universalInputChat" placeholder="Ketik pesan atau kendala token..." style="flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; padding: 9px 10px !important; background: #020617 !important; border: 1px solid #334155 !important; color: #fff !important; border-radius: 7px !important; font-size: 11.5px !important; outline: none !important; font-family: monospace !important; box-sizing: border-box !important;" oninput="handleStaffTypingUniversal()" onkeypress="if(event.key === 'Enter') kirimPesanUniversalChat()" />
+              <input type="text" id="universalInputChat" placeholder="Ketik pesan atau kendala..." style="flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; padding: 9px 10px !important; background: #020617 !important; border: 1px solid #334155 !important; color: #fff !important; border-radius: 7px !important; font-size: 11.5px !important; outline: none !important; font-family: monospace !important; box-sizing: border-box !important;" oninput="handleStaffTypingUniversal()" onkeypress="if(event.key === 'Enter') kirimPesanUniversalChat()" />
               <button type="button" onclick="kirimPesanUniversalChat()" style="flex: 0 0 auto !important; width: auto !important; min-width: 65px !important; padding: 9px 12px !important; background: #0284c7 !important; border: 1px solid #38bdf8 !important; color: white !important; border-radius: 7px !important; cursor: pointer !important; font-family: monospace !important; font-weight: bold !important; font-size: 11.5px !important; box-sizing: border-box !important;">Kirim</button>
           </div>
       </div>
