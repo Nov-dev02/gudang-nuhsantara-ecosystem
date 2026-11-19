@@ -1,5 +1,5 @@
 // =========================================================================
-// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD & PRO LIVE CHAT (v4.7)
+// 🛡️ GUDANG NUHSANTARA - 100% PURE CLOUD FIREBASE GUARD & PRO LIVE CHAT (v4.8)
 // =========================================================================
 
 // 🌐 URL FIREBASE REALTIME DATABASE MILIKMU
@@ -20,26 +20,38 @@ function formatChatTextHtml(text) {
   return clean;
 }
 
-// --- HELPER EKSTRAK TOKEN MURNI ---
+// --- HELPER EKSTRAK TOKEN MURNI (HANYA MENGEMBALIKAN JIKA ADA TOKEN VALID) ---
 function extractPureToken(rawText) {
-  const text = String(rawText || "");
-  // Cari pola token khas seperti ...NX<hex/alphanumeric>
-  const nxMatch = text.match(/[A-Za-z0-9_-]*NX[A-Za-z0-9_-]{8,}/);
+  if (!rawText) return null;
+
+  const cleaned = String(rawText)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[`*"]/g, " ")
+    .trim();
+
+  if (!cleaned) return null;
+
+  // 1. Pola token NX utama (contoh: Qna2GXgCLmkuTopqsaNX1a218ccba7fxMV5dKnYh83F480po7)
+  const nxMatch = cleaned.match(/[A-Za-z0-9_-]{8,}NX[A-Za-z0-9_-]{6,}/);
   if (nxMatch && nxMatch[0]) {
     return nxMatch[0].trim();
   }
 
-  // Fallback jika ada baris yang menyerupai token panjang tanpa spasi
-  const lines = text.split(/\r?\n/);
-  for (let line of lines) {
-    let cleaned = line.replace(/[`*"]/g, "").trim();
-    const tokenCandidate = cleaned.match(/[A-Za-z0-9_-]{16,}/);
-    if (tokenCandidate && tokenCandidate[0]) {
-      return tokenCandidate[0].trim();
+  // 2. Cek per baris/potongan jika ada string kode panjang tanpa spasi (minimal 20 karakter)
+  const parts = cleaned.split(/[\s\r\n]+/);
+  for (let part of parts) {
+    const tokenCandidate = part.replace(/^[^A-Za-z0-9_-]+|[^A-Za-z0-9_-]+$/g, "");
+    if (
+      tokenCandidate.length >= 20 &&
+      /^[A-Za-z0-9_-]+$/.test(tokenCandidate) &&
+      /[A-Za-z]/.test(tokenCandidate) &&
+      /[0-9]/.test(tokenCandidate)
+    ) {
+      return tokenCandidate;
     }
   }
 
-  return text.replace(/[`*"]/g, "").trim();
+  return null;
 }
 
 // --- DECODER TOKEN NX ---
@@ -215,8 +227,8 @@ async function muatPesanUniversalChat() {
             let chatContentHtml = "";
             
             const rawText = m.text || "";
-            const isTokenMessage = (m.sender === 'bot' || m.sender === 'system' || m.sender === 'admin') && 
-                                   (rawText.includes("NX") || (rawText.length > 25 && (rawText.includes("Token") || rawText.includes("🔑") || rawText.includes("aktif"))));
+            const extractedToken = (m.sender !== 'staff') ? extractPureToken(rawText) : null;
+            const isTokenMessage = Boolean(extractedToken);
 
             if (m.sender === 'staff') {
                 bubbleStyle = "background: #0284c7 !important; color: #fff !important; align-self: flex-end !important; border-bottom-right-radius: 2px !important;";
@@ -234,7 +246,6 @@ async function muatPesanUniversalChat() {
             }
 
             if (isTokenMessage) {
-                const extractedToken = extractPureToken(rawText);
                 const escapedToken = extractedToken.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 const formattedMessage = formatChatTextHtml(rawText);
 
@@ -299,6 +310,7 @@ async function muatPesanUniversalChat() {
 
 window.salinTokenUniversalChat = function(kodeToken) {
     let tokenBersih = extractPureToken(kodeToken);
+    if (!tokenBersih) return;
     navigator.clipboard.writeText(tokenBersih).then(() => {
         alert("Token berhasil disalin: " + tokenBersih);
     }).catch(err => {
