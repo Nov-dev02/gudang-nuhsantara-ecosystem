@@ -119,6 +119,8 @@
       padding: 12px; border-radius: 12px; font-family: monospace; font-size: 11px;
     }
 
+    .mobile-status-bar { display: none; }
+
     /* Main Container */
     .main-container {
       padding: 25px;
@@ -311,6 +313,18 @@
       .app-wrapper { display: flex; flex-direction: column; }
       .sidebar { display: none; }
       .mobile-nav-bar { display: flex; }
+      .mobile-status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(11, 18, 32, 0.96);
+        border: 1px solid var(--card-border);
+        padding: 9px 14px;
+        border-radius: 12px;
+        font-family: monospace;
+        font-size: 10.5px;
+        margin-top: 4px;
+      }
       .main-container { padding: 12px; max-height: none; }
       .chat-layout { grid-template-columns: 1fr; height: auto; }
       .chat-rooms-list { height: 150px; }
@@ -406,6 +420,15 @@
         <div class="mobile-nav-item" onclick="switchTab('admin', null, this)"><i class="fa-solid fa-user-gear"></i> Admin</div>
       </div>
 
+      <!-- MOBILE SYSTEM STATUS BAR -->
+      <div class="mobile-status-bar">
+        <span style="color: #64748b;">SYSTEM STATUS</span>
+        <span style="color: var(--accent-green); display: inline-flex; align-items: center; gap: 6px; font-weight: bold;">
+          <span style="width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%;"></span>
+          Cloud Database Active
+        </span>
+      </div>
+
       <!-- ================= TAB 1: OVERVIEW & APPS ================= -->
       <div id="tab-overview" class="tab-pane active">
         <section class="metrics-grid">
@@ -428,9 +451,9 @@
 
         <!-- APPS LAUNCHER -->
         <div class="section-box">
-          <div class="section-title" style="justify-content: space-between;">
+          <div class="section-title" style="justify-content: space-between; gap: 10px;">
             <span><i class="fa-solid fa-rocket"></i> PILIH MODUL APLIKASI OPERASIONAL</span>
-            <button onclick="gantiNamaStafLokal()" style="background: none; border: none; color: #94a3b8; font-size: 10px; font-family: monospace; cursor: pointer; text-decoration: underline;">
+            <button onclick="gantiNamaStafLokal()" style="background: none; border: none; color: #94a3b8; font-size: 10px; font-family: monospace; cursor: pointer; text-decoration: underline; white-space: nowrap; flex-shrink: 0;">
               <i class="fa-solid fa-user-pen"></i> Ganti Nama Staf
             </button>
           </div>
@@ -657,7 +680,7 @@
     let activeStaffRoom = null;
     let typingTimeout = null;
 
-    // --- HELPER MODAL KONFIRMASI & INPUT KUSTOM (PENGGANTI confirm() & prompt() BROWSER) ---
+    // --- HELPER MODAL KONFIRMASI & INPUT KUSTOM ---
     function tampilkanDashboardConfirm(options = {}) {
       const {
         title = "KONFIRMASI TINDAKAN",
