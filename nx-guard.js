@@ -12,6 +12,71 @@ let secretClickCount = 0;
 let secretClickTimer = null;
 let universalChatPollInterval = null;
 let staffTypingTimeout = null;
+let guardToastTimeout = null;
+
+// --- HELPER TOAST ESTETIK TEMA GUDANG NUHSANTARA ---
+function tampilkanGuardToast(pesan, type = "success", duration = 2600) {
+  const existing = document.getElementById("nx-guard-custom-toast");
+  if (existing) existing.remove();
+  if (guardToastTimeout) clearTimeout(guardToastTimeout);
+
+  const palette = {
+    success: { border: "#22c55e", iconBg: "rgba(34, 197, 94, 0.16)", iconColor: "#4ade80", icon: "fa-circle-check" },
+    info: { border: "#38bdf8", iconBg: "rgba(56, 189, 248, 0.16)", iconColor: "#38bdf8", icon: "fa-circle-info" },
+    error: { border: "#ef4444", iconBg: "rgba(239, 68, 68, 0.16)", iconColor: "#f87171", icon: "fa-triangle-exclamation" }
+  };
+  const theme = palette[type] || palette.info;
+
+  const toast = document.createElement("div");
+  toast.id = "nx-guard-custom-toast";
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-14px);
+    width: min(92vw, 410px);
+    background: rgba(15, 23, 42, 0.97);
+    border: 1.5px solid ${theme.border};
+    backdrop-filter: blur(14px);
+    border-radius: 14px;
+    padding: 12px 14px;
+    z-index: 2147483647;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85), 0 0 24px rgba(15, 23, 42, 0.6);
+    font-family: monospace;
+    color: #f8fafc;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    opacity: 0;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    box-sizing: border-box;
+  `;
+
+  toast.innerHTML = `
+    <div style="width: 28px; height: 28px; border-radius: 8px; background: ${theme.iconBg}; color: ${theme.iconColor}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; margin-top: 1px;">
+      <i class="fa-solid ${theme.icon}"></i>
+    </div>
+    <div style="flex: 1; min-width: 0; font-size: 11.5px; line-height: 1.45; word-break: break-word;">
+      ${pesan}
+    </div>
+  `;
+
+  const parentTarget = document.body || document.documentElement;
+  parentTarget.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateX(-50%) translateY(0)";
+  });
+
+  guardToastTimeout = setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(-50%) translateY(-10px)";
+    setTimeout(() => {
+      if (toast.parentNode) toast.remove();
+    }, 220);
+  }, duration);
+}
 
 // --- HELPER FORMAT TEKS CHAT (MARKDOWN SEDERHANA KE HTML BERSIH) ---
 function formatChatTextHtml(text) {
@@ -140,11 +205,11 @@ async function inisialisasiUniversalChatData() {
 }
 
 function toggleUniversalChatWidget() {
-  let box = document.getElementById('universalChatWidgetBox');
-  if (!box) {
+  if (!document.getElementById('universalChatWrapper')) {
     injectUniversalChatHTML();
-    box = document.getElementById('universalChatWidgetBox');
   }
+  const box = document.getElementById('universalChatWidgetBox');
+  if (!box) return;
 
   if (box.style.display === 'flex') {
     box.style.display = 'none';
@@ -304,13 +369,39 @@ async function muatPesanUniversalChat() {
 }
 
 window.salinTokenUniversalChat = function(kodeToken) {
-  let tokenBersih = extractPureToken(kodeToken);
-  if (!tokenBersih) return;
-  navigator.clipboard.writeText(tokenBersih).then(() => {
-    alert("Token berhasil disalin: " + tokenBersih);
-  }).catch(err => {
-    console.error('Gagal menyalin:', err);
-  });
+  const tokenBersih = extractPureToken(kodeToken);
+  if (!tokenBersih) {
+    tampilkanGuardToast("Token tidak ditemukan untuk disalin.", "error");
+    return;
+  }
+
+  const beriNotifSukses = () => {
+    tampilkanGuardToast(
+      `<b style="color:#38bdf8;">Token berhasil disalin</b><div style="margin-top:3px; font-size:10.5px; color:#cbd5e1; word-break:break-all;">${tokenBersih}</div>`,
+      "info",
+      2800
+    );
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(tokenBersih).then(beriNotifSukses).catch(() => {
+      const tempInput = document.createElement("textarea");
+      tempInput.value = tokenBersih;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      tempInput.remove();
+      beriNotifSukses();
+    });
+  } else {
+    const tempInput = document.createElement("textarea");
+    tempInput.value = tokenBersih;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    tempInput.remove();
+    beriNotifSukses();
+  }
 };
 
 async function kirimPesanurUniversalChatBotLogic(textPesan, currentStaffName) {
@@ -388,7 +479,7 @@ async function kirimPesanUniversalChat() {
     input.value = "";
     muatPesanUniversalChat();
     kirimPesanurUniversalChatBotLogic(text, staffName);
-  } catch (e) { alert("Gagal mengirim pesan!"); }
+  } catch (e) { tampilkanGuardToast("Gagal mengirim pesan!", "error"); }
 }
 
 async function handleStaffTypingUniversal() {
@@ -586,11 +677,18 @@ function tampilkanLayarKunciMandiri() {
             });
 
             clearInterval(loadingInterval);
-            alert("Aktivasi Berhasil! Masa aktif lisensi telah diperbarui.");
-            location.reload(true);
+            this.innerText = "TERAKTIVASI";
+            tampilkanGuardToast(
+              `<b style="color:#4ade80;">Aktivasi Berhasil!</b><div style="margin-top:2px; font-size:10.5px; color:#cbd5e1;">Masa aktif lisensi telah diperbarui. Memuat ulang...</div>`,
+              "success",
+              1200
+            );
+            setTimeout(() => {
+              location.reload(true);
+            }, 900);
           } catch (e) {
             clearInterval(loadingInterval);
-            alert("Gagal terhubung ke Cloud. Periksa koneksi internet.");
+            tampilkanGuardToast("Gagal terhubung ke Cloud. Periksa koneksi internet.", "error");
             this.style.opacity = "1";
             this.style.pointerEvents = "auto";
             this.innerText = "AKTIFKAN TOKEN";
