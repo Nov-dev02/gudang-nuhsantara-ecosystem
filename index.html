@@ -766,26 +766,12 @@
         }, 3000);
     }
 
-    // Eksekusi inti auto-approve di background
+    // Eksekusi inti auto-approve di background (kirim token saja, wajib di-redeem manual oleh staf)
     async function eksekusiAutoApproveStaf(staffKey, durasiDiminta) {
         try {
             const tokenOtomatis = generateAutomaticOneWeekToken();
-            const decodedDate = decodeNxTokenDate(tokenOtomatis);
 
             const pesanBalasan = `🤖 [AUTO-SYSTEM]\nPermintaan perpanjangan masa aktif Anda telah diproses otomatis oleh System (Batas maksimal & pembaruan otomatis: **1 Minggu**).\n\nToken Akses Resmi Anda:\n\`${tokenOtomatis}\`\n\n*(Silakan salin token di atas untuk memperpanjang masa aktif aplikasi)*`;
-
-            if (decodedDate && !Number.isNaN(decodedDate.getTime())) {
-                await fetch(CLOUD_LICENSE_ENDPOINT, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        locked: false,
-                        permanent: false,
-                        expiry: decodedDate.toISOString()
-                    })
-                });
-                initCommandCenterHUD();
-            }
 
             const replyMsg = {
                 sender: 'bot',
@@ -1244,7 +1230,6 @@
         `;
       });
 
-      // Status info jika masih pending (meskipun nanti otomatis diproses background)
       if (tokenReq && tokenReq.status === 'pending') {
           html += `
             <div style="background: rgba(56, 189, 248, 0.1); border: 1px dashed var(--accent-blue); padding: 10px; border-radius: 8px; font-family: monospace; text-align: center; color: var(--accent-blue); font-size: 11px;">
