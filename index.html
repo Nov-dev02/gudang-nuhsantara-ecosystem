@@ -133,7 +133,7 @@
 
     /* Top Header Bar */
     .top-header {
-      display: flex; justify-content: space-between; align-items: center;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       padding: 15px 22px;
@@ -143,11 +143,31 @@
     .header-title h1 { margin: 0; font-size: 1.15rem; font-weight: 700; color: #fff; }
     .header-title p { margin: 2px 0 0 0; font-size: 10.5px; color: var(--text-desc); font-family: monospace; }
     
-    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .owner-badge {
       display: flex; align-items: center; gap: 6px;
       background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3);
       padding: 5px 12px; border-radius: 20px; font-size: 11px; color: #d8b4fe; font-family: monospace;
+      white-space: nowrap;
+    }
+    .btn-quick-lock {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.38);
+      color: #fca5a5;
+      padding: 6px 11px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-family: monospace;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .btn-quick-lock:hover {
+      background: rgba(239, 68, 68, 0.25);
+      color: #fff;
     }
 
     /* Mobile Quick Tab Navigation Bar */
@@ -203,7 +223,7 @@
     /* Metric Cards Grid */
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 14px;
     }
     .metric-card {
@@ -214,6 +234,50 @@
     .metric-title { font-size: 10.5px; color: var(--text-desc); font-family: monospace; text-transform: uppercase; }
     .metric-value { font-size: 1.1rem; font-weight: bold; color: #fff; font-family: monospace; margin: 4px 0; }
     .metric-sub { font-size: 10px; color: var(--text-desc); font-family: monospace; }
+
+    .quick-shortcuts-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    .btn-shortcut {
+      background: rgba(2, 6, 23, 0.7);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #e2e8f0;
+      padding: 8px 13px;
+      border-radius: 9px;
+      font-family: monospace;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .btn-shortcut:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    /* Filter Toolbar */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .filter-input, .filter-select {
+      padding: 8px 11px;
+      background: #020617;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      outline: none;
+    }
+    .filter-input { flex: 1; min-width: 180px; }
+    .filter-input:focus, .filter-select:focus { border-color: var(--accent-blue); }
 
     /* Apps Grid */
     .apps-grid {
@@ -326,6 +390,10 @@
         margin-top: 4px;
       }
       .main-container { padding: 12px; max-height: none; }
+      .top-header { padding: 12px 14px; }
+      .header-title h1 { font-size: 1rem; }
+      .header-title p { font-size: 9.5px; }
+      .btn-quick-lock span.lock-label { display: none; }
       .chat-layout { grid-template-columns: 1fr; height: auto; }
       .chat-rooms-list { height: 150px; }
     }
@@ -404,6 +472,9 @@
           <p>Pusat kendali operasional logistik & manajemen gudang online.</p>
         </div>
         <div class="header-actions">
+          <button type="button" class="btn-quick-lock" onclick="kunciLayarDashboard()" title="Kunci Layar Dashboard">
+            <i class="fa-solid fa-lock"></i> <span class="lock-label">Lock</span>
+          </button>
           <div class="owner-badge">
             <i class="fa-solid fa-shield-halved" style="color: #a855f7;"></i> SYSTEM
           </div>
@@ -443,11 +514,32 @@
             <div class="metric-sub">Real-time status</div>
           </div>
           <div class="metric-card">
+            <div class="metric-title"><i class="fa-solid fa-calendar-check"></i> Login Hari Ini</div>
+            <div id="txtTodayLoginCount" class="metric-value" style="font-size: 1rem; color: #38bdf8;">0 Sesi</div>
+            <div class="metric-sub">Akumulasi tanggal aktif</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title"><i class="fa-solid fa-comments"></i> Room Chat</div>
+            <div id="txtActiveRoomsCount" class="metric-value" style="font-size: 1rem; color: #c084fc;">0 Room</div>
+            <div id="txtChatUnreadSub" class="metric-sub">0 pesan belum dibaca</div>
+          </div>
+          <div class="metric-card">
             <div class="metric-title"><i class="fa-solid fa-shield-cat"></i> Cloud License</div>
             <div id="hudExpiryCountdown" class="metric-value" style="font-size: 0.9rem;">Memuat...</div>
             <div class="metric-sub">Real-time Countdown</div>
           </div>
         </section>
+
+        <!-- QUICK SHORTCUTS -->
+        <div class="section-box" style="padding: 14px 18px;">
+          <div class="section-title" style="margin-bottom: 8px;"><span><i class="fa-solid fa-bolt"></i> SHORTCUT OPERASIONAL CEPAT</span></div>
+          <div class="quick-shortcuts-row" style="margin-top: 0;">
+            <button type="button" class="btn-shortcut" onclick="switchTab('chat')"><i class="fa-solid fa-headset" style="color: #38bdf8;"></i> Buka Live Chat CS</button>
+            <button type="button" class="btn-shortcut" onclick="switchTab('history')"><i class="fa-solid fa-clipboard-user" style="color: #34d399;"></i> Cek Riwayat Login</button>
+            <button type="button" class="btn-shortcut" onclick="switchTab('logs')"><i class="fa-solid fa-bullhorn" style="color: #fbbf24;"></i> Kirim Broadcast</button>
+            <button type="button" class="btn-shortcut" onclick="switchTab('admin')"><i class="fa-solid fa-key" style="color: #c084fc;"></i> Kelola Lisensi</button>
+          </div>
+        </div>
 
         <!-- APPS LAUNCHER -->
         <div class="section-box">
@@ -515,7 +607,15 @@
             <span><i class="fa-solid fa-clipboard-user" style="color: #38bdf8;"></i> RIWAYAT SESI LOGIN & BUKA APLIKASI HARIAN</span>
             <button onclick="bersihkanRiwayatLogin()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 10.5px; font-family: monospace; font-weight: bold;"><i class="fa-solid fa-trash-can"></i> Clear Riwayat</button>
           </div>
-          <p style="font-size: 11px; color: var(--text-desc); margin: 0 0 14px 0;">Catatan lengkap tanggal & jam staf membuka modul aplikasi tertentu. Riwayat ini tersimpan aman dan tidak akan terhapus otomatis kecuali kamu menekan tombol Clear di atas.</p>
+          <p style="font-size: 11px; color: var(--text-desc); margin: 0 0 12px 0;">Catatan lengkap tanggal & jam staf membuka modul aplikasi tertentu. Riwayat ini tersimpan aman dan tidak akan terhapus otomatis kecuali kamu menekan tombol Clear di atas.</p>
+          <div class="filter-bar">
+            <input type="text" id="filterHistorySearch" class="filter-input" placeholder="Cari nama staf atau tanggal..." oninput="renderRiwayatLoginFiltered()" />
+            <select id="filterHistoryModul" class="filter-select" onchange="renderRiwayatLoginFiltered()">
+              <option value="ALL">Semua Modul</option>
+              <option value="Proses Data">Proses Data</option>
+              <option value="App PO">App PO</option>
+            </select>
+          </div>
           <div id="containerLoginHistory" style="font-family: monospace; font-size: 11.5px; color: #94a3b8; max-height: 400px; overflow-y: auto;">
             <span>Memuat riwayat login...</span>
           </div>
@@ -527,7 +627,7 @@
         <div class="section-box">
           <div class="section-title" style="justify-content: space-between;">
             <span><i class="fa-solid fa-bullhorn"></i> KIRIM BROADCAST PENGUMUMAN KE STAF</span>
-            <button onclick="bukaModalTemplate()" style="background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 5px 10px; border-radius: 7px; font-size: 10.5px; font-family: monospace; font-weight: bold; cursor: pointer;"><i class="fa-solid fa-folder-open"></i> Template Pesan (15)</button>
+            <button onclick="bukaModalTemplate()" style="background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 5px 10px; border-radius: 7px; font-size: 10.5px; font-family: monospace; font-weight: bold; cursor: pointer;"><i class="fa-solid fa-folder-open"></i> Template Pesan (<span id="templateCountLabel">15</span>)</button>
           </div>
           <div style="display: flex; gap: 8px;">
             <input type="text" id="inputBroadcastMsg" placeholder="Ketik pengumuman penting..." style="flex: 1; padding: 10px; background: #020617; border: 1px solid #334155; color: #f8fafc; font-size: 11px; border-radius: 8px; outline: none; font-family: monospace;" />
@@ -542,6 +642,9 @@
               <button onclick="tandaiSemuaDibaca()" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); color: #d8b4fe; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace;"><i class="fa-solid fa-check-double"></i> Dibaca</button>
               <button onclick="bersihkanSemuaLog()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-family: monospace;" title="Bersihkan Log Numpuk"><i class="fa-solid fa-trash-can"></i> Bersihkan Log</button>
             </div>
+          </div>
+          <div class="filter-bar" style="margin-bottom: 10px;">
+            <input type="text" id="filterAuditSearch" class="filter-input" placeholder="Cari aktivitas di audit log (contoh: Broadcast, Token, Kunci)..." oninput="renderAuditLogsFiltered()" />
           </div>
           <div id="containerAuditLog" style="font-family: monospace; font-size: 11px; color: #94a3b8; max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;"><div>Memuat catatan aktivitas sistem...</div></div>
         </div>
@@ -598,22 +701,26 @@
     </main>
   </div>
 
-  <!-- MODAL TEMPLATE PESAN BROADCAST (15 PILIHAN) -->
+  <!-- MODAL TEMPLATE PESAN BROADCAST (15 BAWAAN + KUSTOM) -->
   <div id="templateModal" class="modal-overlay">
-    <div class="modal-box" style="max-width: 460px; text-align: left; max-height: 85vh; display: flex; flex-direction: column;">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 12px;">
-        <h3 style="color: var(--accent-blue); margin: 0; font-size: 13.5px;"><i class="fa-solid fa-folder-open"></i> PILIH TEMPLATE BROADCAST (15)</h3>
+    <div class="modal-box" style="max-width: 480px; text-align: left; max-height: 88vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">
+        <h3 style="color: var(--accent-blue); margin: 0; font-size: 13.5px;"><i class="fa-solid fa-folder-open"></i> TEMPLATE BROADCAST (<span id="modalTemplateTotalCount">15</span>)</h3>
         <button onclick="tutupModalTemplate()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
       </div>
-      
-      <div style="overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; flex: 1; max-height: 55vh;">
-        <div onclick="pilihTemplateDanTutup('Hai rekan-rekan tim gudang, cuaca hari ini cukup terik. Jangan lupa perbanyak minum air putih dan tetap jaga kesehatan fisik ya!')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;"><b style="color: var(--accent-blue);">1. Pengingat Cuaca Panas & Fisik</b></div>
-        <div onclick="pilihTemplateDanTutup('Perhatian untuk seluruh admin: Mohon segera lakukan sinkronisasi data pesanan Marketplace (Shopee & TikTok) secara berkala.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;"><b style="color: var(--accent-blue);">2. Instruksi Sinkronisasi Data</b></div>
-        <div onclick="pilihTemplateDanTutup('Pengingat operasional: Mohon pastikan kembali seluruh status pesanan dicocokkan dengan teliti dan status Clear ditandai dengan benar.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;"><b style="color: var(--accent-blue);">3. Pengecekan Status Clear</b></div>
-        <div onclick="pilihTemplateDanTutup('Waktunya istirahat rekan-rekan! Silakan rehat sejenak, pastikan area kerja dan perangkat dalam kondisi aman sebelum ditinggal.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;"><b style="color: var(--accent-blue);">4. Waktu Istirahat Siang</b></div>
-        <div onclick="pilihTemplateDanTutup('Informasi sistem: Token lisensi NX pusat telah diperbarui. Jika perangkat mengalami kendala akses, silakan lapor ke admin utama.')" style="background: rgba(30,41,59,0.7); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;"><b style="color: var(--accent-blue);">5. Update Token Lisensi Sistem</b></div>
+
+      <div style="background: rgba(2, 6, 23, 0.75); border: 1px solid #334155; padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+        <div style="font-size: 10px; color: var(--accent-blue); margin-bottom: 6px; font-weight: bold;"><i class="fa-solid fa-plus-circle"></i> TAMBAH TEMPLATE KUSTOM</div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <input type="text" id="customTemplateTitle" placeholder="Judul singkat..." style="flex: 1; min-width: 120px; padding: 7px 9px; margin: 0; font-size: 11px; letter-spacing: normal; text-align: left; color: #fff;" />
+          <input type="text" id="customTemplateText" placeholder="Isi pesan broadcast..." style="flex: 2; min-width: 160px; padding: 7px 9px; margin: 0; font-size: 11px; letter-spacing: normal; text-align: left; color: #fff;" />
+          <button type="button" onclick="tambahTemplateKustom()" style="background: #0284c7; border: 1px solid var(--accent-blue); color: #fff; padding: 7px 11px; border-radius: 7px; font-size: 10.5px; font-weight: bold; cursor: pointer; font-family: monospace;">Simpan</button>
+        </div>
       </div>
-      <div style="margin-top: 14px; text-align: right;"><button onclick="tutupModalTemplate()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 10.5px; font-family: monospace;">Tutup</button></div>
+      
+      <div id="templateListContainer" style="overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; flex: 1; max-height: 46vh;"></div>
+
+      <div style="margin-top: 12px; text-align: right;"><button onclick="tutupModalTemplate()" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 10.5px; font-family: monospace;">Tutup</button></div>
     </div>
   </div>
 
@@ -673,12 +780,33 @@
     const CLOUD_PRESENCE_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/presence.json`;
     const CLOUD_CHATS_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/chats.json`;
     const CLOUD_LOGIN_HISTORY_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/login_history.json`;
+    const CUSTOM_TEMPLATES_STORAGE_KEY = "gudang_custom_broadcast_templates";
+
+    const DEFAULT_BROADCAST_TEMPLATES = [
+      { title: "Pengingat Cuaca Panas & Fisik", text: "Hai rekan-rekan tim gudang, cuaca hari ini cukup terik. Jangan lupa perbanyak minum air putih dan tetap jaga kesehatan fisik ya!" },
+      { title: "Instruksi Sinkronisasi Data", text: "Perhatian untuk seluruh admin: Mohon segera lakukan sinkronisasi data pesanan Marketplace (Shopee & TikTok) secara berkala." },
+      { title: "Pengecekan Status Clear", text: "Pengingat operasional: Mohon pastikan kembali seluruh status pesanan dicocokkan dengan teliti dan status Clear ditandai dengan benar." },
+      { title: "Waktu Istirahat Siang", text: "Waktunya istirahat rekan-rekan! Silakan rehat sejenak, pastikan area kerja dan perangkat dalam kondisi aman sebelum ditinggal." },
+      { title: "Update Token Lisensi Sistem", text: "Informasi sistem: Token lisensi NX pusat telah diperbarui. Jika perangkat mengalami kendala akses, silakan lapor ke admin utama." },
+      { title: "Persiapan Tutup Shift / Sore", text: "Menjelang tutup shift, mohon selesaikan antrean proses data yang sedang berjalan dan pastikan tidak ada data yang tertinggal." },
+      { title: "Prioritas Pesanan Mendesak", text: "Perhatian: Ada pesanan prioritas yang perlu segera diproses. Mohon cek antrean terbaru dan dahulukan sesuai urutan." },
+      { title: "Pengecekan Stok & Purchase Order", text: "Mohon periksa kembali data Purchase Order & stok barang sebelum input lanjutan agar pencatatan gudang tetap akurat." },
+      { title: "Kendala Koneksi / Server Lambat", text: "Jika terasa koneksi jaringan atau akses cloud agak lambat, coba refresh halaman atau cek koneksi internet perangkat masing-masing." },
+      { title: "Pengingat Absensi Modul", text: "Jangan lupa pastikan nama staf sudah sesuai saat membuka modul Proses Data maupun Aplikasi Purchase Order." },
+      { title: "Apresiasi Kinerja Tim", text: "Kerja bagus hari ini tim Gudang Nuhsantara! Tetap kompak, teliti, dan jaga semangat operasional harian." },
+      { title: "Pemeliharaan Sistem Terjadwal", text: "Pemberitahuan: Akan dilakukan pemeliharaan sistem ringan. Simpan pekerjaan penting sebelum melakukan refresh." },
+      { title: "Pengecekan Resi & Marketplace", text: "Mohon cek ulang kesesuaian data pesanan antara Shopee dan TikTok agar tidak terjadi selisih rekap harian." },
+      { title: "Pengingat Keamanan Akun & PIN", text: "Demi keamanan sistem, jangan bagikan PIN akses maupun informasi sensitif ke pihak yang tidak berkepentingan." },
+      { title: "Panggilan Koordinasi Admin", text: "Mohon perhatian rekan admin untuk koordinasi cepat terkait update data operasional hari ini." }
+    ];
 
     let targetAksiAdmin = "";
     let globalExpiryDate = null;
     let pendingTokenToSave = "";
     let activeStaffRoom = null;
     let typingTimeout = null;
+    let cachedLoginHistory = [];
+    let cachedAuditLogs = [];
 
     // --- HELPER MODAL KONFIRMASI & INPUT KUSTOM ---
     function tampilkanDashboardConfirm(options = {}) {
@@ -813,6 +941,7 @@
     document.addEventListener("DOMContentLoaded", function() {
       initSplashScreenFlow();
       muatTemaDashboard();
+      updateTemplateCounterBadge();
       initCommandCenterHUD();
       muatAuditLogs();
       muatStaffPresence();
@@ -828,6 +957,26 @@
       setInterval(updateRealtimeCountdown, 1000);
       setInterval(muatDaftarChatStaf, 4000);
     });
+
+    // --- LOCK LAYAR CEPAT ---
+    window.kunciLayarDashboard = function() {
+      const splash = document.getElementById('splashScreen');
+      const loadingState = document.getElementById('splashLoadingState');
+      const loginState = document.getElementById('splashLoginState');
+      const pinInput = document.getElementById('splashPinInput');
+      const pinError = document.getElementById('splashPinError');
+
+      loadingState.style.display = 'none';
+      loginState.style.display = 'block';
+      pinInput.value = '';
+      pinError.style.display = 'none';
+      splash.style.display = 'flex';
+      setTimeout(() => {
+        splash.style.opacity = '1';
+        pinInput.focus();
+      }, 20);
+      showDashboardToast("Layar dashboard dikunci.", true);
+    };
 
     // --- HELPER PARSE TIMESTAMP TOKEN (SESUAI POLA NX GENERATOR: 18 PREFIX + NX + HEX + 18 SUFFIX) ---
     function decodeNxTokenDate(token) {
@@ -880,7 +1029,7 @@
     // --- FUNGSI AUTO-GENERATOR TOKEN 1 MINGGU (SAMA PERSIS DENGAN WEB NX GENERATOR) ---
     function generateAutomaticOneWeekToken() {
         const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() + 7); // Pas 7 hari (1 minggu) ke depan
+        targetDate.setDate(targetDate.getDate() + 7);
         targetDate.setHours(23, 59, 59, 999);
 
         const timeHex = targetDate.getTime().toString(16);
@@ -906,7 +1055,6 @@
                     const room = data[staffId];
                     const tokenReq = room.token_request;
 
-                    // Jika ada request baru yang berstatus 'pending', eksekusi otomatis!
                     if (tokenReq && tokenReq.status === 'pending') {
                         const durasiReq = tokenReq.requested_duration || "1 Minggu (Otomatis System)";
                         console.log(`⚡ Auto-Pilot mendeteksi request dari ${staffId}, memproses otomatis...`);
@@ -914,13 +1062,10 @@
                         await eksekusiAutoApproveStaf(staffId, durasiReq);
                     }
                 }
-            } catch (e) {
-                // Abaikan jika koneksi sesaat terputus
-            }
+            } catch (e) {}
         }, 3000);
     }
 
-    // Eksekusi inti auto-approve di background (kirim token saja, wajib di-redeem manual oleh staf)
     async function eksekusiAutoApproveStaf(staffKey, durasiDiminta) {
         try {
             const tokenOtomatis = generateAutomaticOneWeekToken();
@@ -1118,12 +1263,25 @@
       if (tabId === 'overview') headerTitle.innerText = "Enterprise Command Center";
       else if (tabId === 'presence') headerTitle.innerText = "Live Staff Monitor (Real-Time)";
       else if (tabId === 'history') { headerTitle.innerText = "Riwayat Login Staf Harian"; muatRiwayatLoginHarian(); }
-      else if (tabId === 'logs') headerTitle.innerText = "Audit Logs & Broadcast Center";
+      else if (tabId === 'logs') { headerTitle.innerText = "Audit Logs & Broadcast Center"; muatAuditLogs(); }
       else if (tabId === 'chat') { headerTitle.innerText = "Pusat Live Chat Bantuan Staf"; muatDaftarChatStaf(); }
       else if (tabId === 'admin') headerTitle.innerText = "System Admin & License Hub";
     }
 
-    // --- RIWAYAT LOGIN HARIAN (FULL SECURE & ROBUST PARSER) ---
+    // --- RIWAYAT LOGIN HARIAN + FILTER ---
+    function updateTodayLoginKPI(logs) {
+      const el = document.getElementById('txtTodayLoginCount');
+      if (!el) return;
+      const now = new Date();
+      const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+      const countToday = logs.filter(item => {
+        if (!item || !item.timestamp) return false;
+        const d = new Date(Number(item.timestamp));
+        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}` === todayKey;
+      }).length;
+      el.innerText = `${countToday} Sesi`;
+    }
+
     async function muatRiwayatLoginHarian() {
       const container = document.getElementById('containerLoginHistory');
       if (!container) return;
@@ -1132,6 +1290,8 @@
         const rawData = await res.json();
         
         if (!rawData) {
+          cachedLoginHistory = [];
+          updateTodayLoginKPI([]);
           container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 20px;">Belum ada riwayat sesi login yang tercatat.</div>`;
           return;
         }
@@ -1143,51 +1303,73 @@
           data = Object.values(rawData).filter(item => item !== null && typeof item === 'object');
         }
         
-        if (data.length === 0) {
-          container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 20px;">Belum ada riwayat sesi login yang tercatat.</div>`;
-          return;
-        }
-
-        let html = `
-          <div style="width: 100%; overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11.5px;">
-              <thead>
-                <tr style="border-bottom: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent-blue);">
-                  <th style="padding: 8px;">Tanggal & Waktu Login</th>
-                  <th style="padding: 8px;">Nama Staf</th>
-                  <th style="padding: 8px;">Modul / Aplikasi</th>
-                  <th style="padding: 8px;">Status Sesi</th>
-                </tr>
-              </thead>
-              <tbody>
-        `;
-
-        const sortedLogs = data.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        
-        sortedLogs.forEach(item => {
-          if (!item || !item.timestamp) return;
-          let tanggalObj = new Date(Number(item.timestamp));
-          let tanggalFormatted = tanggalObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-          let jamFormatted = tanggalObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          let waktuLengkap = `${tanggalFormatted} — ${jamFormatted} WIB`;
-
-          html += `
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-              <td style="padding: 8px; color: #cbd5e1; font-family: monospace;">📅 ${waktuLengkap}</td>
-              <td style="padding: 8px; color: #fff; font-weight: bold;">👤 ${item.name || 'Staf'}</td>
-              <td style="padding: 8px; color: #38bdf8;">${item.modul || 'Modul'}</td>
-              <td style="padding: 8px; color: #34d399; font-weight: bold;">🟢 Aktif Masuk</td>
-            </tr>
-          `;
-        });
-
-        html += `</tbody></table></div>`;
-        container.innerHTML = html;
+        cachedLoginHistory = data.filter(item => item && item.timestamp).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        updateTodayLoginKPI(cachedLoginHistory);
+        renderRiwayatLoginFiltered();
       } catch (e) {
         console.error("Gagal memuat riwayat:", e);
         container.innerHTML = `<div style="color: #ef4444; text-align: center; padding: 20px;">Gagal memuat riwayat login dari server.</div>`;
       }
     }
+
+    window.renderRiwayatLoginFiltered = function() {
+      const container = document.getElementById('containerLoginHistory');
+      if (!container) return;
+
+      const query = (document.getElementById('filterHistorySearch')?.value || "").trim().toLowerCase();
+      const modulFilter = document.getElementById('filterHistoryModul')?.value || "ALL";
+
+      const filtered = cachedLoginHistory.filter(item => {
+        const namaStr = String(item.name || "Staf").toLowerCase();
+        const modulStr = String(item.modul || "Modul");
+        const tanggalObj = new Date(Number(item.timestamp));
+        const tanggalFormatted = tanggalObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const jamFormatted = tanggalObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const waktuLengkap = `${tanggalFormatted} — ${jamFormatted} WIB`.toLowerCase();
+
+        const cocokModul = modulFilter === "ALL" || modulStr.toLowerCase() === modulFilter.toLowerCase();
+        const cocokQuery = !query || namaStr.includes(query) || modulStr.toLowerCase().includes(query) || waktuLengkap.includes(query);
+        return cocokModul && cocokQuery;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 20px;">Tidak ada riwayat login yang cocok dengan filter.</div>`;
+        return;
+      }
+
+      let html = `
+        <div style="width: 100%; overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11.5px;">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent-blue);">
+                <th style="padding: 8px;">Tanggal & Waktu Login</th>
+                <th style="padding: 8px;">Nama Staf</th>
+                <th style="padding: 8px;">Modul / Aplikasi</th>
+                <th style="padding: 8px;">Status Sesi</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      filtered.forEach(item => {
+        const tanggalObj = new Date(Number(item.timestamp));
+        const tanggalFormatted = tanggalObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const jamFormatted = tanggalObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const waktuLengkap = `${tanggalFormatted} — ${jamFormatted} WIB`;
+
+        html += `
+          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 8px; color: #cbd5e1; font-family: monospace;">📅 ${waktuLengkap}</td>
+            <td style="padding: 8px; color: #fff; font-weight: bold;">👤 ${item.name || 'Staf'}</td>
+            <td style="padding: 8px; color: #38bdf8;">${item.modul || 'Modul'}</td>
+            <td style="padding: 8px; color: #34d399; font-weight: bold;">🟢 Aktif Masuk</td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table></div>`;
+      container.innerHTML = html;
+    };
 
     async function bersihkanRiwayatLogin() {
       const yakin = await tampilkanDashboardConfirm({
@@ -1217,8 +1399,15 @@
         let html = "";
 
         const staffKeys = Object.keys(data);
+        const roomsEl = document.getElementById('txtActiveRoomsCount');
+        const unreadSubEl = document.getElementById('txtChatUnreadSub');
+
         if (staffKeys.length === 0) {
+          if (roomsEl) roomsEl.innerText = "0 Room";
+          if (unreadSubEl) unreadSubEl.innerText = "0 pesan belum dibaca";
           roomsListEl.innerHTML = `<div style="padding: 15px; color: var(--text-desc); text-align: center; font-size: 11px;">Belum ada chat masuk.</div>`;
+          const badgeEls = [document.getElementById('sidebarChatBadge'), document.getElementById('mobileChatBadge')];
+          badgeEls.forEach(el => { if (el) el.style.display = 'none'; });
           return;
         }
 
@@ -1254,6 +1443,9 @@
             </div>
           `;
         });
+
+        if (roomsEl) roomsEl.innerText = `${staffKeys.length} Room`;
+        if (unreadSubEl) unreadSubEl.innerText = totalUnread > 0 ? `${totalUnread} pesan belum dibaca` : "Semua pesan terbaca";
 
         roomsListEl.innerHTML = html;
 
@@ -1311,7 +1503,9 @@
           document.getElementById('activeChatTitle').innerText = "Pilih ruang chat staf di sebelah kiri";
           document.getElementById('chatMessagesContainer').innerHTML = `<div style="color: var(--text-desc); text-align: center; margin: auto;">Belum ada ruang chat yang dipilih.</div>`;
         }
+        await catatLogAktivitas(`Menghapus room chat staf "${staffName}"`);
         muatDaftarChatStaf();
+        muatAuditLogs();
         showDashboardToast(`Room chat ${staffName} berhasil dihapus!`, true);
       } catch (e) { showDashboardToast("Gagal menghapus room chat!", false); }
     }
@@ -1529,7 +1723,13 @@
           danger: true
         });
         if (!yakin) return;
-        try { await fetch(CLOUD_PRESENCE_ENDPOINT, { method: 'DELETE' }); showDashboardToast("Daftar staf dibersihkan!", true); muatStaffPresence(); } catch (e) {}
+        try {
+          await fetch(CLOUD_PRESENCE_ENDPOINT, { method: 'DELETE' });
+          await catatLogAktivitas("Reset daftar staf online");
+          showDashboardToast("Daftar staf dibersihkan!", true);
+          muatStaffPresence();
+          muatAuditLogs();
+        } catch (e) {}
     }
 
     async function muatStaffPresence() {
@@ -1597,7 +1797,100 @@
         } catch (e) {}
     }
 
-    function bukaModalTemplate() { document.getElementById('templateModal').style.display = 'flex'; }
+    // --- TEMPLATE BROADCAST (15 BAWAAN + KUSTOM) ---
+    function getCustomTemplates() {
+      try {
+        const raw = localStorage.getItem(CUSTOM_TEMPLATES_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function getAllTemplates() {
+      const custom = getCustomTemplates().map((item, idx) => ({
+        ...item,
+        isCustom: true,
+        customIndex: idx
+      }));
+      const defaults = DEFAULT_BROADCAST_TEMPLATES.map((item, idx) => ({
+        ...item,
+        isCustom: false,
+        number: idx + 1
+      }));
+      return [...custom, ...defaults];
+    }
+
+    function updateTemplateCounterBadge() {
+      const total = getAllTemplates().length;
+      const lbl1 = document.getElementById('templateCountLabel');
+      const lbl2 = document.getElementById('modalTemplateTotalCount');
+      if (lbl1) lbl1.innerText = total;
+      if (lbl2) lbl2.innerText = total;
+    }
+
+    function renderTemplateList() {
+      const container = document.getElementById('templateListContainer');
+      if (!container) return;
+      const all = getAllTemplates();
+      updateTemplateCounterBadge();
+
+      container.innerHTML = all.map((tpl, i) => {
+        const escapedText = String(tpl.text || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        const badgeText = tpl.isCustom ? `KUSTOM #${tpl.customIndex + 1}` : `#${tpl.number}`;
+        const badgeColor = tpl.isCustom ? "#c084fc" : "var(--accent-blue)";
+        const removeBtn = tpl.isCustom
+          ? `<button type="button" onclick="event.stopPropagation(); hapusTemplateKustom(${tpl.customIndex})" title="Hapus Template Kustom" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; border-radius: 6px; padding: 3px 7px; font-size: 10px; cursor: pointer; font-family: monospace;"><i class="fa-solid fa-trash"></i></button>`
+          : "";
+
+        return `
+          <div onclick="pilihTemplateDanTutup('${escapedText}')" style="background: rgba(30,41,59,0.72); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 3px;">
+              <b style="color: ${badgeColor};">${badgeText}. ${tpl.title}</b>
+              ${removeBtn}
+            </div>
+            <div style="color: #cbd5e1; font-size: 10.5px; line-height: 1.4;">${tpl.text}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.tambahTemplateKustom = function() {
+      const titleEl = document.getElementById('customTemplateTitle');
+      const textEl = document.getElementById('customTemplateText');
+      const title = (titleEl?.value || "").trim();
+      const text = (textEl?.value || "").trim();
+
+      if (!text) {
+        showDashboardToast("Isi pesan template kustom belum diisi!", false);
+        return;
+      }
+
+      const custom = getCustomTemplates();
+      custom.unshift({
+        title: title || "Template Kustom",
+        text: text
+      });
+      localStorage.setItem(CUSTOM_TEMPLATES_STORAGE_KEY, JSON.stringify(custom));
+      titleEl.value = "";
+      textEl.value = "";
+      renderTemplateList();
+      showDashboardToast("Template kustom berhasil disimpan!", true);
+    };
+
+    window.hapusTemplateKustom = function(index) {
+      const custom = getCustomTemplates();
+      custom.splice(index, 1);
+      localStorage.setItem(CUSTOM_TEMPLATES_STORAGE_KEY, JSON.stringify(custom));
+      renderTemplateList();
+      showDashboardToast("Template kustom dihapus!", true);
+    };
+
+    function bukaModalTemplate() {
+      renderTemplateList();
+      document.getElementById('templateModal').style.display = 'flex';
+    }
     function tutupModalTemplate() { document.getElementById('templateModal').style.display = 'none'; }
     function pilihTemplateDanTutup(teks) {
         const inputEl = document.getElementById('inputBroadcastMsg');
@@ -1618,7 +1911,11 @@
         tutupModalAdmin();
         tutupPanelNx();
         if (targetAksiAdmin === 'lisensi') bukaPanelNx();
-        else if (targetAksiAdmin === 'generator') window.open('./nx-generator/index.html', '_blank');
+        else if (targetAksiAdmin === 'generator') {
+          catatLogAktivitas("Membuka NX Token Generator");
+          muatAuditLogs();
+          window.open('./nx-generator/index.html', '_blank');
+        }
         else if (targetAksiAdmin === 'force_update') eksekusiForceUpdateAktif();
         else if (targetAksiAdmin === 'broadcast') eksekusiKirimBroadcastAktif();
         else if (targetAksiAdmin === 'save_token') eksekusiSimpanTokenAktif(pendingTokenToSave);
@@ -1674,22 +1971,34 @@
             let logs = await (await fetch(CLOUD_LOGS_ENDPOINT)).json() || [];
             if (!Array.isArray(logs)) logs = [];
             logs.unshift({ text: `[${timeStr}] ${aksi}` });
-            if (logs.length > 20) logs = logs.slice(0, 20);
+            if (logs.length > 30) logs = logs.slice(0, 30);
             await fetch(CLOUD_LOGS_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logs) });
         } catch (e) {}
     }
 
     async function muatAuditLogs() {
         const container = document.getElementById('containerAuditLog');
+        if (!container) return;
         try {
             const logs = await (await fetch(CLOUD_LOGS_ENDPOINT + "?t=" + Date.now())).json();
-            const lastReadTime = parseInt(localStorage.getItem('gudang_last_read_audit') || '0');
-            container.innerHTML = Array.isArray(logs) && logs.length > 0 ? logs.map((l, idx) => {
-                let isUnread = idx === 0 && Date.now() - lastReadTime < 86400000;
-                return `<div style="${isUnread ? 'color: #38bdf8; font-weight: bold;' : ''}">&bull; ${l.text}</div>`;
-            }).join('') : `<div>Belum ada aktivitas.</div>`;
+            cachedAuditLogs = Array.isArray(logs) ? logs.filter(Boolean) : [];
+            renderAuditLogsFiltered();
         } catch (e) {}
     }
+
+    window.renderAuditLogsFiltered = function() {
+        const container = document.getElementById('containerAuditLog');
+        if (!container) return;
+        const query = (document.getElementById('filterAuditSearch')?.value || "").trim().toLowerCase();
+        const lastReadTime = parseInt(localStorage.getItem('gudang_last_read_audit') || '0');
+
+        const filtered = cachedAuditLogs.filter(l => !query || String(l.text || "").toLowerCase().includes(query));
+
+        container.innerHTML = filtered.length > 0 ? filtered.map((l, idx) => {
+            let isUnread = !query && idx === 0 && Date.now() - lastReadTime < 86400000;
+            return `<div style="${isUnread ? 'color: #38bdf8; font-weight: bold;' : ''}">&bull; ${l.text}</div>`;
+        }).join('') : `<div>${query ? "Tidak ada log yang cocok dengan pencarian." : "Belum ada aktivitas."}</div>`;
+    };
 
     function tandaiSemuaDibaca() { localStorage.setItem('gudang_last_read_audit', String(Date.now())); muatAuditLogs(); showDashboardToast("Ditandai dibaca!", true); }
     async function bersihkanSemuaLog() {
@@ -1703,7 +2012,12 @@
       if (!yakin) return;
       try { await fetch(CLOUD_LOGS_ENDPOINT, { method: 'DELETE' }); muatAuditLogs(); showDashboardToast("Log audit dibersihkan!", true); } catch(e){}
     }
-    async function eksekusiForceUpdateAktif() { await fetch(FIREBASE_DB_URL + "/gudang_nuhsantara/version.json", { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ forceReloadTimestamp: Date.now() }) }); showDashboardToast("Perintah update dikirim!", true); }
+    async function eksekusiForceUpdateAktif() {
+      await fetch(FIREBASE_DB_URL + "/gudang_nuhsantara/version.json", { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ forceReloadTimestamp: Date.now() }) });
+      await catatLogAktivitas("Memicu Force Update ke seluruh perangkat staf");
+      muatAuditLogs();
+      showDashboardToast("Perintah update dikirim!", true);
+    }
 
     async function initCommandCenterHUD() {
         const statusText = document.getElementById('hudSystemStatusText'), pingEl = document.getElementById('hudPingText');
@@ -1729,7 +2043,13 @@
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
         
         expiryBox.innerText = days > 0 ? `${days}h ${hours}j ${minutes}m ${seconds}d` : `${hours}j ${minutes}m ${seconds}d`;
-        expiryBox.style.color = "#fff";
+        if (diff <= 6 * 60 * 60 * 1000) {
+          expiryBox.style.color = "#ef4444";
+        } else if (diff <= 2 * 24 * 60 * 60 * 1000) {
+          expiryBox.style.color = "#fbbf24";
+        } else {
+          expiryBox.style.color = "#fff";
+        }
     }
 
     function showDashboardToast(msg, success = true) {
@@ -1769,8 +2089,10 @@
             expiry: decodedDate.toISOString()
           })
         });
+        await catatLogAktivitas(`Memperbarui token lisensi (exp: ${decodedDate.toLocaleDateString('id-ID')})`);
         showDashboardToast("Token Berhasil Disimpan!", true);
         initCommandCenterHUD();
+        muatAuditLogs();
       } else {
         showDashboardToast("Token tidak valid!", false);
       }
@@ -1779,8 +2101,10 @@
     async function eksekusiKunciSistemAktif(type) {
       const past = new Date(); past.setDate(past.getDate() - 1);
       await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locked: true, permanent: (type === 'permanent'), expiry: past.toISOString() }) });
+      await catatLogAktivitas(`Mengaktifkan kunci sistem darurat (${type === 'permanent' ? 'Permanen' : 'Sementara'})`);
       showDashboardToast("Sistem dikunci!", true);
       initCommandCenterHUD();
+      muatAuditLogs();
     }
 
     document.getElementById('adminPinInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') verifikasiPinAdmin(); });
