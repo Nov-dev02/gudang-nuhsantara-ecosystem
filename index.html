@@ -676,16 +676,46 @@
       setInterval(muatDaftarChatStaf, 4000);
     });
 
+    // --- HELPER PARSE TIMESTAMP TOKEN (SESUAI POLA NX GENERATOR: 18 PREFIX + NX + HEX + 18 SUFFIX) ---
+    function decodeNxTokenDate(token) {
+        try {
+            if (!token || typeof token !== "string") return null;
+            const clean = token.trim();
+            if (!clean.includes("NX")) return null;
+
+            const parts = clean.split("NX");
+            if (parts.length < 2) return null;
+
+            const afterNx = parts[1];
+            if (afterNx.length <= 18) return null;
+
+            // Buang 18 karakter randomSuffix di akhir token
+            const hexPart = afterNx.slice(0, -18);
+            if (!/^[0-9a-fA-F]+$/.test(hexPart)) return null;
+
+            const ts = parseInt(hexPart, 16);
+            if (Number.isNaN(ts)) return null;
+
+            const targetDate = new Date(ts);
+            return Number.isNaN(targetDate.getTime()) ? null : targetDate;
+        } catch (e) {
+            return null;
+        }
+    }
+
     // --- FUNGSI SALIN TOKEN BERSIH ---
     window.salinTokenChat = function(textTeks) {
-        let tokenBersih = textTeks;
-        if (textTeks.includes("Token Akses Resmi Anda:")) {
-            const parts = textTeks.split("Token Akses Resmi Anda:");
-            if (parts[1]) tokenBersih = parts[1].replace(/[`<>/b]/g, '').trim();
-        } else if (textTeks.includes("NX")) {
-            tokenBersih = textTeks.replace(/<[^>]*>?/gm, '').trim();
+        let tokenBersih = String(textTeks || "");
+        const nxMatch = tokenBersih.match(/[A-Za-z0-9]{18}NX[0-9a-fA-F]+[A-Za-z0-9]{18}/);
+        if (nxMatch && nxMatch[0]) {
+            tokenBersih = nxMatch[0];
+        } else if (tokenBersih.includes("Token Akses Resmi Anda:")) {
+            const parts = tokenBersih.split("Token Akses Resmi Anda:");
+            if (parts[1]) tokenBersih = parts[1].replace(/[`<>/b*]/g, '').trim();
+        } else {
+            tokenBersih = tokenBersih.replace(/<[^>]*>?/gm, '').trim();
         }
-        
+
         navigator.clipboard.writeText(tokenBersih).then(() => {
             alert("Token bersih berhasil disalin ke clipboard!");
         }).catch(err => {
@@ -693,18 +723,18 @@
         });
     };
 
-    // --- FUNGSI AUTO-GENERATOR TOKEN 1 MINGGU (PRESISI & AMAN) ---
+    // --- FUNGSI AUTO-GENERATOR TOKEN 1 MINGGU (SAMA PERSIS DENGAN WEB NX GENERATOR) ---
     function generateAutomaticOneWeekToken() {
-        let targetDate = new Date();
+        const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() + 7); // Pas 7 hari (1 minggu) ke depan
         targetDate.setHours(23, 59, 59, 999);
 
-        let timeHex = targetDate.getTime().toString(16);
-        
-        let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const timeHex = targetDate.getTime().toString(16);
+
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let randomPrefix = '';
         for (let i = 0; i < 18; i++) randomPrefix += chars.charAt(Math.floor(Math.random() * chars.length));
-        
+
         let randomSuffix = '';
         for (let i = 0; i < 18; i++) randomSuffix += chars.charAt(Math.floor(Math.random() * chars.length));
 
@@ -739,22 +769,24 @@
     // Eksekusi inti auto-approve di background
     async function eksekusiAutoApproveStaf(staffKey, durasiDiminta) {
         try {
-            let tokenOtomatis = generateAutomaticOneWeekToken();
+            const tokenOtomatis = generateAutomaticOneWeekToken();
+            const decodedDate = decodeNxTokenDate(tokenOtomatis);
 
-            let pesanBalasan = `🤖 [AUTO-SYSTEM]\nPermintaan perpanjangan masa aktif Anda telah diproses otomatis oleh System (Batas maksimal & pembaruan otomatis: **1 Minggu**).\n\nToken Akses Resmi Anda:\n\`${tokenOtomatis}\`\n\n*(Silakan salin token di atas untuk memperpanjang masa aktif aplikasi)*`;
-            
-            // Update otomatis license pusat di Firebase
-            let hex = tokenOtomatis.split("NX")[1].slice(0, -18);
-            let ts = parseInt(hex, 16);
-            if (!isNaN(ts)) {
-                await fetch(CLOUD_LICENSE_ENDPOINT, { 
-                    method: 'PUT', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ locked: false, permanent: false, expiry: new Date(ts).toISOString() }) 
+            const pesanBalasan = `🤖 [AUTO-SYSTEM]\nPermintaan perpanjangan masa aktif Anda telah diproses otomatis oleh System (Batas maksimal & pembaruan otomatis: **1 Minggu**).\n\nToken Akses Resmi Anda:\n\`${tokenOtomatis}\`\n\n*(Silakan salin token di atas untuk memperpanjang masa aktif aplikasi)*`;
+
+            if (decodedDate && !Number.isNaN(decodedDate.getTime())) {
+                await fetch(CLOUD_LICENSE_ENDPOINT, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        locked: false,
+                        permanent: false,
+                        expiry: decodedDate.toISOString()
+                    })
                 });
+                initCommandCenterHUD();
             }
 
-            // Kirim balasan chat otomatis ke staf
             const replyMsg = {
                 sender: 'bot',
                 text: pesanBalasan,
@@ -765,12 +797,11 @@
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(replyMsg)
             });
 
-            // Ubah status request jadi 'approved' agar tidak diproses berulang-ulang
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/token_request.json`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ 
-                  status: 'approved',
-                  approved_at: Date.now()
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    status: 'approved',
+                    approved_at: Date.now()
                 })
             });
 
@@ -1532,13 +1563,22 @@
     }
 
     async function eksekusiSimpanTokenAktif(token) {
-      let hex = token.includes("NX") ? token.split("NX")[1].slice(0, -18) : null;
-      let ts = hex ? parseInt(hex, 16) : NaN;
-      if (!isNaN(ts) && new Date(ts) > new Date()) {
-        await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locked: false, permanent: false, expiry: new Date(ts).toISOString() }) });
+      const decodedDate = decodeNxTokenDate(token);
+      if (decodedDate && decodedDate > new Date()) {
+        await fetch(CLOUD_LICENSE_ENDPOINT, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            locked: false,
+            permanent: false,
+            expiry: decodedDate.toISOString()
+          })
+        });
         showDashboardToast("Token Berhasil Disimpan!", true);
         initCommandCenterHUD();
-      } else { showDashboardToast("Token tidak valid!", false); }
+      } else {
+        showDashboardToast("Token tidak valid!", false);
+      }
     }
 
     async function eksekusiKunciSistemAktif(type) {
