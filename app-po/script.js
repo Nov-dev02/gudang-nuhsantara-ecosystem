@@ -564,9 +564,11 @@ async function loadRiwayatPOData() {
                         <td style="padding: 10px; color: #f8fafc;">${item.nama}</td>
                         <td style="padding: 10px; color: #cbd5e1;">${item.pic}</td>
                         <td style="padding: 10px; text-align: right; font-weight: 600; color: #34d399;">${item.jumlah}</td>
-                        <td style="padding: 10px; text-align: center; white-space: nowrap;">
-                            <button type="button" onclick="persiapkanEdit(${item.rowIndex}, '${item.tanggal}', '${item.kode}', '${item.nama}', '${item.pic}', '${item.jumlah}')" style="background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 4px;"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-                            <button type="button" onclick="hapusDataPO(${item.rowIndex})" style="background: #ef4444; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;"><i class="fa-solid fa-trash"></i> Hapus</button>
+                        <td class="riwayat-aksi-col">
+                            <div class="riwayat-aksi-wrap">
+                                <button type="button" class="btn-aksi-icon edit" title="Edit" aria-label="Edit" onclick="persiapkanEdit(${item.rowIndex}, '${escapeHtml(item.tanggal)}', '${escapeHtml(item.kode)}', '${escapeHtml(item.nama)}', '${escapeHtml(item.pic)}', '${escapeHtml(item.jumlah)}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button type="button" class="btn-aksi-icon hapus" title="Hapus" aria-label="Hapus" onclick="hapusDataPO(${item.rowIndex})"><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -928,7 +930,6 @@ async function submitPO(e) {
 
         if (result.status === 'success') {
             if (!isEditMode) {
-                // Catat juga log input PO ke Firebase sebagai cadangan hitungan cepat
                 const namaStafAktif = localStorage.getItem('po_user') || localStorage.getItem('gudang_staff_name') || dataPO.pic || 'Staf';
                 fetch(`${FIREBASE_RTDB_URL}/gudang_nuhsantara/po_history.json`, {
                     method: 'POST',
@@ -1181,7 +1182,6 @@ async function cekRekapOtomatis() {
   if (localStorage.getItem(kunciKemarin)) return;
 
   try {
-    // 1. Ambil Total Input PO Kemarin dari Apps Script (getRekap)
     let totalPO = 0;
     try {
       const response = await fetch(`${WEB_APP_URL}?action=getRekap&pic=${encodeURIComponent(namaPicLogin)}&tanggal=${tanggalKemarin}`);
@@ -1191,7 +1191,6 @@ async function cekRekapOtomatis() {
       }
     } catch (e) { console.log("Skip getRekap Apps Script:", e); }
 
-    // 2. Ambil Riwayat Login Kemarin dari Firebase
     const startYesterday = new Date(kemarin.getFullYear(), kemarin.getMonth(), kemarin.getDate(), 0, 0, 0).getTime();
     const endYesterday = new Date(kemarin.getFullYear(), kemarin.getMonth(), kemarin.getDate(), 23, 59, 59, 999).getTime();
 
@@ -1204,7 +1203,6 @@ async function cekRekapOtomatis() {
       const itemName = (item.name || "").toLowerCase();
       const targetName = namaPicLogin.toLowerCase();
 
-      // Cocokkan nama staf (fleksibel untuk format "Dwi" atau "Dwi - PO")
       if ((itemName.includes(targetName) || targetName.includes(itemName)) && item.timestamp >= startYesterday && item.timestamp <= endYesterday) {
         const d = new Date(Number(item.timestamp));
         const jamStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -1215,10 +1213,8 @@ async function cekRekapOtomatis() {
       }
     });
 
-    // Urutkan dari yang paling pagi
     loginList.sort((a, b) => a.jam.localeCompare(b.jam));
 
-    // Munculkan Pop-up Banner di layar utama aplikasi
     tampilkanBannerRekapHarian({
       nama: namaPicLogin,
       tanggalLabel: tanggalKemarinFormatted,
@@ -1275,7 +1271,6 @@ function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, st
         Halo <b style="color: #38bdf8;">${nama}</b>, berikut catatan kehadiran aplikasi dan produktivitas PO kamu kemarin:
       </p>
 
-      <!-- Kotak Ringkasan Input PO -->
       <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
         <div style="font-size: 12px; color: #cbd5e1;">
           <i class="fa-solid fa-file-invoice" style="color: #34d399; margin-right: 6px;"></i> Total Input PO Kemarin
@@ -1285,7 +1280,6 @@ function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, st
         </div>
       </div>
 
-      <!-- Tabel Riwayat Sesi Login Kemarin -->
       <div style="font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
         <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Sesi Login (${loginList.length}x)
       </div>
