@@ -604,11 +604,11 @@
     </div>
 
     <!-- Modal Pop-up Riwayat PO -->
-    <div id="riwayatModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content" style="max-width: 650px; width: 95%;">
+    <div id="riwayatModal" class="modal-overlay" style="display: none; z-index: 2147483645; pointer-events: auto;">
+        <div class="modal-content" style="max-width: 650px; width: 95%; position: relative; z-index: 2147483646; pointer-events: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h3 style="font-size: 16px; color: #f8fafc; margin: 0;">Riwayat Data Form PO</h3>
-                <button type="button" class="btn-close-modal" onclick="closeRiwayatModal()">&times;</button>
+                <button type="button" id="btnCloseRiwayatX" class="btn-close-modal" onclick="closeRiwayatModal()" style="position: relative; z-index: 2147483647; pointer-events: auto;">&times;</button>
             </div>
             <div style="max-height: 380px; overflow-y: auto; border: 1px solid #334155; border-radius: 6px; background: #0f172a;">
                 <table style="width: 100%; border-collapse: collapse; color: #ddd; font-size: 11px; text-align: left;">
@@ -628,7 +628,7 @@
                 </table>
             </div>
             <div style="margin-top: 14px; text-align: right;">
-                <button type="button" onclick="closeRiwayatModal()" style="padding: 8px 18px; background: #334155; border: none; color: #fff; border-radius: 6px; cursor: pointer; font-size: 12px;">Tutup</button>
+                <button type="button" id="btnCloseRiwayatBottom" onclick="closeRiwayatModal()" style="padding: 8px 18px; background: #334155; border: none; color: #fff; border-radius: 6px; cursor: pointer; font-size: 12px; position: relative; z-index: 2147483647; pointer-events: auto;">Tutup</button>
             </div>
         </div>
     </div>
@@ -717,6 +717,29 @@
                     observer.observe(tbody, { childList: true, subtree: true });
                 }
                 rapikanKolomAksiRiwayatPo();
+
+                const riwayatModal = document.getElementById("riwayatModal");
+                const btnX = document.getElementById("btnCloseRiwayatX");
+                const btnBottom = document.getElementById("btnCloseRiwayatBottom");
+                if (btnX) {
+                    btnX.addEventListener("click", function(e) {
+                        e.stopPropagation();
+                        if (typeof closeRiwayatModal === "function") closeRiwayatModal();
+                    });
+                }
+                if (btnBottom) {
+                    btnBottom.addEventListener("click", function(e) {
+                        e.stopPropagation();
+                        if (typeof closeRiwayatModal === "function") closeRiwayatModal();
+                    });
+                }
+                if (riwayatModal) {
+                    riwayatModal.addEventListener("click", function(e) {
+                        if (e.target === riwayatModal && typeof closeRiwayatModal === "function") {
+                            closeRiwayatModal();
+                        }
+                    });
+                }
             });
         })();
     </script>
@@ -776,7 +799,6 @@
                 }
             }, 150);
 
-            // Fallback keamanan jika splash screen tidak terdeteksi sembunyi
             setTimeout(() => {
                 clearInterval(poll);
                 observer.disconnect();
@@ -1093,12 +1115,10 @@
       return confirm(options.message || "Apakah Anda yakin?");
     }
     
-    // --- FUNGSI PENCATATAN OTOMATIS LOGIN & RIWAYAT (URL LANGSUNG / DASHBOARD) ---
     function catatSesiMasukOtomatis(namaStaf) {
         const currentTime = Date.now();
         const safeKey = namaStaf.replace(/[^a-zA-Z0-9_-]/g, '_');
 
-        // 1. Kirim presence realtime ke Firebase
         fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -1110,7 +1130,6 @@
             })
         }).catch(e => {});
 
-        // 2. Kirim riwayat login harian menggunakan POST (agar masuk ke tabel riwayat command center)
         fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/login_history.json`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1122,7 +1141,6 @@
         }).catch(e => {});
     }
 
-    // --- SKRIP HEARTBEAT AKTIF 5 DETIK SEKALI ---
     function sendHeartbeat(isOffline = false) {
       let currentStaff = localStorage.getItem('gudang_staff_name');
       if (!currentStaff) return;
@@ -1515,7 +1533,6 @@
       } catch (e) {}
     };
 
-    // Broadcast Pro
     function playAlertSoundAndVibrate() {
         if ("vibrate" in navigator) {
             try { navigator.vibrate([300, 150, 300, 150, 500]); } catch (e) {}
