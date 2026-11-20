@@ -229,6 +229,57 @@
             background: rgba(56, 189, 248, 0.25) !important;
         }
 
+        /* KOLOM AKSI RIWAYAT PO: 1 KOLOM, 2 TOMBOL ICON SAJA */
+        #riwayatModal th:last-child,
+        #riwayatModal td:last-child {
+            white-space: nowrap !important;
+            width: 78px !important;
+            min-width: 78px !important;
+            text-align: center !important;
+            padding: 8px 6px !important;
+        }
+        .po-aksi-group {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            flex-wrap: nowrap !important;
+        }
+        .po-aksi-icon-btn {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            max-width: 28px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border-radius: 7px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 11.5px !important;
+            line-height: 1 !important;
+            cursor: pointer;
+            border: 1px solid transparent !important;
+            box-sizing: border-box !important;
+            flex: 0 0 auto !important;
+        }
+        .po-aksi-icon-btn.is-edit {
+            background: rgba(59, 130, 246, 0.18) !important;
+            border-color: rgba(96, 165, 250, 0.45) !important;
+            color: #60a5fa !important;
+        }
+        .po-aksi-icon-btn.is-edit:hover {
+            background: rgba(59, 130, 246, 0.32) !important;
+        }
+        .po-aksi-icon-btn.is-delete {
+            background: rgba(239, 68, 68, 0.18) !important;
+            border-color: rgba(248, 113, 113, 0.45) !important;
+            color: #f87171 !important;
+        }
+        .po-aksi-icon-btn.is-delete:hover {
+            background: rgba(239, 68, 68, 0.32) !important;
+        }
+
         @keyframes poWxFloatCloud {
             0%, 100% { transform: translateX(0px) translateY(0px); }
             50% { transform: translateX(4px) translateY(-2px); }
@@ -600,6 +651,75 @@
     <div class="footer-app">&copy; 2026 All Right Reserved By : Novan Arifki</div>
 
     <script src="script.js"></script>
+    <script>
+        (function() {
+            function rapikanKolomAksiRiwayatPo() {
+                const tbody = document.getElementById("modalRiwayatTableBody");
+                if (!tbody) return;
+
+                tbody.querySelectorAll("tr").forEach(tr => {
+                    const cells = tr.querySelectorAll("td");
+                    if (!cells.length) return;
+                    const aksiCell = cells[cells.length - 1];
+                    const buttons = Array.from(aksiCell.querySelectorAll("button"));
+                    if (!buttons.length) return;
+
+                    let wrapper = aksiCell.querySelector(".po-aksi-group");
+                    if (!wrapper) {
+                        wrapper = document.createElement("div");
+                        wrapper.className = "po-aksi-group";
+                        aksiCell.innerHTML = "";
+                        aksiCell.appendChild(wrapper);
+                    }
+
+                    buttons.forEach((btn, idx) => {
+                        const rawLabel = ((btn.textContent || "") + " " + (btn.getAttribute("title") || "") + " " + (btn.getAttribute("onclick") || "") + " " + (btn.className || "")).toLowerCase();
+                        const isDelete = rawLabel.includes("hapus") || rawLabel.includes("delete") || rawLabel.includes("trash") || rawLabel.includes("del");
+                        const isEdit = !isDelete && (rawLabel.includes("edit") || rawLabel.includes("ubah") || rawLabel.includes("pen") || idx === 0);
+
+                        let iconEl = btn.querySelector("i, svg");
+                        if (!iconEl) {
+                            iconEl = document.createElement("i");
+                            iconEl.className = isDelete ? "fa-solid fa-trash-can" : "fa-solid fa-pen-to-square";
+                        } else if (iconEl.tagName.toLowerCase() === "i") {
+                            if (isDelete && !iconEl.className.includes("fa-")) {
+                                iconEl.className = "fa-solid fa-trash-can";
+                            } else if (isEdit && !iconEl.className.includes("fa-")) {
+                                iconEl.className = "fa-solid fa-pen-to-square";
+                            }
+                        }
+
+                        btn.innerHTML = "";
+                        btn.appendChild(iconEl);
+                        btn.classList.add("po-aksi-icon-btn");
+                        btn.classList.remove("is-edit", "is-delete");
+                        if (isDelete) {
+                            btn.classList.add("is-delete");
+                            btn.setAttribute("title", "Hapus");
+                            btn.setAttribute("aria-label", "Hapus");
+                        } else {
+                            btn.classList.add("is-edit");
+                            btn.setAttribute("title", "Edit");
+                            btn.setAttribute("aria-label", "Edit");
+                        }
+
+                        if (btn.parentElement !== wrapper) {
+                            wrapper.appendChild(btn);
+                        }
+                    });
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", function() {
+                const tbody = document.getElementById("modalRiwayatTableBody");
+                if (tbody) {
+                    const observer = new MutationObserver(rapikanKolomAksiRiwayatPo);
+                    observer.observe(tbody, { childList: true, subtree: true });
+                }
+                rapikanKolomAksiRiwayatPo();
+            });
+        })();
+    </script>
     <script>
         let poSkeletonTimer = null;
         let poSkeletonStarted = false;
