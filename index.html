@@ -220,6 +220,132 @@
       margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
     }
 
+    /* LIVE WEATHER WIDGET (ANIMATED GLASS CARD) */
+    .weather-hero-card {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.94) 0%, rgba(2, 6, 23, 0.92) 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 18px 20px;
+      backdrop-filter: blur(14px);
+      font-family: monospace;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    }
+    .weather-hero-card::before {
+      content: "";
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 150px; height: 150px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.14) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .wx-top-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+    .wx-clock-ring {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .wx-dial-circle {
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-blue);
+      background: rgba(2, 6, 23, 0.72);
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.18);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .wx-dial-circle .wx-day-mini {
+      font-size: 9.5px;
+      color: var(--text-desc);
+      text-transform: uppercase;
+    }
+    .wx-dial-circle .wx-time-mini {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.5px;
+      margin: 1px 0;
+    }
+    .wx-dial-circle .wx-sec-mini {
+      font-size: 9.5px;
+      color: var(--accent-blue);
+    }
+    .wx-current-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(2, 6, 23, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      border-radius: 14px;
+      padding: 10px 14px;
+    }
+    .wx-forecast-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(148, 163, 184, 0.14);
+    }
+    .wx-day-pill {
+      background: rgba(2, 6, 23, 0.52);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 11px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .wx-btn-gps {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--accent-blue);
+      font-family: monospace;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .wx-btn-gps:hover {
+      background: rgba(56, 189, 248, 0.24);
+    }
+
+    @keyframes wxFloatCloud {
+      0%, 100% { transform: translateX(0px) translateY(0px); }
+      50% { transform: translateX(4px) translateY(-2px); }
+    }
+    @keyframes wxFlashBolt {
+      0%, 84%, 100% { opacity: 1; transform: scale(1); }
+      88% { opacity: 0.2; transform: scale(0.92); }
+      92% { opacity: 1; transform: scale(1.1); }
+      95% { opacity: 0.35; }
+    }
+    @keyframes wxSpinSun {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes wxRainDrop {
+      0% { transform: translateY(-4px); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translateY(6px); opacity: 0; }
+    }
+    .wx-anim-cloud { animation: wxFloatCloud 3.5s ease-in-out infinite; transform-origin: center; }
+    .wx-anim-bolt { animation: wxFlashBolt 2.2s infinite; transform-origin: center; }
+    .wx-anim-sun { animation: wxSpinSun 14s linear infinite; transform-origin: center; }
+    .wx-anim-rain { animation: wxRainDrop 1.1s linear infinite; }
+
     /* Metric Cards Grid */
     .metrics-grid {
       display: grid;
@@ -394,6 +520,7 @@
       .header-title h1 { font-size: 1rem; }
       .header-title p { font-size: 9.5px; }
       .btn-quick-lock span.lock-label { display: none; }
+      .wx-top-grid { grid-template-columns: 1fr; }
       .chat-layout { grid-template-columns: 1fr; height: auto; }
       .chat-rooms-list { height: 150px; }
     }
@@ -502,6 +629,56 @@
 
       <!-- ================= TAB 1: OVERVIEW & APPS ================= -->
       <div id="tab-overview" class="tab-pane active">
+        <!-- ANIMATED LIVE WEATHER & CLOCK WIDGET -->
+        <section class="weather-hero-card" id="gnWeatherWidget">
+          <div class="wx-top-grid">
+            <div class="wx-clock-ring">
+              <div class="wx-dial-circle">
+                <span class="wx-day-mini" id="wxDayShort">---</span>
+                <span class="wx-time-mini" id="wxTimeMain">--:--</span>
+                <span class="wx-sec-mini" id="wxTimeSec">:--</span>
+              </div>
+              <div style="min-width: 0;">
+                <div id="wxDateFull" style="font-size: 11px; color: #cbd5e1; font-weight: bold;">Memuat tanggal...</div>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 5px;">
+                  <span id="wxLocationText" style="font-size: 11px; color: var(--accent-blue);"><i class="fa-solid fa-location-dot"></i> Surabaya</span>
+                  <button type="button" class="wx-btn-gps" onclick="deteksiLokasiCuacaGps()" title="Deteksi Lokasi Saat Ini">
+                    <i class="fa-solid fa-crosshairs"></i> GPS
+                  </button>
+                </div>
+                <div id="wxHumidityWind" style="font-size: 10px; color: var(--text-desc); margin-top: 5px;">Kelembapan --% • Angin -- km/j</div>
+              </div>
+            </div>
+
+            <div class="wx-current-box">
+              <div>
+                <div style="display: flex; align-items: baseline; gap: 4px;">
+                  <span id="wxTempNow" style="font-size: 28px; font-weight: 700; color: #fff;">--°</span>
+                  <span style="font-size: 11px; color: var(--text-desc);">C</span>
+                </div>
+                <div id="wxConditionLabel" style="font-size: 11.5px; color: #e2e8f0; font-weight: bold; margin-top: 2px;">Memuat cuaca...</div>
+                <div id="wxMinMaxToday" style="font-size: 10px; color: var(--text-desc); margin-top: 2px;">Min --° / Maks --°</div>
+              </div>
+              <div id="wxAnimatedIconBox" style="width: 56px; height: 56px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;"></div>
+            </div>
+          </div>
+
+          <div class="wx-forecast-strip" id="wxForecastStrip">
+            <div class="wx-day-pill">
+              <div style="font-size: 10px; color: #94a3b8;">Besok</div>
+              <div style="font-size: 11.5px; font-weight: bold; color: #fff; margin-top: 4px;">--° / --°</div>
+            </div>
+            <div class="wx-day-pill">
+              <div style="font-size: 10px; color: #94a3b8;">Lusa</div>
+              <div style="font-size: 11.5px; font-weight: bold; color: #fff; margin-top: 4px;">--° / --°</div>
+            </div>
+            <div class="wx-day-pill">
+              <div style="font-size: 10px; color: #94a3b8;">Hari +3</div>
+              <div style="font-size: 11.5px; font-weight: bold; color: #fff; margin-top: 4px;">--° / --°</div>
+            </div>
+          </div>
+        </section>
+
         <section class="metrics-grid">
           <div class="metric-card">
             <div class="metric-title"><i class="fa-solid fa-server"></i> System Health</div>
@@ -938,9 +1115,174 @@
       });
     }
 
+    // --- LIVE ANIMATED WEATHER & CLOCK WIDGET ---
+    const WX_STORAGE_KEY = "gudang_weather_coords";
+    let wxCurrentCoords = { lat: -7.2575, lon: 112.7521, label: "Surabaya" };
+
+    function loadSavedWeatherCoords() {
+      try {
+        const raw = localStorage.getItem(WX_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (typeof parsed.lat === "number" && typeof parsed.lon === "number") {
+            wxCurrentCoords = parsed;
+          }
+        }
+      } catch (e) {}
+    }
+
+    function renderWeatherAnimatedSvg(code, size = 54) {
+      // Badai Petir (95, 96, 99)
+      if ([95, 96, 99].includes(code)) {
+        return `
+          <svg viewBox="0 0 64 64" width="${size}" height="${size}">
+            <path class="wx-anim-cloud" fill="#94a3b8" d="M20 40h25a10 10 0 0 0 1.4-19.9A14 14 0 0 0 19.6 17 11 11 0 0 0 20 40z"/>
+            <polygon class="wx-anim-bolt" fill="#facc15" points="32,33 25,46 32,46 29,57 41,42 34,42"/>
+          </svg>`;
+      }
+      // Hujan / Gerimis / Shower (51..67, 80..82)
+      if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+        return `
+          <svg viewBox="0 0 64 64" width="${size}" height="${size}">
+            <path class="wx-anim-cloud" fill="#64748b" d="M20 36h25a10 10 0 0 0 1.4-19.9A14 14 0 0 0 19.6 13 11 11 0 0 0 20 36z"/>
+            <line class="wx-anim-rain" x1="24" y1="42" x2="22" y2="51" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>
+            <line class="wx-anim-rain" x1="33" y1="42" x2="31" y2="51" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" style="animation-delay:0.35s"/>
+            <line class="wx-anim-rain" x1="42" y1="42" x2="40" y2="51" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" style="animation-delay:0.7s"/>
+          </svg>`;
+      }
+      // Cerah (0)
+      if (code === 0) {
+        return `
+          <svg viewBox="0 0 64 64" width="${size}" height="${size}">
+            <g class="wx-anim-sun" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round">
+              <circle cx="32" cy="32" r="11" fill="#fbbf24"/>
+              <line x1="32" y1="8" x2="32" y2="14"/><line x1="32" y1="50" x2="32" y2="56"/>
+              <line x1="8" y1="32" x2="14" y2="32"/><line x1="50" y1="32" x2="56" y2="32"/>
+              <line x1="15" y1="15" x2="19" y2="19"/><line x1="45" y1="45" x2="49" y2="49"/>
+              <line x1="49" y1="15" x2="45" y2="19"/><line x1="19" y1="45" x2="15" y2="49"/>
+            </g>
+          </svg>`;
+      }
+      // Berawan / Sebagian Berawan
+      return `
+        <svg viewBox="0 0 64 64" width="${size}" height="${size}">
+          <circle cx="42" cy="20" r="8" fill="#fbbf24" opacity="0.9"/>
+          <path class="wx-anim-cloud" fill="#cbd5e1" d="M18 44h27a9.5 9.5 0 0 0 1.2-18.9A13.5 13.5 0 0 0 20 21 10.5 10.5 0 0 0 18 44z"/>
+        </svg>`;
+    }
+
+    function mapWeatherDesc(code) {
+      if (code === 0) return "Cerah";
+      if (code <= 2) return "Cerah Berawan";
+      if (code === 3) return "Mendung";
+      if (code <= 48) return "Berkabut";
+      if (code <= 57) return "Gerimis";
+      if (code <= 67 || (code >= 80 && code <= 82)) return "Hujan";
+      if (code >= 95) return "Badai Petir";
+      return "Berawan";
+    }
+
+    function updateWeatherClockUI() {
+      const now = new Date();
+      const dayShort = now.toLocaleDateString("id-ID", { weekday: "short" });
+      const dateFull = now.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      const ss = String(now.getSeconds()).padStart(2, "0");
+
+      const elDay = document.getElementById("wxDayShort");
+      const elTime = document.getElementById("wxTimeMain");
+      const elSec = document.getElementById("wxTimeSec");
+      const elDate = document.getElementById("wxDateFull");
+      if (elDay) elDay.textContent = dayShort;
+      if (elTime) elTime.textContent = `${hh}:${mm}`;
+      if (elSec) elSec.textContent = `:${ss}`;
+      if (elDate) elDate.textContent = dateFull;
+    }
+
+    async function fetchLiveWeatherWidget() {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${wxCurrentCoords.lat}&longitude=${wxCurrentCoords.lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!data || !data.current) return;
+
+        const tempNow = Math.round(data.current.temperature_2m);
+        const codeNow = data.current.weather_code;
+        const hum = data.current.relative_humidity_2m ?? "--";
+        const wind = Math.round(data.current.wind_speed_10m ?? 0);
+
+        document.getElementById("wxTempNow").textContent = `${tempNow}°`;
+        document.getElementById("wxConditionLabel").textContent = mapWeatherDesc(codeNow);
+        document.getElementById("wxLocationText").innerHTML = `<i class="fa-solid fa-location-dot"></i> ${wxCurrentCoords.label}`;
+        document.getElementById("wxHumidityWind").textContent = `Kelembapan ${hum}% • Angin ${wind} km/j`;
+        document.getElementById("wxAnimatedIconBox").innerHTML = renderWeatherAnimatedSvg(codeNow, 54);
+
+        const daily = data.daily || {};
+        const times = daily.time || [];
+        const maxArr = daily.temperature_2m_max || [];
+        const minArr = daily.temperature_2m_min || [];
+        const codesArr = daily.weather_code || [];
+
+        if (minArr.length > 0 && maxArr.length > 0) {
+          document.getElementById("wxMinMaxToday").textContent = `Min ${Math.round(minArr[0])}° / Maks ${Math.round(maxArr[0])}°`;
+        }
+
+        const stripEl = document.getElementById("wxForecastStrip");
+        if (stripEl && times.length >= 4) {
+          stripEl.innerHTML = [1, 2, 3].map(idx => {
+            const dObj = new Date(times[idx] + "T00:00:00");
+            const dayName = dObj.toLocaleDateString("id-ID", { weekday: "short", day: "numeric" });
+            return `
+              <div class="wx-day-pill">
+                <div style="font-size: 10px; color: #94a3b8;">${dayName}</div>
+                <div style="display: flex; justify-content: center; margin: 2px 0;">${renderWeatherAnimatedSvg(codesArr[idx], 26)}</div>
+                <div style="font-size: 11px; font-weight: bold; color: #f8fafc;">${Math.round(minArr[idx])}° / ${Math.round(maxArr[idx])}°</div>
+              </div>
+            `;
+          }).join("");
+        }
+      } catch (e) {
+        document.getElementById("wxConditionLabel").textContent = "Cuaca offline";
+      }
+    }
+
+    window.deteksiLokasiCuacaGps = function() {
+      if (!navigator.geolocation) {
+        showDashboardToast("GPS tidak didukung browser ini!", false);
+        return;
+      }
+      showDashboardToast("Mendeteksi koordinat lokasi...", true);
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = Number(pos.coords.latitude.toFixed(4));
+          const lon = Number(pos.coords.longitude.toFixed(4));
+          let placeLabel = `${lat}, ${lon}`;
+          try {
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
+            const geoJson = await geoRes.json();
+            const addr = geoJson.address || {};
+            placeLabel = addr.suburb || addr.village || addr.city_district || addr.city || addr.town || placeLabel;
+          } catch (e) {}
+
+          wxCurrentCoords = { lat, lon, label: placeLabel };
+          localStorage.setItem(WX_STORAGE_KEY, JSON.stringify(wxCurrentCoords));
+          fetchLiveWeatherWidget();
+          showDashboardToast(`Lokasi cuaca diperbarui: ${placeLabel}`, true);
+        },
+        () => {
+          showDashboardToast("Izin lokasi ditolak, tetap pakai default Surabaya.", false);
+        },
+        { timeout: 8000 }
+      );
+    };
+
     document.addEventListener("DOMContentLoaded", function() {
       initSplashScreenFlow();
       muatTemaDashboard();
+      loadSavedWeatherCoords();
+      updateWeatherClockUI();
+      fetchLiveWeatherWidget();
       updateTemplateCounterBadge();
       initCommandCenterHUD();
       muatAuditLogs();
@@ -952,6 +1294,8 @@
       // ⚡ MENJALANKAN AUTO-PILOT BACKGROUND LISTENER SECARA OTOMATIS
       mulaiAutoPilotTokenListener();
 
+      setInterval(updateWeatherClockUI, 1000);
+      setInterval(fetchLiveWeatherWidget, 15 * 60 * 1000);
       setInterval(muatStaffPresence, 3000); 
       setInterval(muatRiwayatLoginHarian, 5000);
       setInterval(updateRealtimeCountdown, 1000);
