@@ -112,6 +112,11 @@
       background: #ef4444; color: white; font-size: 10px; font-weight: bold;
       padding: 2px 6px; border-radius: 10px; display: none;
     }
+    .review-badge {
+      background: rgba(251, 191, 36, 0.2); border: 1px solid rgba(251, 191, 36, 0.5);
+      color: #fbbf24; font-size: 10px; font-weight: bold;
+      padding: 2px 6px; border-radius: 10px; display: none;
+    }
 
     .sidebar-footer {
       background: rgba(2, 6, 23, 0.6);
@@ -405,6 +410,51 @@
     .filter-input { flex: 1; min-width: 180px; }
     .filter-input:focus, .filter-select:focus { border-color: var(--accent-blue); }
 
+    /* Review Cards */
+    .reviews-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 12px;
+      font-family: monospace;
+    }
+    .review-card {
+      background: rgba(2, 6, 23, 0.68);
+      border: 1px solid rgba(56, 189, 248, 0.18);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .review-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding-bottom: 8px;
+    }
+    .review-tag-modul {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--accent-blue);
+    }
+    .review-stars { color: #fbbf24; font-size: 13px; letter-spacing: 1px; }
+    .review-field { font-size: 11px; line-height: 1.45; color: #e2e8f0; }
+    .review-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: #64748b;
+      margin-top: auto;
+      padding-top: 6px;
+    }
+
     /* Apps Grid */
     .apps-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -572,6 +622,10 @@
           <a class="nav-item" onclick="switchTab('presence', this)"><div class="nav-item-left"><i class="fa-solid fa-users-viewfinder"></i> Live Staf Online</div></a>
           <a class="nav-item" onclick="switchTab('history', this)"><div class="nav-item-left"><i class="fa-solid fa-clipboard-user"></i> Riwayat Login Harian</div></a>
           <a class="nav-item" onclick="switchTab('logs', this)"><div class="nav-item-left"><i class="fa-solid fa-clock-rotate-left"></i> Audit & Broadcast</div></a>
+          <a class="nav-item" onclick="switchTab('reviews', this)">
+            <div class="nav-item-left"><i class="fa-solid fa-star"></i> Ulasan Staf</div>
+            <span id="sidebarReviewBadge" class="review-badge">0</span>
+          </a>
           <a class="nav-item" onclick="switchTab('chat', this)">
             <div class="nav-item-left"><i class="fa-solid fa-headset"></i> Live Chat CS</div>
             <span id="sidebarChatBadge" class="chat-badge">0</span>
@@ -614,6 +668,7 @@
         <div class="mobile-nav-item" onclick="switchTab('presence', null, this)"><i class="fa-solid fa-users-viewfinder"></i> Staf Online</div>
         <div class="mobile-nav-item" onclick="switchTab('history', null, this)"><i class="fa-solid fa-clipboard-user"></i> Riwayat</div>
         <div class="mobile-nav-item" onclick="switchTab('logs', null, this)"><i class="fa-solid fa-clock-rotate-left"></i> Audit</div>
+        <div class="mobile-nav-item" onclick="switchTab('reviews', null, this)"><i class="fa-solid fa-star"></i> Ulasan <span id="mobileReviewBadge" class="review-badge">0</span></div>
         <div class="mobile-nav-item" onclick="switchTab('chat', null, this)"><i class="fa-solid fa-headset"></i> Live Chat <span id="mobileChatBadge" class="chat-badge">0</span></div>
         <div class="mobile-nav-item" onclick="switchTab('admin', null, this)"><i class="fa-solid fa-user-gear"></i> Admin</div>
       </div>
@@ -712,6 +767,7 @@
           <div class="section-title" style="margin-bottom: 8px;"><span><i class="fa-solid fa-bolt"></i> SHORTCUT OPERASIONAL CEPAT</span></div>
           <div class="quick-shortcuts-row" style="margin-top: 0;">
             <button type="button" class="btn-shortcut" onclick="switchTab('chat')"><i class="fa-solid fa-headset" style="color: #38bdf8;"></i> Buka Live Chat CS</button>
+            <button type="button" class="btn-shortcut" onclick="switchTab('reviews')"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> Lihat Ulasan Staf</button>
             <button type="button" class="btn-shortcut" onclick="switchTab('history')"><i class="fa-solid fa-clipboard-user" style="color: #34d399;"></i> Cek Riwayat Login</button>
             <button type="button" class="btn-shortcut" onclick="switchTab('logs')"><i class="fa-solid fa-bullhorn" style="color: #fbbf24;"></i> Kirim Broadcast</button>
             <button type="button" class="btn-shortcut" onclick="switchTab('admin')"><i class="fa-solid fa-key" style="color: #c084fc;"></i> Kelola Lisensi</button>
@@ -827,7 +883,63 @@
         </div>
       </div>
 
-      <!-- ================= TAB 5: LIVE CHAT CS CENTER ================= -->
+      <!-- ================= TAB 5: ULASAN STAF (APP PO & PROSES DATA) ================= -->
+      <div id="tab-reviews" class="tab-pane">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-title"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> Rata-Rata Rating</div>
+            <div id="reviewAvgRating" class="metric-value" style="color: #fbbf24;">★ 0.0 / 5</div>
+            <div class="metric-sub">Skor ulasan tim gudang</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title"><i class="fa-solid fa-comment-dots"></i> Total Ulasan</div>
+            <div id="reviewTotalCount" class="metric-value">0 Ulasan</div>
+            <div class="metric-sub">Masuk dari modul staf</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title"><i class="fa-solid fa-file-invoice-dollar" style="color: #34d399;"></i> Ulasan App PO</div>
+            <div id="reviewPoCount" class="metric-value" style="color: #34d399;">0</div>
+            <div class="metric-sub">Modul Purchase Order</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title"><i class="fa-solid fa-bolt-lightning" style="color: #38bdf8;"></i> Ulasan Proses Data</div>
+            <div id="reviewPdCount" class="metric-value" style="color: #38bdf8;">0</div>
+            <div class="metric-sub">Modul Proses Data</div>
+          </div>
+        </div>
+
+        <div class="section-box">
+          <div class="section-title" style="justify-content: space-between;">
+            <span><i class="fa-solid fa-star" style="color: #fbbf24;"></i> DAFTAR ULASAN APLIKASI DARI TEMAN GUDANG</span>
+            <button onclick="bersihkanSemuaUlasan()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 10.5px; font-family: monospace; font-weight: bold;">
+              <i class="fa-solid fa-trash-can"></i> Hapus Semua Ulasan
+            </button>
+          </div>
+
+          <div class="filter-bar">
+            <input type="text" id="filterReviewSearch" class="filter-input" placeholder="Cari nama staf, kelebihan, kekurangan, atau komentar..." oninput="renderUlasanFiltered()" />
+            <select id="filterReviewModul" class="filter-select" onchange="renderUlasanFiltered()">
+              <option value="ALL">Semua Modul</option>
+              <option value="App PO">App PO</option>
+              <option value="Proses Data">Proses Data</option>
+            </select>
+            <select id="filterReviewStar" class="filter-select" onchange="renderUlasanFiltered()">
+              <option value="ALL">Semua Bintang</option>
+              <option value="5">★★★★★ (5)</option>
+              <option value="4">★★★★☆ (4)</option>
+              <option value="3">★★★☆☆ (3)</option>
+              <option value="2">★★☆☆☆ (2)</option>
+              <option value="1">★☆☆☆☆ (1)</option>
+            </select>
+          </div>
+
+          <div id="containerStaffReviews" class="reviews-list">
+            <div style="color: var(--text-desc); font-size: 11.5px; padding: 14px;">Memuat ulasan staf...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 6: LIVE CHAT CS CENTER ================= -->
       <div id="tab-chat" class="tab-pane">
         <div class="section-box">
           <div class="section-title"><i class="fa-solid fa-headset"></i> PUSAT LIVE CHAT BANTUAN STAF (CS CENTER)</div>
@@ -862,7 +974,7 @@
         </div>
       </div>
 
-      <!-- ================= TAB 6: SYSTEM ADMIN HUB ================= -->
+      <!-- ================= TAB 7: SYSTEM ADMIN HUB ================= -->
       <div id="tab-admin" class="tab-pane">
         <div class="section-box" style="border-color: rgba(168, 85, 247, 0.4);">
           <div class="section-title" style="color: #a855f7;"><i class="fa-solid fa-user-gear"></i> SYSTEM / SUPER ADMIN CONTROLS</div>
@@ -957,6 +1069,7 @@
     const CLOUD_PRESENCE_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/presence.json`;
     const CLOUD_CHATS_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/chats.json`;
     const CLOUD_LOGIN_HISTORY_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/login_history.json`;
+    const CLOUD_REVIEWS_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/reviews.json`;
     const CUSTOM_TEMPLATES_STORAGE_KEY = "gudang_custom_broadcast_templates";
 
     const DEFAULT_BROADCAST_TEMPLATES = [
@@ -984,6 +1097,7 @@
     let typingTimeout = null;
     let cachedLoginHistory = [];
     let cachedAuditLogs = [];
+    let cachedReviews = [];
 
     // --- HELPER MODAL KONFIRMASI & INPUT KUSTOM ---
     function tampilkanDashboardConfirm(options = {}) {
@@ -1132,7 +1246,6 @@
     }
 
     function renderWeatherAnimatedSvg(code, size = 54) {
-      // Badai Petir (95, 96, 99)
       if ([95, 96, 99].includes(code)) {
         return `
           <svg viewBox="0 0 64 64" width="${size}" height="${size}">
@@ -1140,7 +1253,6 @@
             <polygon class="wx-anim-bolt" fill="#facc15" points="32,33 25,46 32,46 29,57 41,42 34,42"/>
           </svg>`;
       }
-      // Hujan / Gerimis / Shower (51..67, 80..82)
       if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
         return `
           <svg viewBox="0 0 64 64" width="${size}" height="${size}">
@@ -1150,7 +1262,6 @@
             <line class="wx-anim-rain" x1="42" y1="42" x2="40" y2="51" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" style="animation-delay:0.7s"/>
           </svg>`;
       }
-      // Cerah (0)
       if (code === 0) {
         return `
           <svg viewBox="0 0 64 64" width="${size}" height="${size}">
@@ -1163,7 +1274,6 @@
             </g>
           </svg>`;
       }
-      // Berawan / Sebagian Berawan
       return `
         <svg viewBox="0 0 64 64" width="${size}" height="${size}">
           <circle cx="42" cy="20" r="8" fill="#fbbf24" opacity="0.9"/>
@@ -1288,6 +1398,7 @@
       muatAuditLogs();
       muatStaffPresence();
       muatRiwayatLoginHarian();
+      muatUlasanStaf();
       muatDaftarChatStaf();
       mulaiPantauBroadcastRealtime();
       
@@ -1298,9 +1409,164 @@
       setInterval(fetchLiveWeatherWidget, 15 * 60 * 1000);
       setInterval(muatStaffPresence, 3000); 
       setInterval(muatRiwayatLoginHarian, 5000);
+      setInterval(muatUlasanStaf, 6000);
       setInterval(updateRealtimeCountdown, 1000);
       setInterval(muatDaftarChatStaf, 4000);
     });
+
+    // --- ULASAN STAF (APP PO & PROSES DATA) ---
+    function updateReviewSummaryKPI(list) {
+      const total = list.length;
+      const poCount = list.filter(r => String(r.modul || "").toLowerCase() === "app po").length;
+      const pdCount = list.filter(r => String(r.modul || "").toLowerCase() === "proses data").length;
+      const sumStars = list.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+      const avg = total > 0 ? (sumStars / total).toFixed(1) : "0.0";
+
+      const avgEl = document.getElementById("reviewAvgRating");
+      const totalEl = document.getElementById("reviewTotalCount");
+      const poEl = document.getElementById("reviewPoCount");
+      const pdEl = document.getElementById("reviewPdCount");
+      if (avgEl) avgEl.innerText = `★ ${avg} / 5`;
+      if (totalEl) totalEl.innerText = `${total} Ulasan`;
+      if (poEl) poEl.innerText = `${poCount}`;
+      if (pdEl) pdEl.innerText = `${pdCount}`;
+
+      const badges = [document.getElementById("sidebarReviewBadge"), document.getElementById("mobileReviewBadge")];
+      badges.forEach(b => {
+        if (!b) return;
+        if (total > 0) {
+          b.innerText = total;
+          b.style.display = "inline-block";
+        } else {
+          b.style.display = "none";
+        }
+      });
+    }
+
+    async function muatUlasanStaf() {
+      const container = document.getElementById("containerStaffReviews");
+      if (!container) return;
+      try {
+        const res = await fetch(CLOUD_REVIEWS_ENDPOINT + "?t=" + Date.now());
+        const raw = await res.json();
+        if (!raw || typeof raw !== "object") {
+          cachedReviews = [];
+          updateReviewSummaryKPI([]);
+          renderUlasanFiltered();
+          return;
+        }
+
+        const list = Object.keys(raw).map(key => ({
+          id: key,
+          ...raw[key]
+        })).filter(r => r && (r.rating || r.kelebihan || r.kekurangan || r.komentar));
+
+        list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        cachedReviews = list;
+        updateReviewSummaryKPI(cachedReviews);
+        renderUlasanFiltered();
+      } catch (e) {
+        container.innerHTML = `<div style="color: #ef4444; font-size: 11.5px; padding: 14px;">Gagal memuat ulasan dari server.</div>`;
+      }
+    }
+
+    window.renderUlasanFiltered = function() {
+      const container = document.getElementById("containerStaffReviews");
+      if (!container) return;
+
+      const query = (document.getElementById("filterReviewSearch")?.value || "").trim().toLowerCase();
+      const modulFilter = document.getElementById("filterReviewModul")?.value || "ALL";
+      const starFilter = document.getElementById("filterReviewStar")?.value || "ALL";
+
+      const filtered = cachedReviews.filter(item => {
+        const modulStr = String(item.modul || "Modul");
+        const starVal = Number(item.rating) || 0;
+        const textGabung = `${item.staffName || ""} ${modulStr} ${item.kelebihan || ""} ${item.kekurangan || ""} ${item.komentar || ""}`.toLowerCase();
+
+        const cocokModul = modulFilter === "ALL" || modulStr.toLowerCase() === modulFilter.toLowerCase();
+        const cocokStar = starFilter === "ALL" || starVal === Number(starFilter);
+        const cocokQuery = !query || textGabung.includes(query);
+        return cocokModul && cocokStar && cocokQuery;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="color: #64748b; font-size: 11.5px; padding: 16px;">Belum ada ulasan staf yang tampil untuk filter ini.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const starCount = Math.max(1, Math.min(5, Number(item.rating) || 5));
+        const starVisual = "★".repeat(starCount) + "☆".repeat(5 - starCount);
+        const waktuStr = item.timestamp
+          ? new Date(Number(item.timestamp)).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+          : "-";
+
+        return `
+          <div class="review-card">
+            <div class="review-card-top">
+              <div>
+                <div style="color: #fff; font-weight: bold; font-size: 12px;">👤 ${item.staffName || "Staf Gudang"}</div>
+                <span class="review-tag-modul" style="display: inline-block; margin-top: 4px;">${item.modul || "Modul"}</span>
+              </div>
+              <div style="text-align: right;">
+                <div class="review-stars">${starVisual}</div>
+                <div style="font-size: 10px; color: #fbbf24;">${starCount}/5</div>
+              </div>
+            </div>
+            <div class="review-field"><span style="color: #34d399; font-weight: bold;">+ Kelebihan:</span> ${item.kelebihan || "-"}</div>
+            <div class="review-field"><span style="color: #f87171; font-weight: bold;">- Kekurangan:</span> ${item.kekurangan || "-"}</div>
+            <div class="review-field"><span style="color: #93c5fd; font-weight: bold;">💬 Komentar:</span> ${item.komentar || "-"}</div>
+            <div class="review-meta">
+              <span>🕒 ${waktuStr}</span>
+              <button type="button" onclick="hapusSatuUlasan('${item.id}')" style="background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; padding: 3px 8px; border-radius: 6px; cursor: pointer; font-family: monospace; font-size: 10px;">
+                <i class="fa-solid fa-trash"></i> Hapus
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    };
+
+    window.hapusSatuUlasan = async function(reviewId) {
+      if (!reviewId) return;
+      const yakin = await tampilkanDashboardConfirm({
+        title: "HAPUS ULASAN",
+        message: "Hapus ulasan staf ini secara permanen?",
+        confirmText: "Hapus",
+        cancelText: "Batal",
+        danger: true
+      });
+      if (!yakin) return;
+      try {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/reviews/${reviewId}.json`, { method: "DELETE" });
+        await catatLogAktivitas("Menghapus 1 data ulasan staf");
+        showDashboardToast("Ulasan berhasil dihapus!", true);
+        muatUlasanStaf();
+        muatAuditLogs();
+      } catch (e) {
+        showDashboardToast("Gagal menghapus ulasan!", false);
+      }
+    };
+
+    window.bersihkanSemuaUlasan = async function() {
+      const yakin = await tampilkanDashboardConfirm({
+        title: "HAPUS SEMUA ULASAN",
+        message: "Yakin ingin menghapus seluruh ulasan dari teman-teman gudang?",
+        confirmText: "Hapus Semua",
+        cancelText: "Batal",
+        danger: true
+      });
+      if (!yakin) return;
+      try {
+        await fetch(CLOUD_REVIEWS_ENDPOINT, { method: "DELETE" });
+        await catatLogAktivitas("Membersihkan seluruh data ulasan staf");
+        showDashboardToast("Semua ulasan berhasil dihapus!", true);
+        muatUlasanStaf();
+        muatAuditLogs();
+      } catch (e) {
+        showDashboardToast("Gagal menghapus ulasan!", false);
+      }
+    };
 
     // --- LOCK LAYAR CEPAT ---
     window.kunciLayarDashboard = function() {
@@ -1335,7 +1601,6 @@
             const afterNx = parts[1];
             if (afterNx.length <= 18) return null;
 
-            // Buang 18 karakter randomSuffix di akhir token
             const hexPart = afterNx.slice(0, -18);
             if (!/^[0-9a-fA-F]+$/.test(hexPart)) return null;
 
@@ -1608,6 +1873,7 @@
       else if (tabId === 'presence') headerTitle.innerText = "Live Staff Monitor (Real-Time)";
       else if (tabId === 'history') { headerTitle.innerText = "Riwayat Login Staf Harian"; muatRiwayatLoginHarian(); }
       else if (tabId === 'logs') { headerTitle.innerText = "Audit Logs & Broadcast Center"; muatAuditLogs(); }
+      else if (tabId === 'reviews') { headerTitle.innerText = "Ulasan Aplikasi dari Staf Gudang"; muatUlasanStaf(); }
       else if (tabId === 'chat') { headerTitle.innerText = "Pusat Live Chat Bantuan Staf"; muatDaftarChatStaf(); }
       else if (tabId === 'admin') headerTitle.innerText = "System Admin & License Hub";
     }
