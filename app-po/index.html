@@ -87,12 +87,12 @@
             border-radius: 8px;
             background: linear-gradient(
                 90deg,
-                rgba(148, 163, 184, 0.13) 25%,
-                rgba(226, 232, 240, 0.28) 50%,
-                rgba(148, 163, 184, 0.13) 75%
+                rgba(148, 163, 184, 0.15) 25%,
+                rgba(226, 232, 240, 0.34) 50%,
+                rgba(148, 163, 184, 0.15) 75%
             );
             background-size: 200% 100%;
-            animation: poSkeletonShimmer 1.25s infinite linear;
+            animation: poSkeletonShimmer 1.6s infinite linear;
         }
 
         .po-skel-wrapper {
@@ -609,26 +609,86 @@
 
     <script src="script.js"></script>
     <script>
+        let poSkeletonTimer = null;
+        let poSkeletonStarted = false;
+
+        function mulaiSkeletonSetelahSplash() {
+            if (poSkeletonStarted) return;
+            poSkeletonStarted = true;
+            document.body.classList.add('po-skeleton-active');
+            clearTimeout(poSkeletonTimer);
+            poSkeletonTimer = setTimeout(selesaiSkeletonAppPo, 1800);
+        }
+
         function selesaiSkeletonAppPo() {
+            clearTimeout(poSkeletonTimer);
             document.body.classList.remove('po-skeleton-active');
         }
 
-        window.addEventListener('DOMContentLoaded', function() {
-            setTimeout(selesaiSkeletonAppPo, 950);
+        function pantauSplashScreen() {
+            const splash = document.getElementById('appSplashScreen');
+            if (!splash) {
+                mulaiSkeletonSetelahSplash();
+                return;
+            }
 
+            const cekStatusSplash = () => {
+                const style = window.getComputedStyle(splash);
+                const hiddenByStyle =
+                    style.display === 'none' ||
+                    style.visibility === 'hidden' ||
+                    parseFloat(style.opacity || '1') === 0 ||
+                    splash.classList.contains('hidden') ||
+                    splash.classList.contains('fade-out');
+
+                if (hiddenByStyle) {
+                    mulaiSkeletonSetelahSplash();
+                    return true;
+                }
+                return false;
+            };
+
+            if (cekStatusSplash()) return;
+
+            const observer = new MutationObserver(() => {
+                if (cekStatusSplash()) {
+                    observer.disconnect();
+                }
+            });
+            observer.observe(splash, { attributes: true, attributeFilter: ['class', 'style'] });
+
+            const poll = setInterval(() => {
+                if (cekStatusSplash()) {
+                    clearInterval(poll);
+                    observer.disconnect();
+                }
+            }, 150);
+
+            // Fallback keamanan jika splash screen tidak terdeteksi sembunyi
+            setTimeout(() => {
+                clearInterval(poll);
+                observer.disconnect();
+                mulaiSkeletonSetelahSplash();
+            }, 3200);
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
             const sudahPernahSambutan = localStorage.getItem('gudang_welcome_ecosystem_shown');
             if (!sudahPernahSambutan) {
                 const modalWelcome = document.getElementById('welcomeEcosystemModal');
                 if (modalWelcome) modalWelcome.style.display = 'flex';
+            } else {
+                pantauSplashScreen();
             }
         });
+
         function tutupWelcomeModal() {
             const modalWelcome = document.getElementById('welcomeEcosystemModal');
             if (modalWelcome) {
                 modalWelcome.style.display = 'none';
                 localStorage.setItem('gudang_welcome_ecosystem_shown', 'true');
             }
-            setTimeout(selesaiSkeletonAppPo, 400);
+            pantauSplashScreen();
         }
     </script>
 
