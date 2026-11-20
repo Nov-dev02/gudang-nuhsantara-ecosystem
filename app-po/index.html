@@ -407,6 +407,42 @@
         </div>
     </div>
 
+    <!-- MODAL ULASAN APLIKASI (MUNCUL SEKALI SAJA BESOK) -->
+    <div id="modalUlasanPo" style="display: none; position: fixed; inset: 0; z-index: 2147483647; align-items: center; justify-content: center; background: rgba(7, 11, 20, 0.88); backdrop-filter: blur(10px); padding: 18px; box-sizing: border-box;">
+        <div style="width: 100%; max-width: 420px; background: linear-gradient(145deg, #0f172a, #1e293b); border: 1.5px solid rgba(56, 189, 248, 0.45); border-radius: 18px; padding: 22px 20px; color: #f8fafc; font-family: monospace; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.92); box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 13px; font-weight: bold; color: #38bdf8;"><i class="fa-solid fa-star"></i> ULASAN APP PO GUDANG</span>
+                <button type="button" onclick="tutupUlasanPoSekali()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 12px 0; line-height: 1.5;">
+                Halo tim gudang! Ulasan singkat ini cuma muncul sekali saja untuk bantu evaluasi aplikasi ke dashboard.
+            </p>
+
+            <div style="font-size: 11px; color: #e2e8f0; margin-bottom: 6px;">Rating Bintang (1 - 5):</div>
+            <div id="poStarRatingGroup" style="display: flex; gap: 8px; font-size: 24px; margin-bottom: 12px; cursor: pointer;">
+                <span data-star="1" onclick="pilihBintangPo(1)">☆</span>
+                <span data-star="2" onclick="pilihBintangPo(2)">☆</span>
+                <span data-star="3" onclick="pilihBintangPo(3)">☆</span>
+                <span data-star="4" onclick="pilihBintangPo(4)">☆</span>
+                <span data-star="5" onclick="pilihBintangPo(5)">☆</span>
+            </div>
+
+            <label style="display: block; font-size: 11px; color: #34d399; margin-bottom: 4px;">Kelebihan Aplikasi:</label>
+            <input type="text" id="poUlasanKelebihan" placeholder="Contoh: Cepat, mudah input PO, QR lancar..." style="width: 100%; padding: 9px 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #334155; background: #020617; color: #fff; font-family: monospace; font-size: 11.5px; box-sizing: border-box;">
+
+            <label style="display: block; font-size: 11px; color: #f87171; margin-bottom: 4px;">Kekurangan / Kendala:</label>
+            <input type="text" id="poUlasanKekurangan" placeholder="Contoh: Ada bagian yang perlu diperbaiki..." style="width: 100%; padding: 9px 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #334155; background: #020617; color: #fff; font-family: monospace; font-size: 11.5px; box-sizing: border-box;">
+
+            <label style="display: block; font-size: 11px; color: #cbd5e1; margin-bottom: 4px;">Komentar / Masukan Lain:</label>
+            <textarea id="poUlasanKomentar" rows="3" placeholder="Tulis komentar tambahan untuk pengembangan aplikasi..." style="width: 100%; padding: 9px 10px; margin-bottom: 14px; border-radius: 8px; border: 1px solid #334155; background: #020617; color: #fff; font-family: monospace; font-size: 11.5px; resize: vertical; box-sizing: border-box;"></textarea>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="tutupUlasanPoSekali()" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: #cbd5e1; font-family: monospace; font-size: 11.5px; font-weight: bold; cursor: pointer;">Lewati</button>
+                <button type="button" onclick="kirimUlasanPoSekali()" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #38bdf8; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; font-family: monospace; font-size: 11.5px; font-weight: bold; cursor: pointer;">Kirim Ulasan</button>
+            </div>
+        </div>
+    </div>
+
     <!-- WIDGET FLOATING LIVE CHAT CS -->
     <div id="floatingChatBtn" class="floating-chat-btn" onclick="toggleChatWidget()" style="display: none;">
         <i class="fa-solid fa-headset"></i>
@@ -514,6 +550,124 @@
                 localStorage.setItem('gudang_welcome_ecosystem_shown', 'true');
             }
         }
+    </script>
+
+    <!-- SCRIPT ULASAN SEKALI BESOK (2026-11-21) -->
+    <script>
+        (function() {
+            const PO_REVIEW_ENDPOINT = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app/gudang_nuhsantara/reviews.json";
+            const TARGET_ULASAN_BESOK = "2026-11-21";
+            const ULASAN_ONCE_KEY = "gudang_po_ulasan_done_" + TARGET_ULASAN_BESOK;
+            let poRatingTerpilih = 5;
+
+            function getLocalIsoDatePo() {
+                const now = new Date();
+                const y = now.getFullYear();
+                const m = String(now.getMonth() + 1).padStart(2, "0");
+                const d = String(now.getDate()).padStart(2, "0");
+                return `${y}-${m}-${d}`;
+            }
+
+            window.pilihBintangPo = function(nilai) {
+                poRatingTerpilih = nilai;
+                document.querySelectorAll("#poStarRatingGroup span").forEach(el => {
+                    const s = Number(el.getAttribute("data-star"));
+                    el.textContent = s <= nilai ? "★" : "☆";
+                    el.style.color = s <= nilai ? "#fbbf24" : "#64748b";
+                });
+            };
+
+            function tandaiUlasanPoSelesai() {
+                localStorage.setItem(ULASAN_ONCE_KEY, "true");
+            }
+
+            window.tutupUlasanPoSekali = function() {
+                tandaiUlasanPoSelesai();
+                const modal = document.getElementById("modalUlasanPo");
+                if (modal) modal.style.display = "none";
+            };
+
+            window.kirimUlasanPoSekali = async function() {
+                const staffName = (localStorage.getItem("gudang_staff_name") || "Staf Gudang").trim();
+                const kelebihan = document.getElementById("poUlasanKelebihan").value.trim();
+                const kekurangan = document.getElementById("poUlasanKekurangan").value.trim();
+                const komentar = document.getElementById("poUlasanKomentar").value.trim();
+
+                if (!kelebihan && !kekurangan && !komentar) {
+                    if (typeof tampilkanGuardToast === "function") {
+                        tampilkanGuardToast("Isi minimal kelebihan, kekurangan, atau komentar ya!", "error");
+                    } else {
+                        alert("Isi minimal kelebihan, kekurangan, atau komentar ya!");
+                    }
+                    return;
+                }
+
+                const payload = {
+                    staffName,
+                    modul: "App PO",
+                    rating: poRatingTerpilih,
+                    kelebihan: kelebihan || "-",
+                    kekurangan: kekurangan || "-",
+                    komentar: komentar || "-",
+                    timestamp: Date.now()
+                };
+
+                try {
+                    const res = await fetch(PO_REVIEW_ENDPOINT, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) throw new Error("Gagal simpan ulasan");
+
+                    tandaiUlasanPoSelesai();
+                    const modal = document.getElementById("modalUlasanPo");
+                    if (modal) modal.style.display = "none";
+
+                    if (typeof tampilkanGuardToast === "function") {
+                        tampilkanGuardToast("Ulasan terkirim! Setelah ini tidak akan muncul lagi.", "success", 2600);
+                    } else {
+                        alert("Terima kasih! Ulasan kamu sudah terkirim dan setelah ini tidak akan muncul lagi.");
+                    }
+                } catch (err) {
+                    if (typeof tampilkanGuardToast === "function") {
+                        tampilkanGuardToast("Gagal mengirim ulasan, cek koneksi internet.", "error");
+                    } else {
+                        alert("Gagal mengirim ulasan, cek koneksi internet.");
+                    }
+                }
+            };
+
+            document.addEventListener("DOMContentLoaded", function() {
+                window.pilihBintangPo(5);
+                if (getLocalIsoDatePo() !== TARGET_ULASAN_BESOK) return;
+                if (localStorage.getItem(ULASAN_ONCE_KEY) === "true") return;
+
+                let sudahDitampilkan = false;
+                const cekDanMunculkan = () => {
+                    if (sudahDitampilkan || localStorage.getItem(ULASAN_ONCE_KEY) === "true") return;
+                    const poSec = document.getElementById("poSection");
+                    const modal = document.getElementById("modalUlasanPo");
+                    if (poSec && !poSec.classList.contains("hidden") && modal) {
+                        sudahDitampilkan = true;
+                        setTimeout(() => {
+                            if (localStorage.getItem(ULASAN_ONCE_KEY) !== "true") {
+                                modal.style.display = "flex";
+                            }
+                        }, 1000);
+                    }
+                };
+
+                cekDanMunculkan();
+                const watcher = setInterval(() => {
+                    if (sudahDitampilkan || localStorage.getItem(ULASAN_ONCE_KEY) === "true") {
+                        clearInterval(watcher);
+                        return;
+                    }
+                    cekDanMunculkan();
+                }, 800);
+            });
+        })();
     </script>
     
     <script>
