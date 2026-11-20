@@ -1173,7 +1173,7 @@
 
       async function cekBroadcastPusat() {
         try {
-          const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json?t=${Date.now()}`);
+          const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/broadcast.json?t=` + Date.now());
           const data = await res.json();
           if (!data || !data.message || !data.timestamp) return;
 
@@ -1188,6 +1188,134 @@
       setInterval(cekBroadcastPusat, 1000);
       window.addEventListener('focus', cekBroadcastPusat);
     });
+  </script>
+
+  <!-- ULASAN SEKALI SAJA BESOK (MODUL: PROSES DATA) -->
+  <script>
+  (function() {
+    const REVIEW_MODUL_NAME = "Proses Data";
+    const REVIEW_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app/gudang_nuhsantara/reviews.json";
+
+    // Tanggal besok: 21 November 2026
+    const TARGET_DAY_KEY = "2026-11-21";
+    const SUBMITTED_KEY = `gn_review_once_done_${REVIEW_MODUL_NAME}`;
+
+    function getTodayKey() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function bolehMunculSekali() {
+      if (localStorage.getItem(SUBMITTED_KEY) === "true") return false;
+      return getTodayKey() === TARGET_DAY_KEY;
+    }
+
+    function buatPopupUlasan() {
+      if (!bolehMunculSekali() || document.getElementById("gn-once-review-modal")) return;
+
+      const namaDefault = localStorage.getItem("gudang_staff_name") || "";
+      let ratingDipilih = 5;
+
+      const wrap = document.createElement("div");
+      wrap.id = "gn-once-review-modal";
+      wrap.style.cssText = `
+        position: fixed; inset: 0; width: 100vw; height: 100vh;
+        background: rgba(7, 11, 20, 0.85); backdrop-filter: blur(8px);
+        z-index: 2147483647; display: flex; justify-content: center; align-items: center;
+        padding: 16px; box-sizing: border-box; font-family: monospace;
+      `;
+
+      wrap.innerHTML = `
+        <div style="width: min(100%, 400px); background: #0f172a; border: 1.5px solid #38bdf8; border-radius: 16px; padding: 20px; color: #f8fafc; box-shadow: 0 20px 50px rgba(0,0,0,0.85); box-sizing: border-box;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <strong style="color:#38bdf8; font-size:13px;">ULASAN ${REVIEW_MODUL_NAME.toUpperCase()}</strong>
+            <span style="font-size:10px; color:#94a3b8;">Muncul 1x Saja</span>
+          </div>
+
+          <label style="display:block; font-size:11px; color:#cbd5e1; margin-bottom:4px;">Nama Staf</label>
+          <input id="gnRevName" type="text" value="${namaDefault.replace(/"/g, "&quot;")}" placeholder="Nama kamu..." style="width:100%; padding:8px 10px; margin-bottom:10px; background:#020617; border:1px solid #334155; border-radius:8px; color:#fff; font-family:monospace; font-size:11.5px; box-sizing:border-box;" />
+
+          <label style="display:block; font-size:11px; color:#cbd5e1; margin-bottom:4px;">Rating</label>
+          <div id="gnRevStars" style="display:flex; gap:6px; margin-bottom:10px;">
+            ${[1,2,3,4,5].map(n => `<button type="button" data-star="${n}" style="flex:1; padding:7px 0; border-radius:7px; border:1px solid #fbbf24; background:${n<=5?'rgba(251,191,36,0.2)':'#020617'}; color:#fbbf24; font-weight:bold; cursor:pointer; font-family:monospace;">${n}★</button>`).join("")}
+          </div>
+
+          <label style="display:block; font-size:11px; color:#34d399; margin-bottom:4px;">Kelebihan</label>
+          <input id="gnRevPlus" type="text" placeholder="Apa yang sudah bagus?" style="width:100%; padding:8px 10px; margin-bottom:10px; background:#020617; border:1px solid #334155; border-radius:8px; color:#fff; font-family:monospace; font-size:11.5px; box-sizing:border-box;" />
+
+          <label style="display:block; font-size:11px; color:#f87171; margin-bottom:4px;">Kekurangan</label>
+          <input id="gnRevMinus" type="text" placeholder="Bagian mana yang perlu diperbaiki?" style="width:100%; padding:8px 10px; margin-bottom:10px; background:#020617; border:1px solid #334155; border-radius:8px; color:#fff; font-family:monospace; font-size:11.5px; box-sizing:border-box;" />
+
+          <label style="display:block; font-size:11px; color:#93c5fd; margin-bottom:4px;">Komentar Tambahan</label>
+          <textarea id="gnRevNote" rows="2" placeholder="Saran atau catatan singkat..." style="width:100%; padding:8px 10px; margin-bottom:14px; background:#020617; border:1px solid #334155; border-radius:8px; color:#fff; font-family:monospace; font-size:11.5px; resize:none; box-sizing:border-box;"></textarea>
+
+          <div style="display:flex; gap:8px;">
+            <button type="button" id="gnRevClose" style="flex:1; padding:9px; background:#1e293b; border:1px solid #475569; color:#cbd5e1; border-radius:8px; cursor:pointer; font-family:monospace; font-size:11.5px;">Nanti Saja</button>
+            <button type="button" id="gnRevSend" style="flex:1.4; padding:9px; background:#0284c7; border:1px solid #38bdf8; color:#fff; border-radius:8px; cursor:pointer; font-family:monospace; font-size:11.5px; font-weight:bold;">Kirim Ulasan</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(wrap);
+
+      const starBtns = wrap.querySelectorAll("#gnRevStars button");
+      function refreshStars() {
+        starBtns.forEach(btn => {
+          const val = Number(btn.getAttribute("data-star"));
+          const active = val <= ratingDipilih;
+          btn.style.background = active ? "rgba(251,191,36,0.22)" : "#020617";
+          btn.style.opacity = active ? "1" : "0.55";
+        });
+      }
+      starBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          ratingDipilih = Number(btn.getAttribute("data-star"));
+          refreshStars();
+        });
+      });
+      refreshStars();
+
+      wrap.querySelector("#gnRevClose").addEventListener("click", () => {
+        wrap.remove();
+      });
+
+      wrap.querySelector("#gnRevSend").addEventListener("click", async () => {
+        const staffName = (wrap.querySelector("#gnRevName").value || "").trim() || "Staf Gudang";
+        const kelebihan = (wrap.querySelector("#gnRevPlus").value || "").trim() || "-";
+        const kekurangan = (wrap.querySelector("#gnRevMinus").value || "").trim() || "-";
+        const komentar = (wrap.querySelector("#gnRevNote").value || "").trim() || "-";
+
+        const payload = {
+          staffName,
+          modul: REVIEW_MODUL_NAME,
+          rating: ratingDipilih,
+          kelebihan,
+          kekurangan,
+          komentar,
+          timestamp: Date.now()
+        };
+
+        try {
+          await fetch(REVIEW_DB_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          localStorage.setItem(SUBMITTED_KEY, "true");
+          wrap.remove();
+        } catch (e) {
+          console.error("Gagal mengirim ulasan:", e);
+        }
+      });
+    }
+
+    window.addEventListener("load", () => {
+      setTimeout(buatPopupUlasan, 1200);
+    });
+  })();
   </script>
 
 </body>
