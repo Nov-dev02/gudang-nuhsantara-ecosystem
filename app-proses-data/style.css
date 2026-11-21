@@ -58,16 +58,16 @@
   --font-main: 'Fredoka', 'Segoe UI', sans-serif;
 }
 
-/* Transisi halus universal */
+/* Transisi halus warna & border tanpa menabrak animasi transform */
 *, *::before, *::after {
-  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease !important;
+  transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 body {
@@ -78,8 +78,8 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center; 
-  align-items: center;     
+  justify-content: center;
+  align-items: center;
   box-sizing: border-box;
   position: relative;
 }
@@ -101,7 +101,7 @@ body {
   content: "💙 OHANA MEANS FAMILY • EXPERIMENT 626 💙";
   position: fixed;
   bottom: 12px;
-  left: 20px;
+  left: 126px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -112,6 +112,66 @@ body {
   border: 1px solid rgba(125, 211, 252, 0.5);
   pointer-events: none;
   z-index: 1;
+}
+
+/* ==========================================
+   🐾 MASKOT GAMBAR STITCH (stitch.png)
+   ========================================== */
+.stitch-mascot-card {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 18px;
+  width: 98px;
+  height: 98px;
+  z-index: 2147483639;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: stitchFloatSmooth 3.4s ease-in-out infinite;
+}
+
+[data-theme="stitch"] .stitch-mascot-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stitch-mascot-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 18px;
+  filter: drop-shadow(0 8px 18px rgba(2, 132, 199, 0.5)) drop-shadow(0 0 12px rgba(251, 113, 133, 0.35));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+}
+
+.stitch-mascot-card:hover .stitch-mascot-img {
+  transform: scale(1.12) rotate(-4deg);
+  filter: drop-shadow(0 12px 24px rgba(2, 132, 199, 0.7)) drop-shadow(0 0 18px rgba(251, 113, 133, 0.5));
+}
+
+@keyframes stitchFloatSmooth {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@media (max-width: 600px) {
+  .stitch-mascot-card {
+    width: 68px;
+    height: 68px;
+    bottom: 14px;
+    left: 12px;
+  }
+
+  [data-theme="stitch"] body::after {
+    left: 88px;
+    font-size: 9.5px;
+    padding: 4px 10px;
+  }
 }
 
 /* ==========================================
@@ -153,7 +213,7 @@ body {
   box-shadow: 0 20px 50px rgba(3, 105, 161, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.25);
 }
 
-/* Telinga Lucu Stitch di Atas Container */
+/* Aksen Bunga di Atas Container Saat Tema Stitch */
 [data-theme="stitch"] .container::before {
   content: "🌺";
   position: absolute;
@@ -290,7 +350,7 @@ textarea {
   font-family: monospace;
   font-size: 12px;
   box-sizing: border-box;
-  resize: none;            
+  resize: none;
   background-color: var(--textarea-bg);
   color: var(--textarea-color);
 }
@@ -329,8 +389,8 @@ textarea:focus {
   border-radius: 50px !important;
   cursor: pointer !important;
   overflow: hidden !important;
-  transform: translateZ(0); 
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+  transform: translateZ(0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
   width: auto !important;
   min-width: 160px !important;
@@ -370,7 +430,6 @@ textarea:focus {
   transition: background 0.3s ease;
 }
 
-/* Tombol Execute Versi Stitch */
 [data-theme="stitch"] .btn-process-glow {
   background: #0284c7 !important;
   box-shadow: 0 8px 22px rgba(2, 132, 199, 0.45) !important;
@@ -462,14 +521,14 @@ textarea:focus {
 /* DEVOPS TERMINAL LOG STYLE */
 #log {
     margin-top: 12px;
-    background: var(--log-bg);                          
-    border: 1px solid rgba(34, 197, 94, 0.3);     
+    background: var(--log-bg);
+    border: 1px solid rgba(34, 197, 94, 0.3);
     border-radius: 12px;
     padding: 12px;
     font-family: 'Courier New', Courier, monospace;
     font-size: 11.5px;
-    color: #22c55e;                               
-    text-shadow: 0 0 6px rgba(34, 197, 94, 0.4);  
+    color: #22c55e;
+    text-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
     max-height: 130px;
     overflow-y: auto;
     box-sizing: border-box;
@@ -556,30 +615,30 @@ textarea:focus {
 }
 
 #operatorAvatarBox {
-  width: 40px;          
-  height: 40px;         
-  border-radius: 4px;   
-  overflow: hidden;     
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #38bdf8;  
-  color: #ffffff;       
+  background: #38bdf8;
+  color: #ffffff;
   font-weight: bold;
 }
 
 #operatorAvatarBox img {
   width: 100%;
   height: 100%;
-  object-fit: cover;    
+  object-fit: cover;
 }
 
 /* Floating Glass Toast */
 .glass-toast {
   position: fixed;
-  top: 24px; 
+  top: 24px;
   left: 50%;
-  transform: translateX(-50%) scale(0.95); 
+  transform: translateX(-50%) scale(0.95);
   z-index: 99999;
   display: flex;
   align-items: center;
@@ -806,7 +865,6 @@ textarea:focus {
   transform: rotate(45deg);
 }
 
-/* Penyesuaian Header Box dan Badge saat Tema Stitch */
 [data-theme="stitch"] .header-brand-box {
   background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
   border: 2px solid #7dd3fc !important;
@@ -1011,35 +1069,4 @@ textarea:focus {
 
 .glass-modal-footer {
   padding: 12px 20px !important;
-  background: rgba(15, 23, 42, 0.5) !important;
-  display: flex !important;
-  justify-content: flex-end !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
-}
-
-.btn-action-close {
-  background: #1e293b !important;
-  color: #f8fafc !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  padding: 8px 18px !important;
-  border-radius: 8px !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  transition: all 0.2s !important;
-}
-
-.btn-action-close:hover {
-  background: #38bdf8 !important;
-  color: #0f172a !important;
-  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4) !important;
-}
-
-button[onclick*="openDeveloperModal"], 
-.btn-developer {
-  padding: 6px 12px !important;
-  font-size: 12px !important;
-  height: auto !important;
-  min-height: unset !important;
-  border-radius: 8px !important;
-}
+  background: rgba(15, 23, 
