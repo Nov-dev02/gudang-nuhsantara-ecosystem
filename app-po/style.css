@@ -13,6 +13,7 @@ body {
     min-height: 100vh;
     justify-content: center;
     align-items: center;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* SPLASH SCREEN STYLING */
@@ -113,6 +114,7 @@ body {
     border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     width: 100%;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .robot-container {
@@ -212,7 +214,7 @@ input[type="number"] {
     color: #fff;
     font-size: 14px;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, background-color 0.2s, color 0.2s;
     box-sizing: border-box;
 }
 
@@ -323,6 +325,7 @@ button:hover {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    gap: 8px;
     margin-bottom: 8px;
 }
 
@@ -567,11 +570,316 @@ input[readonly] {
     color: var(--clr) !important;
     transform: scale(1.15) !important;
 }
+
 #btnGoogleLogin:hover {
     background: rgba(255, 255, 255, 0.15) !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
     transform: translateY(-1px);
 }
+
 #customModalBox {
     transition: opacity 0.25s ease;
+}
+
+/* ============================================================
+   🐾 TEMA STITCH CERAH & BERSIH ([data-theme="stitch"])
+   ============================================================ */
+html[data-theme="stitch"] body {
+    background: linear-gradient(155deg, #e0f2fe 0%, #bae6fd 48%, #f0f9ff 100%);
+    color: #0c4a6e;
+}
+
+html[data-theme="stitch"] .login-box,
+html[data-theme="stitch"] #poSection {
+    background: rgba(255, 255, 255, 0.94);
+    border: 1.5px solid #7dd3fc;
+    box-shadow: 0 14px 32px rgba(2, 132, 199, 0.14);
+}
+
+html[data-theme="stitch"] .header-po h2 {
+    background: linear-gradient(90deg, #0284c7 0%, #2563eb 50%, #0284c7 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+}
+
+html[data-theme="stitch"] .clock {
+    background: #e0f2fe;
+    border: 1px solid #7dd3fc;
+    color: #0369a1;
+}
+
+html[data-theme="stitch"] .po-theme-switch-btn {
+    background: linear-gradient(135deg, #e0f2fe, #fce7f3);
+    border: 1.5px solid #38bdf8;
+    color: #0369a1;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+}
+
+html[data-theme="stitch"] .po-theme-switch-btn:hover {
+    background: linear-gradient(135deg, #bae6fd, #fbcfe8);
+}
+
+html[data-theme="stitch"] .user-greeting {
+    color: #0369a1;
+}
+
+html[data-theme="stitch"] .user-greeting span {
+    color: #475569 !important;
+}
+
+html[data-theme="stitch"] .subtitle {
+    color: #475569;
+}
+
+html[data-theme="stitch"] .form-group label {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+html[data-theme="stitch"] input[type="text"],
+html[data-theme="stitch"] input[type="password"],
+html[data-theme="stitch"] input[type="date"],
+html[data-theme="stitch"] input[type="number"] {
+    background: #f8fafc;
+    border: 1.5px solid #bae6fd;
+    color: #0f172a;
+}
+
+html[data-theme="stitch"] input[type="text"]:focus,
+html[data-theme="stitch"] input[type="password"]:focus,
+html[data-theme="stitch"] input[type="date"]:focus,
+html[data-theme="stitch"] input[type="number"]:focus {
+    border-color: #0284c7;
+    background: #ffffff;
+}
+
+html[data-theme="stitch"] input[readonly] {
+    background: #e0f2fe !important;
+    border-color: #bae6fd !important;
+    color: #0369a1 !important;
+    font-weight: 600;
+}
+
+html[data-theme="stitch"] .btn-modal-trigger {
+    background: #f0f9ff;
+    border: 1.5px solid #7dd3fc;
+    color: #0369a1;
+    font-weight: 600;
+}
+
+html[data-theme="stitch"] .btn-modal-trigger:hover {
+    background: #e0f2fe;
+    border-color: #0284c7;
+}
+
+html[data-theme="stitch"] #poForm button[onclick^="tambahJumlah"] {
+    background: #e0f2fe !important;
+    border: 1px solid #7dd3fc !important;
+    color: #0369a1 !important;
+    font-weight: 700 !important;
+}
+
+html[data-theme="stitch"] #poForm button[onclick^="tambahJumlah"]:hover {
+    background: #bae6fd !important;
+}
+
+html[data-theme="stitch"] #btnToggleScanner {
+    background: #ecfdf5 !important;
+    border: 1.5px solid #10b981 !important;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.14);
+}
+
+html[data-theme="stitch"] #scannerTextTitle {
+    color: #065f46 !important;
+}
+
+html[data-theme="stitch"] .btn-riwayat {
+    background: #f0f9ff;
+    border: 1.5px solid #7dd3fc;
+    color: #0369a1;
+}
+
+html[data-theme="stitch"] .btn-riwayat:hover {
+    background: #e0f2fe;
+}
+
+html[data-theme="stitch"] .po-weather-card {
+    background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%);
+    border: 1.5px solid #7dd3fc;
+    box-shadow: 0 10px 24px rgba(2, 132, 199, 0.14);
+}
+
+html[data-theme="stitch"] .po-wx-dial {
+    background: #f0f9ff;
+    border: 2px solid #0284c7;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.18);
+}
+
+html[data-theme="stitch"] .po-wx-dial .po-wx-day-mini {
+    color: #0369a1;
+    font-weight: 700;
+}
+
+html[data-theme="stitch"] .po-wx-dial .po-wx-time-mini {
+    color: #0c4a6e;
+}
+
+html[data-theme="stitch"] .po-wx-dial .po-wx-sec-mini {
+    color: #0284c7;
+    font-weight: 700;
+}
+
+html[data-theme="stitch"] #poWxDateFull,
+html[data-theme="stitch"] #poWxConditionLabel {
+    color: #0f172a !important;
+}
+
+html[data-theme="stitch"] #poWxLocationText {
+    color: #0284c7 !important;
+    font-weight: 700;
+}
+
+html[data-theme="stitch"] #poWxHumidityWind,
+html[data-theme="stitch"] #poWxMinMaxToday {
+    color: #475569 !important;
+}
+
+html[data-theme="stitch"] .po-wx-now-box {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #bae6fd;
+}
+
+html[data-theme="stitch"] #poWxTempNow {
+    color: #0284c7 !important;
+}
+
+html[data-theme="stitch"] .po-wx-forecast {
+    border-top-color: #bae6fd;
+}
+
+html[data-theme="stitch"] .po-wx-pill {
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid #bae6fd;
+}
+
+html[data-theme="stitch"] .po-wx-pill div {
+    color: #0f172a !important;
+}
+
+html[data-theme="stitch"] .po-wx-gps-btn {
+    background: #e0f2fe !important;
+    border-color: #38bdf8 !important;
+    color: #0369a1 !important;
+    font-weight: 700 !important;
+}
+
+html[data-theme="stitch"] .modal-content {
+    background: #ffffff;
+    border: 1.5px solid #7dd3fc;
+    color: #0f172a;
+}
+
+html[data-theme="stitch"] .modal-content h3 {
+    color: #0369a1 !important;
+}
+
+html[data-theme="stitch"] .search-input-modal {
+    background: #f0f9ff;
+    border: 1.5px solid #7dd3fc;
+    color: #0f172a;
+}
+
+html[data-theme="stitch"] .item-list-container {
+    background: #f8fafc;
+    border-color: #bae6fd;
+}
+
+html[data-theme="stitch"] .item-pilihan {
+    border-bottom-color: #e0f2fe;
+}
+
+html[data-theme="stitch"] .item-pilihan:hover {
+    background: #e0f2fe;
+}
+
+html[data-theme="stitch"] .item-kode {
+    color: #0284c7;
+}
+
+html[data-theme="stitch"] .item-nama {
+    color: #0f172a;
+}
+
+html[data-theme="stitch"] #riwayatModal table {
+    background: #ffffff;
+    color: #0f172a !important;
+}
+
+html[data-theme="stitch"] #riwayatModal thead tr {
+    background: #e0f2fe !important;
+    color: #0369a1 !important;
+}
+
+html[data-theme="stitch"] #riwayatModal td {
+    color: #0f172a !important;
+}
+
+html[data-theme="stitch"] .footer-app {
+    color: #0369a1;
+    font-weight: 600;
+}
+
+/* ============================================================
+   🔤 FONT KHUSUS TEMA STITCH ([data-theme="stitch"])
+   ============================================================ */
+html[data-theme="stitch"],
+html[data-theme="stitch"] *,
+html[data-theme="stitch"] body,
+html[data-theme="stitch"] input,
+html[data-theme="stitch"] textarea,
+html[data-theme="stitch"] select,
+html[data-theme="stitch"] button,
+html[data-theme="stitch"] table,
+html[data-theme="stitch"] .po-weather-card,
+html[data-theme="stitch"] .po-theme-switch-btn,
+html[data-theme="stitch"] .po-speech-bubble,
+html[data-theme="stitch"] #modalUlasanPo,
+html[data-theme="stitch"] #chatWidgetBox {
+    font-family: 'Fredoka', 'Nunito', 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif !important;
+}
+
+/* Jaga ikon Font Awesome tetap pakai font ikonnya */
+html[data-theme="stitch"] .fa,
+html[data-theme="stitch"] .fas,
+html[data-theme="stitch"] .far,
+html[data-theme="stitch"] .fal,
+html[data-theme="stitch"] .fad,
+html[data-theme="stitch"] .fab,
+html[data-theme="stitch"] [class^="fa-"],
+html[data-theme="stitch"] [class*=" fa-"] {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+}
+
+html[data-theme="stitch"] h2,
+html[data-theme="stitch"] h3,
+html[data-theme="stitch"] .po-wx-time-mini,
+html[data-theme="stitch"] #poWxTempNow,
+html[data-theme="stitch"] .po-theme-switch-btn {
+    letter-spacing: 0.3px;
+}
+
+html[data-theme="stitch"] .po-weather-card,
+html[data-theme="stitch"] .po-speech-bubble {
+    font-size: 12.5px;
+}
+
+/* Mobile compact spacing */
+@media (max-width: 480px) {
+    .container {
+        padding: 12px;
+    }
+    .login-box, #poSection {
+        padding: 18px 15px;
+    }
 }
