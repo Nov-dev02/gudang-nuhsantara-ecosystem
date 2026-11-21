@@ -326,40 +326,36 @@
             position: fixed;
             bottom: 20px;
             left: 14px;
-            width: 72px;
-            height: 72px;
             z-index: 2147483639;
-            cursor: grab;
             user-select: none;
             -webkit-user-select: none;
         }
 
         [data-theme="stitch"] .po-stitch-mascot {
-            display: block;
-            touch-action: none;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
         }
 
-        .po-stitch-mascot.is-dragging {
-            cursor: grabbing !important;
-            z-index: 2147483647 !important;
-        }
-
-        .po-stitch-stage {
+        .po-stitch-avatar-btn {
             position: relative;
-            width: 100%;
-            height: 100%;
+            width: 72px;
+            height: 72px;
+            padding: 0;
+            margin: 0;
             border-radius: 20px;
             overflow: hidden;
             background: #040711;
             border: 2px solid #38bdf8;
             box-shadow: 0 8px 20px rgba(2, 132, 199, 0.45), 0 0 12px rgba(251, 113, 133, 0.3);
             animation: poStitchFloat 3.4s ease-in-out infinite;
-            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            flex-shrink: 0;
         }
 
-        .po-stitch-mascot.is-dragging .po-stitch-stage {
-            animation: none;
-            transform: scale(1.08) rotate(-3deg);
+        .po-stitch-avatar-btn:hover {
+            transform: scale(1.06);
         }
 
         .po-stitch-img {
@@ -395,8 +391,8 @@
         }
 
         @keyframes poStitchFloat {
-            0%, 100% { translate: 0 0; }
-            50% { translate: 0 -6px; }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
         }
 
         @keyframes poEyeBlink {
@@ -406,11 +402,7 @@
         }
 
         .po-speech-bubble {
-            position: absolute;
-            bottom: 8px;
-            left: calc(100% + 10px);
-            min-width: 145px;
-            max-width: 210px;
+            max-width: 215px;
             padding: 8px 12px;
             border-radius: 15px;
             border-bottom-left-radius: 4px;
@@ -418,69 +410,19 @@
             color: #0c4a6e;
             border: 2px solid #22c55e;
             box-shadow: 0 10px 24px rgba(2, 132, 199, 0.35);
-            font-family: monospace;
             font-size: 11.5px;
             font-weight: 700;
             line-height: 1.35;
+            margin-bottom: 6px;
             pointer-events: none;
-            z-index: 2147483642;
-            opacity: 0;
-            transform: translateY(8px) scale(0.78);
-            transform-origin: left bottom;
-            transition: opacity 0.22s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .po-speech-bubble.is-visible {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-
-        .po-speech-bubble::before {
-            content: "";
-            position: absolute;
-            bottom: 6px;
-            left: -9px;
-            border-width: 7px 9px 7px 0;
-            border-style: solid;
-            border-color: transparent #22c55e transparent transparent;
-        }
-
-        .po-speech-bubble::after {
-            content: "";
-            position: absolute;
-            bottom: 8px;
-            left: -6px;
-            border-width: 5px 7px 5px 0;
-            border-style: solid;
-            border-color: transparent #f0f9ff transparent transparent;
-        }
-
-        .po-stitch-mascot.bubble-left .po-speech-bubble {
-            left: auto;
-            right: calc(100% + 10px);
-            border-bottom-left-radius: 15px;
-            border-bottom-right-radius: 4px;
-            transform-origin: right bottom;
-        }
-
-        .po-stitch-mascot.bubble-left .po-speech-bubble::before {
-            left: auto;
-            right: -9px;
-            border-width: 7px 0 7px 9px;
-            border-color: transparent transparent transparent #22c55e;
-        }
-
-        .po-stitch-mascot.bubble-left .po-speech-bubble::after {
-            left: auto;
-            right: -6px;
-            border-width: 5px 0 5px 7px;
-            border-color: transparent transparent transparent #f0f9ff;
         }
 
         @media (min-width: 640px) {
+            .po-stitch-avatar-btn {
+                width: 82px;
+                height: 82px;
+            }
             .po-stitch-mascot {
-                width: 86px;
-                height: 86px;
                 bottom: 24px;
                 left: 24px;
             }
@@ -615,9 +557,8 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
                         <div class="real-time-clock clock">00:00:00</div>
-                        <button type="button" id="btnSwitchTemaPo" class="po-theme-switch-btn" onclick="toggleTemaStitchPo()" title="Ganti Tema App PO">
-                            <span id="iconTemaPo">🐾</span>
-                            <span id="labelTemaPo">Stitch</span>
+                        <button type="button" id="btnSwitchPoTheme" class="po-theme-switch-btn" title="Ganti Tema App PO">
+                            🐾 Stitch
                         </button>
                         <button type="button" class="btn-logout" onclick="handleLogout()">Logout</button>
                     </div>
@@ -709,15 +650,15 @@
         </div>
     </div>
 
-    <!-- Maskot Stitch Kedip Mata + Bubble Chat Sukses PO -->
-    <div id="stitchPoMascot" class="po-stitch-mascot" title="Geser Stitch atau klik untuk sapaan">
-        <div id="stitchSpeechBubble" class="po-speech-bubble" role="status" aria-live="polite">
-            <span id="stitchSpeechBubbleText">PO berhasil dikirim ke spreadsheet!</span>
-        </div>
-        <div class="po-stitch-stage">
+    <!-- Maskot Stitch Kedip Mata + Bubble Chat -->
+    <div id="poStitchMascotWrap" class="po-stitch-mascot" style="display: none;">
+        <button type="button" id="poStitchAvatar" class="po-stitch-avatar-btn" title="Klik Stitch untuk menyapa">
             <img src="stitch.png" alt="Stitch Mascot" class="po-stitch-img" draggable="false" />
             <span class="po-eye-lid left"></span>
             <span class="po-eye-lid right"></span>
+        </button>
+        <div id="poStitchBubble" class="po-speech-bubble" role="status" aria-live="polite">
+            Aloha! Ohana siap bantu input PO hari ini! 🌺
         </div>
     </div>
 
@@ -849,91 +790,6 @@
     <div class="footer-app">&copy; 2026 All Right Reserved By : Novan Arifki</div>
 
     <script src="script.js"></script>
-    <script>
-        (function() {
-            const THEME_KEY = "po_app_theme";
-            let bubbleTimer = null;
-
-            function terapkanTemaPo(tema) {
-                const mode = tema === "stitch" ? "stitch" : "default";
-                if (mode === "stitch") {
-                    document.documentElement.setAttribute("data-theme", "stitch");
-                } else {
-                    document.documentElement.removeAttribute("data-theme");
-                }
-
-                try {
-                    localStorage.setItem(THEME_KEY, mode);
-                } catch (e) {}
-
-                const iconEl = document.getElementById("iconTemaPo");
-                const labelEl = document.getElementById("labelTemaPo");
-                if (iconEl && labelEl) {
-                    if (mode === "stitch") {
-                        iconEl.textContent = "🌙";
-                        labelEl.textContent = "Gelap";
-                    } else {
-                        iconEl.textContent = "🐾";
-                        labelEl.textContent = "Stitch";
-                    }
-                }
-
-                if (typeof window.syncStitchBubbleSide === "function") {
-                    setTimeout(window.syncStitchBubbleSide, 50);
-                }
-            }
-
-            window.toggleTemaStitchPo = function() {
-                const sedangStitch = document.documentElement.getAttribute("data-theme") === "stitch";
-                terapkanTemaPo(sedangStitch ? "default" : "stitch");
-            };
-
-            window.syncStitchBubbleSide = function() {
-                const mascot = document.getElementById("stitchPoMascot");
-                const bubble = document.getElementById("stitchSpeechBubble");
-                if (!mascot || !bubble) return;
-
-                const rect = mascot.getBoundingClientRect();
-                const bubbleWidth = bubble.offsetWidth || 165;
-                const spaceRight = window.innerWidth - rect.right;
-
-                if (spaceRight < bubbleWidth + 18) {
-                    mascot.classList.add("bubble-left");
-                } else {
-                    mascot.classList.remove("bubble-left");
-                }
-            };
-
-            window.showPoStitchSuccessBubble = function(pesanTeks, durasiMs = 3600) {
-                if (document.documentElement.getAttribute("data-theme") !== "stitch") return;
-                const mascot = document.getElementById("stitchPoMascot");
-                const bubble = document.getElementById("stitchSpeechBubble");
-                const textEl = document.getElementById("stitchSpeechBubbleText");
-                if (!mascot || !bubble || !textEl) return;
-
-                const bersih = (pesanTeks || "PO berhasil dikirim ke spreadsheet!")
-                    .replace(/<[^>]*>/g, "")
-                    .trim();
-
-                textEl.textContent = bersih || "PO berhasil dikirim ke spreadsheet!";
-                window.syncStitchBubbleSide();
-                bubble.classList.add("is-visible");
-
-                clearTimeout(bubbleTimer);
-                bubbleTimer = setTimeout(() => {
-                    bubble.classList.remove("is-visible");
-                }, durasiMs);
-            };
-
-            document.addEventListener("DOMContentLoaded", function() {
-                let tersimpan = "default";
-                try {
-                    tersimpan = localStorage.getItem(THEME_KEY) || "default";
-                } catch (e) {}
-                terapkanTemaPo(tersimpan);
-            });
-        })();
-    </script>
     <script>
         let poSkeletonTimer = null;
         let poSkeletonStarted = false;
