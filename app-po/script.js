@@ -1,10 +1,120 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMxaPzNaYATNn-zMyx36NvjYQ1iwjwKYbmpezRMxE_OYWUd-JveOUbFGVMApS1ZZDdvw/exec";
 const FIREBASE_RTDB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
 const CURRENT_APP_VERSION = "v1.2.3"; // 🚀 Update versi dengan Banner Rekap Harian
+const PO_THEME_STORAGE_KEY = "po_theme_mode";
 
 let masterBarang = [];
 let html5QrCode = null;
 let isScannerActive = false;
+let stitchAudioCtx = null;
+
+// ==========================================
+// 🐾 THEME SWITCHER & KARAKTER STITCH (GELAP ↔ STITCH)
+// ==========================================
+function isStitchThemeActive() {
+    return document.documentElement.getAttribute('data-theme') === 'stitch';
+}
+
+function playStitchSound(mode = "tap") {
+    if (!isStitchThemeActive()) return;
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!stitchAudioCtx) stitchAudioCtx = new AudioCtx();
+        if (stitchAudioCtx.state === 'suspended') stitchAudioCtx.resume();
+
+        const now = stitchAudioCtx.currentTime;
+        const notes = mode === "success"
+            ? [523.25, 659.25, 783.99, 1046.5]
+            : mode === "warn"
+                ? [440, 349.23]
+                : [587.33, 880];
+
+        notes.forEach((freq, idx) => {
+            const osc = stitchAudioCtx.createOscillator();
+            const gain = stitchAudioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.065);
+            gain.gain.setValueAtTime(0.001, now + idx * 0.065);
+            gain.gain.exponentialRampToValueAtTime(0.08, now + idx * 0.065 + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.065 + 0.14);
+            osc.connect(gain);
+            gain.connect(stitchAudioCtx.destination);
+            osc.start(now + idx * 0.065);
+            osc.stop(now + idx * 0.065 + 0.15);
+        });
+    } catch (e) {}
+}
+
+function updateStitchSpeech(customText = null) {
+    const bubble = document.getElementById('poStitchBubble');
+    if (!bubble) return;
+
+    if (customText) {
+        bubble.textContent = customText;
+        return;
+    }
+
+    const daftarPesan = [
+        "Aloha! Ohana siap bantu input PO hari ini! 🌺",
+        "Jangan lupa cek kode & jumlah barang biar presisi ya! 🐾",
+        "Semangat kerja! Data PO aman terkendali bareng Stitch ✨",
+        "Klik aku kalau butuh semangat tambahan bro! 💙"
+    ];
+    bubble.textContent = daftarPesan[Math.floor(Math.random() * daftarPesan.length)];
+}
+
+function applyPoTheme(themeName, playSound = false) {
+    const isStitch = themeName === 'stitch';
+    if (isStitch) {
+        document.documentElement.setAttribute('data-theme', 'stitch');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+    }
+
+    localStorage.setItem(PO_THEME_STORAGE_KEY, isStitch ? 'stitch' : 'dark');
+
+    const switchBtn = document.getElementById('btnSwitchPoTheme');
+    if (switchBtn) {
+        switchBtn.innerHTML = isStitch
+            ? `<i class="fa-solid fa-moon"></i> Gelap`
+            : `🐾 Stitch`;
+    }
+
+    const mascotWrap = document.getElementById('poStitchMascotWrap');
+    if (mascotWrap) {
+        mascotWrap.style.display = isStitch ? 'flex' : 'none';
+    }
+
+    const savedUser = localStorage.getItem('po_user');
+    if (savedUser) setDynamicGreeting(savedUser);
+
+    if (isStitch) {
+        updateStitchSpeech();
+        if (playSound) playStitchSound("tap");
+    }
+}
+
+function initPoThemeSystem() {
+    const savedTheme = localStorage.getItem(PO_THEME_STORAGE_KEY) || 'dark';
+    applyPoTheme(savedTheme, false);
+
+    const switchBtn = document.getElementById('btnSwitchPoTheme');
+    if (switchBtn) {
+        switchBtn.addEventListener('click', () => {
+            const nextTheme = isStitchThemeActive() ? 'dark' : 'stitch';
+            applyPoTheme(nextTheme, true);
+        });
+    }
+
+    const stitchAvatar = document.getElementById('poStitchAvatar');
+    if (stitchAvatar) {
+        stitchAvatar.addEventListener('click', () => {
+            playStitchSound("tap");
+            updateStitchSpeech();
+        });
+    }
+}
 
 // ==========================================
 // 🚀 AUTO-UPDATE & FORCE REFRESH SYSTEM
@@ -96,6 +206,18 @@ function showCustomModal({ title = "Informasi", message = "", type = "info", sho
 
         if (!modalBox || !wrapper) { resolve(true); return; }
 
+        if (isStitchThemeActive()) {
+            wrapper.style.background = "linear-gradient(145deg, #ffffff, #e0f2fe)";
+            wrapper.style.borderColor = "#7dd3fc";
+            if (titleEl) titleEl.style.color = "#0369a1";
+            if (msgEl) msgEl.style.color = "#334155";
+        } else {
+            wrapper.style.background = "linear-gradient(145deg, #1e293b, #0f172a)";
+            wrapper.style.borderColor = "rgba(56, 189, 248, 0.3)";
+            if (titleEl) titleEl.style.color = "#f8fafc";
+            if (msgEl) msgEl.style.color = "#94a3b8";
+        }
+
         if (titleEl) titleEl.textContent = title;
         if (msgEl) msgEl.textContent = message;
         if (btnConfirm) btnConfirm.textContent = confirmText;
@@ -172,6 +294,7 @@ function injectModernStyles() {
     style.innerHTML = `
         #btnLogin, #btnSubmit {
             background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+            color: #ffffff !important;
             border: none !important;
             border-radius: 8px !important;
             font-weight: 600 !important;
@@ -255,12 +378,14 @@ function setDynamicGreeting(username) {
     }
     
     const motivasiAcak = daftarMotivasi[Math.floor(Math.random() * daftarMotivasi.length)];
-    greetingEl.innerHTML = `Selamat ${waktu}, <b>${username}</b>! <br><span style="font-size: 11px; color: #94a3b8;">${motivasiAcak}</span>`;
+    const subColor = isStitchThemeActive() ? '#475569' : '#94a3b8';
+    greetingEl.innerHTML = `Selamat ${waktu}, <b>${username}</b>! <br><span style="font-size: 11px; color: ${subColor};">${motivasiAcak}</span>`;
 }
 
 window.onload = function() {
     updateRealTimeClock();
     injectModernStyles();
+    initPoThemeSystem();
     initRealTimeWeather();
     cekPembaruanAplikasi();
     
@@ -495,6 +620,11 @@ function pilihBarang(kode, nama, pic) {
     stopCameraScanner();
     checkFormValidity();
 
+    if (isStitchThemeActive()) {
+        playStitchSound("tap");
+        updateStitchSpeech(`Sip! Barang "${nama}" terpilih. Tinggal isi jumlahnya ya! 🐾`);
+    }
+
     setTimeout(() => {
         const submitBtn = document.querySelector('#poSection button[type="submit"]');
         if (submitBtn) submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -504,6 +634,7 @@ function pilihBarang(kode, nama, pic) {
 function openRiwayatModal() {
     const modal = document.getElementById('riwayatModal');
     if (modal) modal.style.display = 'flex';
+    if (isStitchThemeActive()) playStitchSound("tap");
     loadRiwayatPOData();
 }
 
@@ -546,6 +677,9 @@ async function loadRiwayatPOData() {
 
             formattedRows.reverse();
 
+            const borderRow = isStitchThemeActive() ? '#e0f2fe' : '#1e293b';
+            const hoverBg = isStitchThemeActive() ? '#f0f9ff' : 'rgba(255,255,255,0.03)';
+
             tbody.innerHTML = formattedRows.map(item => {
                 let tanggalStr = item.tanggal;
                 if (tanggalStr) {
@@ -558,7 +692,7 @@ async function loadRiwayatPOData() {
                 }
 
                 return `
-                    <tr style="border-bottom: 1px solid #1e293b; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                    <tr style="border-bottom: 1px solid ${borderRow}; transition: background 0.2s;" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'">
                         <td style="padding: 10px; white-space: nowrap; color: #94a3b8;">${tanggalStr}</td>
                         <td style="padding: 10px; color: #38bdf8; font-weight: 500;">${item.kode}</td>
                         <td style="padding: 10px; color: #f8fafc;">${item.nama}</td>
@@ -608,6 +742,11 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     if (btnSubmit) {
         btnSubmit.innerHTML = "💾 Update Data PO";
         btnSubmit.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+    }
+
+    if (isStitchThemeActive()) {
+        playStitchSound("tap");
+        updateStitchSpeech(`Mode edit aktif untuk "${nama}". Silakan ubah lalu simpan! ✏️`);
     }
 
     closeRiwayatModal();
@@ -662,6 +801,7 @@ async function hapusDataPO(rowIndex) {
         const result = await response.json();
 
         if (result.status === 'success') {
+            if (isStitchThemeActive()) playStitchSound("success");
             if (titleEl) titleEl.textContent = "Berhasil";
             if (msgEl) msgEl.textContent = "Data PO berhasil dihapus!";
             if (iconContainer) {
@@ -723,6 +863,7 @@ function initEventListeners() {
         triggerModal.addEventListener('click', async function() {
             if (popupSearch) popupSearch.style.display = 'flex';
             if (searchInput) searchInput.value = '';
+            if (isStitchThemeActive()) playStitchSound("tap");
             
             if (!masterBarang || masterBarang.length === 0) {
                 renderList([{ kode_barang: '', nama_barang: 'Memuat data dari server...', pic: '' }]);
@@ -877,6 +1018,7 @@ async function onScanSuccess(decodedText) {
         document.getElementById('triggerModal').textContent = decodedText;
         stopCameraScanner();
         checkFormValidity();
+        if (isStitchThemeActive()) playStitchSound("tap");
         await showCustomModal({
             title: "Kode Ditemukan",
             message: `Kode terdeteksi: ${decodedText} (Dimasukkan manual)`,
@@ -907,7 +1049,7 @@ async function submitPO(e) {
     }
 
     if (msg) {
-        msg.style.color = "#38bdf8";
+        msg.style.color = isStitchThemeActive() ? "#0284c7" : "#38bdf8";
         msg.innerText = isEditMode ? "Memperbarui data di kedua sheet..." : "Mengirim data PO ke Google Sheets...";
     }
 
@@ -944,6 +1086,11 @@ async function submitPO(e) {
                 }).catch(err => {});
             }
 
+            if (isStitchThemeActive()) {
+                playStitchSound("success");
+                updateStitchSpeech(isEditMode ? "Yeay! Data PO berhasil diperbarui! 🎉" : "Mantap Ohana! PO baru sudah tersimpan! 🚀");
+            }
+
             if (btn) {
                 btn.innerHTML = `✨ Berhasil!`;
                 btn.style.backgroundColor = "#10b981";
@@ -971,6 +1118,10 @@ async function submitPO(e) {
             }
 
         } else {
+            if (isStitchThemeActive()) {
+                playStitchSound("warn");
+                updateStitchSpeech("Waduh gagal simpan, coba cek lagi datanya ya bro!");
+            }
             await showCustomModal({
                 title: "Gagal",
                 message: "Gagal: " + result.message,
@@ -986,6 +1137,10 @@ async function submitPO(e) {
         setTimeout(() => { if (msg) msg.innerText = ""; }, 3000);
 
     } catch (err) {
+        if (isStitchThemeActive()) {
+            playStitchSound("warn");
+            updateStitchSpeech("Koneksi internet terputus sebentar, coba kirim ulang ya!");
+        }
         if (msg) {
             msg.style.color = "#ef4444";
             msg.innerText = "Terjadi kendala koneksi internet!";
@@ -1050,6 +1205,7 @@ function tambahJumlah(angka) {
     let inputJumlah = document.getElementById('poJumlah');
     let nilaiSekarang = parseInt(inputJumlah.value) || 0;
     inputJumlah.value = nilaiSekarang + angka;
+    if (isStitchThemeActive()) playStitchSound("tap");
     checkFormValidity();
 }
 
@@ -1232,13 +1388,25 @@ function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, st
   const existing = document.getElementById('bannerRekapHarianModal');
   if (existing) existing.remove();
 
+  const isStitch = isStitchThemeActive();
+  const cardBg = isStitch ? 'linear-gradient(145deg, #ffffff, #e0f2fe)' : 'linear-gradient(145deg, #0f172a, #1e293b)';
+  const cardBorder = isStitch ? '#7dd3fc' : 'rgba(56, 189, 248, 0.45)';
+  const titleColor = isStitch ? '#0369a1' : '#fff';
+  const textColor = isStitch ? '#334155' : '#cbd5e1';
+  const accentColor = isStitch ? '#0284c7' : '#38bdf8';
+  const listBoxBg = isStitch ? '#f0f9ff' : 'rgba(2, 6, 23, 0.65)';
+  const listBoxBorder = isStitch ? '#bae6fd' : '#334155';
+  const fontStack = isStitch
+    ? "'Fredoka', 'Nunito', 'Comic Sans MS', cursive, sans-serif"
+    : "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+
   let listHtml = "";
   if (loginList.length > 0) {
     listHtml = loginList.map(log => `
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11px;">
-        <span style="color: #cbd5e1;">📅 ${log.jam}</span>
-        <span style="color: #38bdf8; font-weight: 600;">${log.modul}</span>
-        <span style="color: #34d399; font-size: 10px;">🟢 Masuk</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid ${isStitch ? '#e0f2fe' : 'rgba(255,255,255,0.06)'}; font-size: 11px;">
+        <span style="color: ${textColor};">📅 ${log.jam}</span>
+        <span style="color: ${accentColor}; font-weight: 600;">${log.modul}</span>
+        <span style="color: #10b981; font-size: 10px;">🟢 Masuk</span>
       </div>
     `).join('');
   } else {
@@ -1248,42 +1416,42 @@ function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, st
   const modal = document.createElement('div');
   modal.id = 'bannerRekapHarianModal';
   modal.style.cssText = `
-    position: fixed; inset: 0; background: rgba(7, 11, 20, 0.92);
-    backdrop-filter: blur(12px); display: flex; justify-content: center;
+    position: fixed; inset: 0; background: rgba(7, 11, 20, 0.85);
+    backdrop-filter: blur(10px); display: flex; justify-content: center;
     align-items: center; z-index: 2147483647; padding: 18px; box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: ${fontStack};
   `;
 
   modal.innerHTML = `
-    <div style="background: linear-gradient(145deg, #0f172a, #1e293b); border: 1.5px solid rgba(56, 189, 248, 0.45); border-radius: 20px; width: 100%; max-width: 420px; padding: 24px 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); color: #f8fafc;">
+    <div style="background: ${cardBg}; border: 1.5px solid ${cardBorder}; border-radius: 20px; width: 100%; max-width: 420px; padding: 24px 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.45); color: ${titleColor};">
       
-      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 12px;">
-        <div style="width: 42px; height: 42px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: #38bdf8; font-size: 18px; flex-shrink: 0;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; border-bottom: 1px solid ${listBoxBorder}; padding-bottom: 12px;">
+        <div style="width: 42px; height: 42px; background: rgba(56, 189, 248, 0.15); border: 1px solid ${accentColor}; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: ${accentColor}; font-size: 18px; flex-shrink: 0;">
           <i class="fa-solid fa-clipboard-check"></i>
         </div>
         <div>
-          <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #fff;">REKAP AKTIVITAS KEMARIN</h3>
-          <div style="font-size: 11px; color: #38bdf8;">${tanggalLabel}</div>
+          <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: ${titleColor};">REKAP AKTIVITAS KEMARIN</h3>
+          <div style="font-size: 11px; color: ${accentColor};">${tanggalLabel}</div>
         </div>
       </div>
 
-      <p style="font-size: 12.5px; color: #cbd5e1; margin: 0 0 14px 0; line-height: 1.5;">
-        Halo <b style="color: #38bdf8;">${nama}</b>, berikut catatan kehadiran aplikasi dan produktivitas PO kamu kemarin:
+      <p style="font-size: 12.5px; color: ${textColor}; margin: 0 0 14px 0; line-height: 1.5;">
+        Halo <b style="color: ${accentColor};">${nama}</b>, berikut catatan kehadiran aplikasi dan produktivitas PO kamu kemarin:
       </p>
 
-      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
-        <div style="font-size: 12px; color: #cbd5e1;">
-          <i class="fa-solid fa-file-invoice" style="color: #34d399; margin-right: 6px;"></i> Total Input PO Kemarin
+      <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 12px; color: ${textColor};">
+          <i class="fa-solid fa-file-invoice" style="color: #10b981; margin-right: 6px;"></i> Total Input PO Kemarin
         </div>
-        <div style="font-size: 16px; font-weight: 800; color: #34d399; font-family: monospace;">
+        <div style="font-size: 16px; font-weight: 800; color: #10b981; font-family: ${isStitch ? fontStack : 'monospace'};">
           ${totalPO} Kali
         </div>
       </div>
 
-      <div style="font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+      <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
         <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Sesi Login (${loginList.length}x)
       </div>
-      <div style="background: rgba(2, 6, 23, 0.65); border: 1px solid #334155; border-radius: 10px; max-height: 165px; overflow-y: auto; margin-bottom: 18px; font-family: monospace;">
+      <div style="background: ${listBoxBg}; border: 1px solid ${listBoxBorder}; border-radius: 10px; max-height: 165px; overflow-y: auto; margin-bottom: 18px; font-family: ${isStitch ? fontStack : 'monospace'};">
         ${listHtml}
       </div>
 
@@ -1297,6 +1465,7 @@ function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, st
 
   document.getElementById('btnConfirmRekapHarian').addEventListener('click', () => {
     localStorage.setItem(storageKey, 'true');
+    if (isStitch) playStitchSound("tap");
     modal.remove();
   });
 }
