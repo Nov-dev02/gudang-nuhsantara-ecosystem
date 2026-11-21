@@ -802,32 +802,6 @@
         </div>
     </div>
 
-    <!-- WIDGET FLOATING LIVE CHAT CS -->
-    <div id="floatingChatBtn" class="floating-chat-btn" onclick="toggleChatWidget()" style="display: none;">
-        <i class="fa-solid fa-headset"></i>
-        <span id="chatUnreadBadgePo" class="chat-badge-po">0</span>
-    </div>
-
-    <div id="chatWidgetBox" class="chat-widget-box">
-        <div class="chat-widget-header">
-            <div>
-                <b style="color: #fff; font-size: 12px;"><i class="fa-solid fa-robot" style="color: #38bdf8;"></i> CS Asisten Nuhsantara</b>
-                <div id="chatWidgetSub" style="font-size: 9.5px; color: var(--text-desc, #94a3b8);">Terhubung dengan Asisten Virtual</div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <button onclick="hapusSemuaChatStaf()" title="Hapus Semua Percakapan" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
-                <button onclick="toggleChatWidget()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
-            </div>
-        </div>
-
-        <div class="chat-widget-messages" id="chatWidgetMessagesContainer">
-            <div style="color: #94a3b8; text-align: center; margin: auto; font-size: 11px;">Memuat asisten virtual...</div>
-        </div>
-
-        <div style="padding: 4px 12px; background: rgba(15, 23, 42, 0.95); flex-shrink: 0;">
-            <span id="typingIndicatorPo" style="color: #38bdf8; font-size: 10px; font-style: italic; display: none;">System sedang mengetik...</span>
-        </div>
-
         <div class="chat-widget-input-row">
             <input type="text" id="inputChatPo" placeholder="Ketik pesan atau kendala..." oninput="handleStaffTyping()" onkeypress="if(event.key === 'Enter') kirimPesanStaff()" />
             <button type="button" onclick="kirimPesanStaff()">Kirim</button>
