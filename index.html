@@ -1128,7 +1128,6 @@
     let pinCooldownTimer = null;
     let lastUserInteractionAt = Date.now();
 
-    // Tracking notifikasi suara chat staf masuk agar tidak berbunyi berulang
     const notifiedStaffMsgKeys = new Set();
     let isFirstChatLoad = true;
 
@@ -1156,15 +1155,22 @@
     let activeStaffRoom = null;
     let typingTimeout = null;
     let cachedLoginHistory = [];
+    let cachedPresenceMap = {};
     let cachedAuditLogs = [];
     let cachedReviews = [];
 
-    // --- [IDE 3] DETEKSI PERANGKAT STAF ---
+    // --- DETEKSI PERANGKAT STAF ---
     function deteksiTipePerangkatStaf() {
       const ua = navigator.userAgent || "";
-      const isMobileUa = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      if (/iPhone|iPad|iPod/i.test(ua)) return "Mobile (iOS)";
+      if (/Android/i.test(ua)) return "Mobile (Android)";
+      const isMobileUa = /webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
       const isSmallScreen = typeof window !== "undefined" && window.innerWidth <= 768;
-      return (isMobileUa || isSmallScreen) ? "Mobile" : "Desktop";
+      if (isMobileUa || isSmallScreen) return "Mobile";
+      if (/Windows/i.test(ua)) return "Desktop (Windows)";
+      if (/Mac/i.test(ua)) return "Desktop (Mac)";
+      if (/Linux/i.test(ua)) return "Desktop (Linux)";
+      return "Desktop";
     }
 
     // --- [IDE 4] AUTO-LOCK LAYAR SETELAH IDLE ---
@@ -1676,7 +1682,6 @@
       muatDaftarChatStaf();
       mulaiPantauBroadcastRealtime();
       
-      // MENJALANKAN AUTO-PILOT BACKGROUND LISTENER SECARA OTOMATIS
       mulaiAutoPilotTokenListener();
 
       setInterval(updateWeatherClockUI, 1000);
@@ -1928,7 +1933,7 @@
         return randomPrefix + "NX" + timeHex + randomSuffix;
     }
 
-    // --- AUTO-PILOT BACKGROUND LISTENER (DENGAN NOTIFIKASI & AUDIT LOG) ---
+    // --- AUTO-PILOT BACKGROUND LISTENER ---
     function mulaiAutoPilotTokenListener() {
         setInterval(async () => {
             try {
@@ -2170,7 +2175,7 @@
       else if (tabId === 'admin') { headerTitle.innerText = "System Admin & License Hub"; updateAutoLockHintUI(); }
     }
 
-    // --- RIWAYAT LOGIN HARIAN + FILTER RENTANG TANGGAL & PERANGKAT ---
+    // --- RIWAYAT LOGIN HARIAN + FALLBACK PERANGKAT DARI PRESENCE ---
     function updateTodayLoginKPI(logs) {
       const el = document.getElementById('txtTodayLoginCount');
       if (!el) return;
@@ -2182,6 +2187,17 @@
         return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}` === todayKey;
       }).length;
       el.innerText = `${countToday} Sesi`;
+    }
+
+    function resolveDeviceForEntry(item) {
+      if (item && item.device && String(item.device).trim() && String(item.device).trim() !== "-") {
+        return String(item.device).trim();
+      }
+      const namaKey = String(item?.name || "").trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      if (namaKey && cachedPresenceMap[namaKey] && cachedPresenceMap[namaKey].device) {
+        return String(cachedPresenceMap[namaKey].device).trim();
+      }
+      return deteksiTipePerangkatStaf();
     }
 
     async function muatRiwayatLoginHarian() {
@@ -2231,7 +2247,7 @@
         const ts = Number(item.timestamp) || 0;
         const namaStr = String(item.name || "Staf").toLowerCase();
         const modulStr = String(item.modul || "Modul");
-        const deviceStr = String(item.device || "Perangkat");
+        const deviceStr = resolveDeviceForEntry(item).toLowerCase();
         const tanggalObj = new Date(ts);
         const tanggalFormatted = tanggalObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
         const jamFormatted = tanggalObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -2243,7 +2259,7 @@
         else if (rangeFilter === "30D") cocokRange = ts >= thirtyDaysAgo;
 
         const cocokModul = modulFilter === "ALL" || modulStr.toLowerCase() === modulFilter.toLowerCase();
-        const cocokQuery = !query || namaStr.includes(query) || modulStr.toLowerCase().includes(query) || deviceStr.toLowerCase().includes(query) || waktuLengkap.includes(query);
+        const cocokQuery = !query || namaStr.includes(query) || modulStr.toLowerCase().includes(query) || deviceStr.includes(query) || waktuLengkap.includes(query);
         return cocokRange && cocokModul && cocokQuery;
       });
 
@@ -2272,8 +2288,8 @@
         const tanggalFormatted = tanggalObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
         const jamFormatted = tanggalObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const waktuLengkap = `${tanggalFormatted} — ${jamFormatted} WIB`;
-        const deviceLabel = item.device || "-";
-        const deviceIcon = deviceLabel.toLowerCase().includes("mobile") ? "📱" : (deviceLabel.toLowerCase().includes("desktop") ? "💻" : "🖥️");
+        const deviceLabel = resolveDeviceForEntry(item);
+        const deviceIcon = deviceLabel.toLowerCase().includes("mobile") ? "📱" : "💻";
 
         html += `
           <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
@@ -2308,7 +2324,7 @@
       }
     }
 
-    // --- LIVE CHAT & CHAT STAF (DENGAN NOTIFIKASI PESAN BARU) ---
+    // --- LIVE CHAT & CHAT STAF ---
     async function muatDaftarChatStaf() {
       try {
         const res = await fetch(CLOUD_CHATS_ENDPOINT + "?t=" + Date.now());
@@ -2682,6 +2698,7 @@
         try {
             const res = await fetch(CLOUD_PRESENCE_ENDPOINT + "?t=" + Date.now());
             const data = await res.json();
+            cachedPresenceMap = (data && typeof data === 'object') ? data : {};
             
             if (!data) { 
                 container.innerHTML = `<span style="color: #64748b;">Tidak ada staf online saat ini.</span>`; 
@@ -2724,8 +2741,8 @@
                     
                     const durasiStr = `${hours > 0 ? hours + 'j ' : ''}${minutes}m ${seconds}d`;
                     const jamMasukStr = new Date(loginTimestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    const deviceLabel = item.device || "-";
-                    const deviceIcon = deviceLabel.toLowerCase().includes("mobile") ? "📱" : (deviceLabel.toLowerCase().includes("desktop") ? "💻" : "🖥️");
+                    const deviceLabel = item.device || deteksiTipePerangkatStaf();
+                    const deviceIcon = deviceLabel.toLowerCase().includes("mobile") ? "📱" : "💻";
                     const isIdle = (now - lastHeartbeat) >= STAFF_IDLE_THRESHOLD_MS;
                     const activityBadge = isIdle
                       ? `<span style="color: #fbbf24; font-weight: bold;">💤 Idle</span>`
