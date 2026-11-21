@@ -87,18 +87,134 @@ function updateThemeButtonUI(theme) {
 document.addEventListener('DOMContentLoaded', () => {
   const savedTheme = localStorage.getItem('gudang_theme') || 'dark';
   setTheme(savedTheme);
+});
 
-  const stitchMascot = document.getElementById('stitchMascotFloat');
-  if (stitchMascot && !stitchMascot.dataset.boundClick) {
-    stitchMascot.dataset.boundClick = '1';
-    stitchMascot.addEventListener('click', () => {
+// ==========================================
+// 🖱️ DRAG & DROP MASKOT STITCH (SAVE POSISI)
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  const mascot = document.getElementById('stitchMascotFloat');
+  if (!mascot || mascot.dataset.dragBound === '1') return;
+  mascot.dataset.dragBound = '1';
+
+  const STORAGE_POS_KEY = 'gudang_stitch_pos';
+  let isPointerDown = false;
+  let hasMoved = false;
+  let startX = 0;
+  let startY = 0;
+  let originLeft = 0;
+  let originTop = 0;
+
+  function clampPosition(left, top) {
+    const rect = mascot.getBoundingClientRect();
+    const width = rect.width || 86;
+    const height = rect.height || 86;
+    const margin = 8;
+
+    const maxLeft = Math.max(margin, window.innerWidth - width - margin);
+    const maxTop = Math.max(margin, window.innerHeight - height - margin);
+
+    return {
+      left: Math.min(Math.max(margin, left), maxLeft),
+      top: Math.min(Math.max(margin, top), maxTop)
+    };
+  }
+
+  function applySavedPosition() {
+    try {
+      const raw = localStorage.getItem(STORAGE_POS_KEY);
+      if (!raw) return;
+      const pos = JSON.parse(raw);
+      if (typeof pos.left === 'number' && typeof pos.top === 'number') {
+        const clamped = clampPosition(pos.left, pos.top);
+        mascot.style.left = `${clamped.left}px`;
+        mascot.style.top = `${clamped.top}px`;
+        mascot.style.right = 'auto';
+        mascot.style.bottom = 'auto';
+      }
+    } catch (e) {}
+  }
+
+  applySavedPosition();
+
+  mascot.addEventListener('pointerdown', (e) => {
+    if (document.documentElement.getAttribute('data-theme') !== 'stitch') return;
+    if (e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
+
+    isPointerDown = true;
+    hasMoved = false;
+    startX = e.clientX;
+    startY = e.clientY;
+
+    const rect = mascot.getBoundingClientRect();
+    originLeft = rect.left;
+    originTop = rect.top;
+
+    mascot.style.left = `${originLeft}px`;
+    mascot.style.top = `${originTop}px`;
+    mascot.style.right = 'auto';
+    mascot.style.bottom = 'auto';
+
+    mascot.classList.add('is-dragging');
+    try { mascot.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  mascot.addEventListener('pointermove', (e) => {
+    if (!isPointerDown) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (Math.hypot(dx, dy) > 6) {
+      hasMoved = true;
+    }
+
+    if (hasMoved) {
+      const clamped = clampPosition(originLeft + dx, originTop + dy);
+      mascot.style.left = `${clamped.left}px`;
+      mascot.style.top = `${clamped.top}px`;
+    }
+  });
+
+  function finishDrag(e) {
+    if (!isPointerDown) return;
+    isPointerDown = false;
+    mascot.classList.remove('is-dragging');
+
+    try {
+      if (e && e.pointerId !== undefined && mascot.hasPointerCapture(e.pointerId)) {
+        mascot.releasePointerCapture(e.pointerId);
+      }
+    } catch (err) {}
+
+    if (hasMoved) {
+      const rect = mascot.getBoundingClientRect();
+      const clamped = clampPosition(rect.left, rect.top);
+      mascot.style.left = `${clamped.left}px`;
+      mascot.style.top = `${clamped.top}px`;
+      localStorage.setItem(STORAGE_POS_KEY, JSON.stringify(clamped));
+    } else {
       if (typeof showNxToast === 'function') {
         showNxToast("Ohana means family! 💙 Experiment 626 siap bantu gudang!", "🐾");
       } else if (typeof showCustomToastNotification === 'function') {
         showCustomToastNotification("Ohana means family! 💙 Experiment 626 siap bantu gudang!", "#38bdf8");
       }
-    });
+    }
   }
+
+  mascot.addEventListener('pointerup', finishDrag);
+  mascot.addEventListener('pointercancel', finishDrag);
+
+  window.addEventListener('resize', () => {
+    if (!mascot.style.left || !mascot.style.top) return;
+    const currentLeft = parseFloat(mascot.style.left);
+    const currentTop = parseFloat(mascot.style.top);
+    if (!Number.isNaN(currentLeft) && !Number.isNaN(currentTop)) {
+      const clamped = clampPosition(currentLeft, currentTop);
+      mascot.style.left = `${clamped.left}px`;
+      mascot.style.top = `${clamped.top}px`;
+    }
+  });
 });
 
 
@@ -901,7 +1017,6 @@ async function simpanGasUrl() {
       return;
     }
 
-    // 1. Simpan ke lokal dan Firebase Cloud agar semua perangkat staf ikut ter-update
     localStorage.setItem('GUDANG_GAS_URL', newUrl);
     localStorage.setItem('GUDANG_REFRESH_BYPASS', 'true');
     tutupModalGas();
