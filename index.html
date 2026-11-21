@@ -496,6 +496,18 @@
       cursor: not-allowed;
     }
 
+    .autolock-setting-box {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(148, 163, 184, 0.16);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-family: monospace;
+    }
+
     /* LIVE CHAT DASHBOARD STYLES */
     .chat-layout {
       display: grid; grid-template-columns: 280px 1fr; gap: 15px; height: 550px;
@@ -847,7 +859,13 @@
           </div>
           <p style="font-size: 11px; color: var(--text-desc); margin: 0 0 12px 0;">Catatan lengkap tanggal & jam staf membuka modul aplikasi tertentu. Riwayat ini tersimpan aman dan tidak akan terhapus otomatis kecuali kamu menekan tombol Clear di atas.</p>
           <div class="filter-bar">
-            <input type="text" id="filterHistorySearch" class="filter-input" placeholder="Cari nama staf atau tanggal..." oninput="renderRiwayatLoginFiltered()" />
+            <input type="text" id="filterHistorySearch" class="filter-input" placeholder="Cari nama staf, perangkat, atau tanggal..." oninput="renderRiwayatLoginFiltered()" />
+            <select id="filterHistoryRange" class="filter-select" onchange="renderRiwayatLoginFiltered()">
+              <option value="ALL">Semua Waktu</option>
+              <option value="TODAY">Hari Ini</option>
+              <option value="7D">7 Hari Terakhir</option>
+              <option value="30D">30 Hari Terakhir</option>
+            </select>
             <select id="filterHistoryModul" class="filter-select" onchange="renderRiwayatLoginFiltered()">
               <option value="ALL">Semua Modul</option>
               <option value="Proses Data">Proses Data</option>
@@ -990,6 +1008,24 @@
             <button class="btn-admin" onclick="bukaModalAdmin('generator')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399;"><i class="fa-solid fa-code"></i> Generator</button>
             <button class="btn-admin" onclick="bukaModalAdmin('force_update')" style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); border-color: #f87171;"><i class="fa-solid fa-rotate"></i> Paksa Update</button>
           </div>
+
+          <div class="autolock-setting-box">
+            <div>
+              <div style="font-size: 11.5px; font-weight: bold; color: #f8fafc;">
+                <i class="fa-solid fa-hourglass-half" style="color: var(--accent-blue);"></i> AUTO-LOCK LAYAR SAAT IDLE
+              </div>
+              <div id="autoLockStatusHint" style="font-size: 10px; color: var(--text-desc); margin-top: 3px;">
+                Kunci layar otomatis jika tidak ada aktivitas selama 10 menit.
+              </div>
+            </div>
+            <select id="selectAutoLockMinutes" class="filter-select" onchange="ubahDurasiAutoLock(this.value)">
+              <option value="0">Nonaktif (Off)</option>
+              <option value="5">5 Menit</option>
+              <option value="10" selected>10 Menit</option>
+              <option value="15">15 Menit</option>
+              <option value="30">30 Menit</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -1078,6 +1114,8 @@
     const CLOUD_REVIEWS_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/reviews.json`;
     const CLOUD_SECURITY_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/config/admin_pin_hash.json`;
     const CUSTOM_TEMPLATES_STORAGE_KEY = "gudang_custom_broadcast_templates";
+    const AUTOLOCK_MINUTES_STORAGE_KEY = "gudang_autolock_minutes";
+    const STAFF_IDLE_THRESHOLD_MS = 3 * 60 * 1000;
 
     // SHA-256 hash default tanpa menyertakan PIN teks polos di kode sumber
     const DEFAULT_PIN_SHA256 = "f6642b16c637a9c1567aa6b17f67a3f57d47c8e99e81529f7887d8a8b24f682f";
@@ -1088,6 +1126,7 @@
     let pinFailedAttempts = 0;
     let pinLockUntil = 0;
     let pinCooldownTimer = null;
+    let lastUserInteractionAt = Date.now();
 
     // Tracking notifikasi suara chat staf masuk agar tidak berbunyi berulang
     const notifiedStaffMsgKeys = new Set();
@@ -1119,6 +1158,66 @@
     let cachedLoginHistory = [];
     let cachedAuditLogs = [];
     let cachedReviews = [];
+
+    // --- [IDE 3] DETEKSI PERANGKAT STAF ---
+    function deteksiTipePerangkatStaf() {
+      const ua = navigator.userAgent || "";
+      const isMobileUa = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      const isSmallScreen = typeof window !== "undefined" && window.innerWidth <= 768;
+      return (isMobileUa || isSmallScreen) ? "Mobile" : "Desktop";
+    }
+
+    // --- [IDE 4] AUTO-LOCK LAYAR SETELAH IDLE ---
+    function getAutoLockMinutes() {
+      const raw = localStorage.getItem(AUTOLOCK_MINUTES_STORAGE_KEY);
+      if (raw === null) return 10;
+      const num = parseInt(raw, 10);
+      return Number.isNaN(num) ? 10 : Math.max(0, num);
+    }
+
+    function updateAutoLockHintUI() {
+      const mins = getAutoLockMinutes();
+      const sel = document.getElementById("selectAutoLockMinutes");
+      const hint = document.getElementById("autoLockStatusHint");
+      if (sel) sel.value = String(mins);
+      if (hint) {
+        hint.innerText = mins > 0
+          ? `Kunci layar otomatis jika tidak ada aktivitas selama ${mins} menit.`
+          : "Auto-lock idle sedang dinonaktifkan (hanya kunci manual).";
+      }
+    }
+
+    window.ubahDurasiAutoLock = function(val) {
+      const mins = Math.max(0, parseInt(val, 10) || 0);
+      localStorage.setItem(AUTOLOCK_MINUTES_STORAGE_KEY, String(mins));
+      lastUserInteractionAt = Date.now();
+      updateAutoLockHintUI();
+      showDashboardToast(mins > 0 ? `Auto-lock diatur ke ${mins} menit.` : "Auto-lock dinonaktifkan.", true);
+    };
+
+    function resetIdleTimer() {
+      lastUserInteractionAt = Date.now();
+    }
+
+    function initAutoLockMonitor() {
+      ["mousemove", "mousedown", "keydown", "touchstart", "scroll", "click"].forEach(evtName => {
+        window.addEventListener(evtName, resetIdleTimer, { passive: true });
+      });
+
+      setInterval(() => {
+        const mins = getAutoLockMinutes();
+        if (mins <= 0) return;
+
+        const splash = document.getElementById("splashScreen");
+        const isAlreadyLocked = splash && splash.style.display === "flex" && parseFloat(splash.style.opacity || "0") > 0.5;
+        if (isAlreadyLocked) return;
+
+        if (Date.now() - lastUserInteractionAt >= mins * 60 * 1000) {
+          kunciLayarDashboard();
+          showDashboardToast(`Layar dikunci otomatis setelah ${mins} menit idle.`, false);
+        }
+      }, 5000);
+    }
 
     // --- [IDE 1] KEAMANAN PIN HASH SHA-256 + CLOUD + COOLDOWN ---
     async function sha256Hex(plainText) {
@@ -1563,6 +1662,8 @@
       initSplashScreenFlow();
       ambilHashPinAktif();
       muatTemaDashboard();
+      updateAutoLockHintUI();
+      initAutoLockMonitor();
       loadSavedWeatherCoords();
       updateWeatherClockUI();
       fetchLiveWeatherWidget();
@@ -2036,6 +2137,7 @@
     }
 
     function bukaSplashScreenDashboard() {
+      resetIdleTimer();
       const splash = document.getElementById('splashScreen');
       splash.style.opacity = '0';
       setTimeout(() => { splash.style.display = 'none'; }, 400);
@@ -2043,6 +2145,7 @@
     }
 
     function switchTab(tabId, desktopEl, mobileEl) {
+      resetIdleTimer();
       document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
       document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
@@ -2064,10 +2167,10 @@
       else if (tabId === 'logs') { headerTitle.innerText = "Audit Logs & Broadcast Center"; muatAuditLogs(); }
       else if (tabId === 'reviews') { headerTitle.innerText = "Ulasan Aplikasi dari Staf Gudang"; muatUlasanStaf(); }
       else if (tabId === 'chat') { headerTitle.innerText = "Pusat Live Chat Bantuan Staf"; muatDaftarChatStaf(); }
-      else if (tabId === 'admin') headerTitle.innerText = "System Admin & License Hub";
+      else if (tabId === 'admin') { headerTitle.innerText = "System Admin & License Hub"; updateAutoLockHintUI(); }
     }
 
-    // --- RIWAYAT LOGIN HARIAN + FILTER ---
+    // --- RIWAYAT LOGIN HARIAN + FILTER RENTANG TANGGAL & PERANGKAT ---
     function updateTodayLoginKPI(logs) {
       const el = document.getElementById('txtTodayLoginCount');
       if (!el) return;
@@ -2116,19 +2219,32 @@
       if (!container) return;
 
       const query = (document.getElementById('filterHistorySearch')?.value || "").trim().toLowerCase();
+      const rangeFilter = document.getElementById('filterHistoryRange')?.value || "ALL";
       const modulFilter = document.getElementById('filterHistoryModul')?.value || "ALL";
 
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
       const filtered = cachedLoginHistory.filter(item => {
+        const ts = Number(item.timestamp) || 0;
         const namaStr = String(item.name || "Staf").toLowerCase();
         const modulStr = String(item.modul || "Modul");
-        const tanggalObj = new Date(Number(item.timestamp));
+        const deviceStr = String(item.device || "Perangkat");
+        const tanggalObj = new Date(ts);
         const tanggalFormatted = tanggalObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
         const jamFormatted = tanggalObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const waktuLengkap = `${tanggalFormatted} — ${jamFormatted} WIB`.toLowerCase();
 
+        let cocokRange = true;
+        if (rangeFilter === "TODAY") cocokRange = ts >= startOfToday;
+        else if (rangeFilter === "7D") cocokRange = ts >= sevenDaysAgo;
+        else if (rangeFilter === "30D") cocokRange = ts >= thirtyDaysAgo;
+
         const cocokModul = modulFilter === "ALL" || modulStr.toLowerCase() === modulFilter.toLowerCase();
-        const cocokQuery = !query || namaStr.includes(query) || modulStr.toLowerCase().includes(query) || waktuLengkap.includes(query);
-        return cocokModul && cocokQuery;
+        const cocokQuery = !query || namaStr.includes(query) || modulStr.toLowerCase().includes(query) || deviceStr.toLowerCase().includes(query) || waktuLengkap.includes(query);
+        return cocokRange && cocokModul && cocokQuery;
       });
 
       if (filtered.length === 0) {
@@ -2144,6 +2260,7 @@
                 <th style="padding: 8px;">Tanggal & Waktu Login</th>
                 <th style="padding: 8px;">Nama Staf</th>
                 <th style="padding: 8px;">Modul / Aplikasi</th>
+                <th style="padding: 8px;">Perangkat</th>
                 <th style="padding: 8px;">Status Sesi</th>
               </tr>
             </thead>
@@ -2155,12 +2272,15 @@
         const tanggalFormatted = tanggalObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
         const jamFormatted = tanggalObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const waktuLengkap = `${tanggalFormatted} — ${jamFormatted} WIB`;
+        const deviceLabel = item.device || "-";
+        const deviceIcon = deviceLabel.toLowerCase().includes("mobile") ? "📱" : (deviceLabel.toLowerCase().includes("desktop") ? "💻" : "🖥️");
 
         html += `
           <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
             <td style="padding: 8px; color: #cbd5e1; font-family: monospace;">📅 ${waktuLengkap}</td>
             <td style="padding: 8px; color: #fff; font-weight: bold;">👤 ${item.name || 'Staf'}</td>
             <td style="padding: 8px; color: #38bdf8;">${item.modul || 'Modul'}</td>
+            <td style="padding: 8px; color: #cbd5e1;">${deviceIcon} ${deviceLabel}</td>
             <td style="padding: 8px; color: #34d399; font-weight: bold;">🟢 Aktif Masuk</td>
           </tr>
         `;
@@ -2490,6 +2610,7 @@
         
         const safeKey = staffName.replace(/[^a-zA-Z0-9_-]/g, '_');
         const currentTime = Date.now();
+        const deviceType = deteksiTipePerangkatStaf();
         
         try {
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
@@ -2497,7 +2618,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     name: staffName, 
-                    modul: modulName, 
+                    modul: modulName,
+                    device: deviceType,
                     loginTime: currentTime, 
                     time: currentTime 
                 })
@@ -2509,6 +2631,7 @@
                 body: JSON.stringify({
                     name: staffName,
                     modul: modulName,
+                    device: deviceType,
                     timestamp: currentTime
                 })
             });
@@ -2575,8 +2698,10 @@
                             <tr style="border-bottom: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent-blue);">
                                 <th style="padding: 8px;">Nama Staf</th>
                                 <th style="padding: 8px;">Modul Aktif</th>
+                                <th style="padding: 8px;">Perangkat</th>
                                 <th style="padding: 8px;">Jam Masuk</th>
                                 <th style="padding: 8px;">Durasi Aktif</th>
+                                <th style="padding: 8px;">Aktivitas</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2584,27 +2709,36 @@
 
             Object.keys(data).forEach(id => {
                 const item = data[id];
-                const isOnline = item.modul !== "Offline" && (now - item.time < 10000);
+                const lastHeartbeat = Number(item.time || item.loginTime || 0);
+                const isOnline = item.modul !== "Offline" && (now - lastHeartbeat < 10000);
 
                 if (isOnline) {
                     activeCount++;
                     
-                    let loginTimestamp = item.loginTime || item.time;
-                    let diffMs = now - loginTimestamp;
-                    let totalSec = Math.floor(diffMs / 1000);
-                    let hours = Math.floor(totalSec / 3600);
-                    let minutes = Math.floor((totalSec % 3600) / 60);
-                    let seconds = totalSec % 60;
+                    const loginTimestamp = Number(item.loginTime || item.time || now);
+                    const diffMs = Math.max(0, now - loginTimestamp);
+                    const totalSec = Math.floor(diffMs / 1000);
+                    const hours = Math.floor(totalSec / 3600);
+                    const minutes = Math.floor((totalSec % 3600) / 60);
+                    const seconds = totalSec % 60;
                     
-                    let durasiStr = `${hours > 0 ? hours + 'j ' : ''}${minutes}m ${seconds}d`;
-                    let jamMasukStr = new Date(loginTimestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const durasiStr = `${hours > 0 ? hours + 'j ' : ''}${minutes}m ${seconds}d`;
+                    const jamMasukStr = new Date(loginTimestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const deviceLabel = item.device || "-";
+                    const deviceIcon = deviceLabel.toLowerCase().includes("mobile") ? "📱" : (deviceLabel.toLowerCase().includes("desktop") ? "💻" : "🖥️");
+                    const isIdle = (now - lastHeartbeat) >= STAFF_IDLE_THRESHOLD_MS;
+                    const activityBadge = isIdle
+                      ? `<span style="color: #fbbf24; font-weight: bold;">💤 Idle</span>`
+                      : `<span style="color: #34d399; font-weight: bold;">⚡ Aktif</span>`;
 
                     htmlContent += `
                         <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
                             <td style="padding: 8px; color: #fff; font-weight: bold;">🟢 ${item.name || id}</td>
                             <td style="padding: 8px; color: #38bdf8;">${item.modul}</td>
+                            <td style="padding: 8px; color: #cbd5e1;">${deviceIcon} ${deviceLabel}</td>
                             <td style="padding: 8px; color: #cbd5e1;">${jamMasukStr} WIB</td>
                             <td style="padding: 8px; color: #34d399; font-family: monospace; font-weight: bold;">${durasiStr}</td>
+                            <td style="padding: 8px;">${activityBadge}</td>
                         </tr>
                     `;
                 }
@@ -2891,6 +3025,7 @@
     }
 
     function bukaModalAdmin(aksi) {
+      resetIdleTimer();
       targetAksiAdmin = aksi;
       document.getElementById('adminModal').style.display = 'flex';
       document.getElementById('adminPinInput').value = '';
