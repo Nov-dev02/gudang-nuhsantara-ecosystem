@@ -297,25 +297,61 @@
         .po-wx-anim-sun { animation: poWxSpinSun 14s linear infinite; transform-origin: center; }
         .po-wx-anim-rain { animation: poWxRainDrop 1.1s linear infinite; }
 
-        /* TOMBOL SWITCH TEMA STITCH DI HEADER */
+        /* HEADER KANAN ATAS & TOMBOL SWITCH TEMA STITCH (ANTI-MELAR) */
+        .po-header-actions {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 5px !important;
+            flex-wrap: nowrap !important;
+            flex-shrink: 0 !important;
+        }
+
+        .header-po .clock {
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            flex: 0 0 auto !important;
+        }
+
         .po-theme-switch-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(56, 189, 248, 0.45);
-            background: rgba(56, 189, 248, 0.14);
-            color: #e0f2fe;
-            font-family: monospace;
-            font-size: 10.5px;
-            font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            width: auto !important;
+            min-width: 0 !important;
+            max-width: max-content !important;
+            flex: 0 0 auto !important;
+            padding: 6px 10px !important;
+            margin: 0 !important;
+            border-radius: 999px !important;
+            border: 1px solid rgba(56, 189, 248, 0.45) !important;
+            background: rgba(56, 189, 248, 0.14) !important;
+            color: #e0f2fe !important;
+            font-family: monospace !important;
+            font-size: 10.5px !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+            cursor: pointer !important;
+            white-space: nowrap !important;
+            box-sizing: border-box !important;
             transition: all 0.2s ease;
         }
         .po-theme-switch-btn:hover {
-            background: rgba(56, 189, 248, 0.25);
+            background: rgba(56, 189, 248, 0.25) !important;
+        }
+
+        .header-po .btn-logout {
+            width: auto !important;
+            min-width: 0 !important;
+            flex: 0 0 auto !important;
+            padding: 6px 10px !important;
+            margin: 0 !important;
+            font-size: 11.5px !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
         }
 
         /* ==========================================
@@ -331,10 +367,11 @@
             -webkit-user-select: none;
         }
 
-        [data-theme="stitch"] .po-stitch-mascot {
-            display: flex;
-            align-items: flex-end;
-            gap: 8px;
+        [data-theme="stitch"] .po-stitch-mascot,
+        html[data-theme="stitch"] #poStitchMascotWrap.po-stitch-mascot {
+            display: flex !important;
+            align-items: flex-end !important;
+            gap: 8px !important;
         }
 
         .po-stitch-avatar-btn {
@@ -548,14 +585,14 @@
 
             <div class="po-skel-content">
                 <div class="header-po">
-                    <div>
+                    <div style="min-width: 0; flex: 1;">
                         <div style="display: inline-flex; align-items: center; background: rgba(56, 189, 248, 0.1); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.2); margin-bottom: 6px;">
                             <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: #38bdf8; font-weight: 700; white-space: nowrap;">Nuhsantara Merchandise</span>
                         </div>
                         <h2 style="margin: 0; font-size: 20px; font-weight: 700; background: linear-gradient(90deg, #38bdf8 0%, #e0f2fe 50%, #38bdf8 100%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shimmerEffect 3s linear infinite;">System PO Gudang</h2>
                         <div id="userGreeting" class="user-greeting"></div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+                    <div class="po-header-actions">
                         <div class="real-time-clock clock">00:00:00</div>
                         <button type="button" id="btnSwitchPoTheme" class="po-theme-switch-btn" title="Ganti Tema App PO">
                             🐾 Stitch
@@ -651,7 +688,7 @@
     </div>
 
     <!-- Maskot Stitch Kedip Mata + Bubble Chat -->
-    <div id="poStitchMascotWrap" class="po-stitch-mascot" style="display: none;">
+    <div id="poStitchMascotWrap" class="po-stitch-mascot">
         <button type="button" id="poStitchAvatar" class="po-stitch-avatar-btn" title="Klik Stitch untuk menyapa">
             <img src="stitch.png" alt="Stitch Mascot" class="po-stitch-img" draggable="false" />
             <span class="po-eye-lid left"></span>
@@ -856,6 +893,55 @@
         window.addEventListener('DOMContentLoaded', function() {
             localStorage.removeItem('gudang_welcome_ecosystem_shown');
             pantauSplashScreen();
+        });
+    </script>
+
+    <!-- SCRIPT SWITCH TEMA STITCH & SAPAAN MASKOT -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const btnTheme = document.getElementById("btnSwitchPoTheme");
+            const stitchAvatar = document.getElementById("poStitchAvatar");
+            const stitchBubble = document.getElementById("poStitchBubble");
+            const themeKey = "gudang_po_theme";
+
+            const sapaanStitch = [
+                "Aloha! Ohana siap bantu input PO hari ini! 🌺",
+                "Cek kode & jumlah PO dulu sebelum kirim ya! 📦",
+                "Semangat kerjanya bro! Jangan lupa istirahat sebentar 💙",
+                "QR scanner siap dipakai kalau buru-buru! 📷"
+            ];
+            let sapaanIdx = 0;
+
+            function terapkanTemaPo(themeName) {
+                if (themeName === "stitch") {
+                    document.documentElement.setAttribute("data-theme", "stitch");
+                    if (btnTheme) btnTheme.textContent = "🌙 Gelap";
+                } else {
+                    document.documentElement.removeAttribute("data-theme");
+                    if (btnTheme) btnTheme.textContent = "🐾 Stitch";
+                }
+            }
+
+            const savedTheme = localStorage.getItem(themeKey);
+            if (savedTheme === "stitch") {
+                terapkanTemaPo("stitch");
+            }
+
+            if (btnTheme) {
+                btnTheme.addEventListener("click", function() {
+                    const isStitch = document.documentElement.getAttribute("data-theme") === "stitch";
+                    const nextTheme = isStitch ? "dark" : "stitch";
+                    localStorage.setItem(themeKey, nextTheme);
+                    terapkanTemaPo(nextTheme);
+                });
+            }
+
+            if (stitchAvatar && stitchBubble) {
+                stitchAvatar.addEventListener("click", function() {
+                    sapaanIdx = (sapaanIdx + 1) % sapaanStitch.length;
+                    stitchBubble.textContent = sapaanStitch[sapaanIdx];
+                });
+            }
         });
     </script>
 
