@@ -1,12 +1,13 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMxaPzNaYATNn-zMyx36NvjYQ1iwjwKYbmpezRMxE_OYWUd-JveOUbFGVMApS1ZZDdvw/exec";
 const FIREBASE_RTDB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
-const CURRENT_APP_VERSION = "v1.2.3"; // 🚀 Update versi dengan Banner Rekap Harian
-const PO_THEME_STORAGE_KEY = "po_theme_mode";
+const CURRENT_APP_VERSION = "v1.2.3";
+const PO_THEME_STORAGE_KEY = "gudang_po_theme";
 
 let masterBarang = [];
 let html5QrCode = null;
 let isScannerActive = false;
 let stitchAudioCtx = null;
+let currentEditRowIndex = null;
 
 // ==========================================
 // 🐾 THEME SWITCHER & KARAKTER STITCH (GELAP ↔ STITCH)
@@ -81,11 +82,6 @@ function applyPoTheme(themeName, playSound = false) {
             : `🐾 Stitch`;
     }
 
-    const mascotWrap = document.getElementById('poStitchMascotWrap');
-    if (mascotWrap) {
-        mascotWrap.style.display = isStitch ? 'flex' : 'none';
-    }
-
     const savedUser = localStorage.getItem('po_user');
     if (savedUser) setDynamicGreeting(savedUser);
 
@@ -100,7 +96,8 @@ function initPoThemeSystem() {
     applyPoTheme(savedTheme, false);
 
     const switchBtn = document.getElementById('btnSwitchPoTheme');
-    if (switchBtn) {
+    if (switchBtn && !switchBtn.dataset.boundTheme) {
+        switchBtn.dataset.boundTheme = "1";
         switchBtn.addEventListener('click', () => {
             const nextTheme = isStitchThemeActive() ? 'dark' : 'stitch';
             applyPoTheme(nextTheme, true);
@@ -108,7 +105,8 @@ function initPoThemeSystem() {
     }
 
     const stitchAvatar = document.getElementById('poStitchAvatar');
-    if (stitchAvatar) {
+    if (stitchAvatar && !stitchAvatar.dataset.boundAvatar) {
+        stitchAvatar.dataset.boundAvatar = "1";
         stitchAvatar.addEventListener('click', () => {
             playStitchSound("tap");
             updateStitchSpeech();
@@ -279,12 +277,31 @@ function showCustomModal({ title = "Informasi", message = "", type = "info", sho
     });
 }
 
-function getLocalDateString() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+function formatDateLocal(dateObj) {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+function getLocalDateString() {
+    return formatDateLocal(new Date());
+}
+
+function escapeHtml(text) {
+    return String(text ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function escapeJsAttr(text) {
+    return String(text ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;');
 }
 
 function injectModernStyles() {
@@ -342,11 +359,11 @@ setInterval(updateRealTimeClock, 1000);
 function setDynamicGreeting(username) {
     const greetingEl = document.getElementById('userGreeting');
     if (!greetingEl) return;
-    
+
     const hour = new Date().getHours();
     let waktu = "Malam";
     let daftarMotivasi = [];
-    
+
     if (hour >= 4 && hour < 11) {
         waktu = "Pagi";
         daftarMotivasi = [
@@ -376,19 +393,18 @@ function setDynamicGreeting(username) {
             "Malam tenang, waktunya beresin tugas terakhir dengan teliti."
         ];
     }
-    
+
     const motivasiAcak = daftarMotivasi[Math.floor(Math.random() * daftarMotivasi.length)];
     const subColor = isStitchThemeActive() ? '#475569' : '#94a3b8';
-    greetingEl.innerHTML = `Selamat ${waktu}, <b>${username}</b>! <br><span style="font-size: 11px; color: ${subColor};">${motivasiAcak}</span>`;
+    greetingEl.innerHTML = `Selamat ${waktu}, <b>${escapeHtml(username)}</b>! <br><span style="font-size: 11px; color: ${subColor};">${escapeHtml(motivasiAcak)}</span>`;
 }
 
 window.onload = function() {
     updateRealTimeClock();
     injectModernStyles();
     initPoThemeSystem();
-    initRealTimeWeather();
     cekPembaruanAplikasi();
-    
+
     const today = getLocalDateString();
     const poTanggal = document.getElementById('poTanggal');
     if (poTanggal) poTanggal.value = today;
@@ -429,16 +445,13 @@ function tampilkanFormPO(username) {
     const poSec = document.getElementById('poSection');
     if (loginSec) loginSec.classList.add('hidden');
     if (poSec) poSec.classList.remove('hidden');
-    
+
     setDynamicGreeting(username);
     loadMasterBarang();
     cekRekapOtomatis();
     setTimeout(checkAndForceNotification, 1500);
 }
 
-// ==========================================
-// 🟢 HANDLE LOGIN (SINKRON DENGAN IDENTITAS DASHBOARD)
-// ==========================================
 async function handleLogin() {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
@@ -468,7 +481,7 @@ async function handleLogin() {
             errDiv.style.color = "#38bdf8";
             errDiv.innerText = "Menghubungkan ke server...";
         }
-        
+
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'login', username: user, password: pass })
@@ -494,7 +507,7 @@ async function handleLogin() {
             if (!localStorage.getItem('gudang_staff_name')) {
                 localStorage.setItem('gudang_staff_name', user);
             }
-            
+
             if (errDiv) errDiv.innerText = "";
             tampilkanFormPO(user);
         } else {
@@ -520,7 +533,7 @@ function handleGoogleLogin(response) {
     const responsePayload = parseJwt(response.credential);
     const operatorName = responsePayload.name;
     const operatorEmail = responsePayload.email;
-    
+
     const errDiv = document.getElementById('loginError');
     if (errDiv) {
         errDiv.style.color = "#10b981";
@@ -535,16 +548,16 @@ function handleGoogleLogin(response) {
         if (!localStorage.getItem('gudang_staff_name')) {
             localStorage.setItem('gudang_staff_name', operatorName);
         }
-        
+
         if (errDiv) errDiv.innerText = "";
         tampilkanFormPO(operatorName);
     }, 600);
 }
 
 function parseJwt(token) {
-    var base64Url = token.split('.')[1];
-    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     return JSON.parse(jsonPayload);
@@ -573,7 +586,7 @@ function renderList(data) {
         container.innerHTML = `
             <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">
                 Tidak ada barang ditemukan.<br>
-                <button onclick="muatUlangMasterBarangManual()" style="margin-top: 10px; padding: 6px 14px; background: #3b82f6; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Muat Ulang Data</button>
+                <button type="button" onclick="muatUlangMasterBarangManual()" style="margin-top: 10px; padding: 6px 14px; background: #3b82f6; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Muat Ulang Data</button>
             </div>`;
         return;
     }
@@ -590,16 +603,12 @@ function renderList(data) {
             pic = item.pic || item.penanggung_jawab || '-';
         }
         return `
-            <div class="item-pilihan" onclick="pilihBarang('${escapeHtml(kode)}', '${escapeHtml(nama)}', '${escapeHtml(pic)}')">
-                <span class="item-kode">${kode}</span>
-                <span class="item-nama">${nama} (${pic})</span>
+            <div class="item-pilihan" onclick="pilihBarang('${escapeJsAttr(kode)}', '${escapeJsAttr(nama)}', '${escapeJsAttr(pic)}')">
+                <span class="item-kode">${escapeHtml(kode)}</span>
+                <span class="item-nama">${escapeHtml(nama)} (${escapeHtml(pic)})</span>
             </div>
         `;
     }).join('');
-}
-
-function escapeHtml(text) {
-    return String(text).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
 async function muatUlangMasterBarangManual() {
@@ -612,11 +621,18 @@ async function muatUlangMasterBarangManual() {
 }
 
 function pilihBarang(kode, nama, pic) {
-    document.getElementById('poKode').value = kode;
-    document.getElementById('poNama').value = nama;
-    document.getElementById('poPic').value = pic;
-    document.getElementById('triggerModal').textContent = `${kode} - ${nama}`;
-    document.getElementById('popupSearch').style.display = 'none';
+    const elKode = document.getElementById('poKode');
+    const elNama = document.getElementById('poNama');
+    const elPic = document.getElementById('poPic');
+    const elTrigger = document.getElementById('triggerModal');
+    const elPopup = document.getElementById('popupSearch');
+
+    if (elKode) elKode.value = kode;
+    if (elNama) elNama.value = nama;
+    if (elPic) elPic.value = pic;
+    if (elTrigger) elTrigger.textContent = `${kode} - ${nama}`;
+    if (elPopup) elPopup.style.display = 'none';
+
     stopCameraScanner();
     checkFormValidity();
 
@@ -646,7 +662,7 @@ function closeRiwayatModal() {
 async function loadRiwayatPOData() {
     const tbody = document.getElementById('modalRiwayatTableBody');
     if (!tbody) return;
-    
+
     tbody.innerHTML = `<tr><td colspan="6" style="padding: 25px; text-align: center; color: #38bdf8;"><span class="modern-spinner"></span> Memuat seluruh riwayat PO...</td></tr>`;
 
     try {
@@ -688,26 +704,25 @@ async function loadRiwayatPOData() {
                         if (!isNaN(d.getTime())) {
                             tanggalStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
                         }
-                    } catch(e) {}
+                    } catch (e) {}
                 }
 
                 return `
                     <tr style="border-bottom: 1px solid ${borderRow}; transition: background 0.2s;" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'">
-                        <td style="padding: 10px; white-space: nowrap; color: #94a3b8;">${tanggalStr}</td>
-                        <td style="padding: 10px; color: #38bdf8; font-weight: 500;">${item.kode}</td>
-                        <td style="padding: 10px; color: #f8fafc;">${item.nama}</td>
-                        <td style="padding: 10px; color: #cbd5e1;">${item.pic}</td>
-                        <td style="padding: 10px; text-align: right; font-weight: 600; color: #34d399;">${item.jumlah}</td>
+                        <td style="padding: 10px; white-space: nowrap; color: #94a3b8;">${escapeHtml(tanggalStr)}</td>
+                        <td style="padding: 10px; color: #38bdf8; font-weight: 500;">${escapeHtml(item.kode)}</td>
+                        <td style="padding: 10px; color: #f8fafc;">${escapeHtml(item.nama)}</td>
+                        <td style="padding: 10px; color: #cbd5e1;">${escapeHtml(item.pic)}</td>
+                        <td style="padding: 10px; text-align: right; font-weight: 600; color: #34d399;">${escapeHtml(item.jumlah)}</td>
                         <td class="riwayat-aksi-col">
                             <div class="riwayat-aksi-wrap">
-                                <button type="button" class="btn-aksi-icon edit" title="Edit" aria-label="Edit" onclick="persiapkanEdit(${item.rowIndex}, '${escapeHtml(item.tanggal)}', '${escapeHtml(item.kode)}', '${escapeHtml(item.nama)}', '${escapeHtml(item.pic)}', '${escapeHtml(item.jumlah)}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button type="button" class="btn-aksi-icon edit" title="Edit" aria-label="Edit" onclick="persiapkanEdit(${item.rowIndex}, '${escapeJsAttr(item.tanggal)}', '${escapeJsAttr(item.kode)}', '${escapeJsAttr(item.nama)}', '${escapeJsAttr(item.pic)}', '${escapeJsAttr(item.jumlah)}')"><i class="fa-solid fa-pen-to-square"></i></button>
                                 <button type="button" class="btn-aksi-icon hapus" title="Hapus" aria-label="Hapus" onclick="hapusDataPO(${item.rowIndex})"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </td>
                     </tr>
                 `;
             }).join('');
-
         } else {
             tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #ef4444;">Gagal memuat data dari spreadsheet.</td></tr>`;
         }
@@ -716,28 +731,28 @@ async function loadRiwayatPOData() {
     }
 }
 
-let currentEditRowIndex = null;
-
 function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     currentEditRowIndex = rowIndex;
-    
-    if (tanggal) {
-        try {
+
+    const elTgl = document.getElementById('poTanggal');
+    if (elTgl) {
+        let parsed = false;
+        if (tanggal) {
             const d = new Date(tanggal);
             if (!isNaN(d.getTime())) {
-                document.getElementById('poTanggal').value = d.toISOString().split('T')[0];
+                elTgl.value = formatDateLocal(d);
+                parsed = true;
             }
-        } catch(e) {
-            document.getElementById('poTanggal').value = getLocalDateString();
         }
+        if (!parsed) elTgl.value = getLocalDateString();
     }
-    
+
     document.getElementById('poKode').value = kode;
     document.getElementById('poNama').value = nama;
     document.getElementById('poPic').value = pic;
     document.getElementById('poJumlah').value = jumlah;
     document.getElementById('triggerModal').textContent = `${kode} - ${nama}`;
-    
+
     const btnSubmit = document.getElementById('btnSubmit');
     if (btnSubmit) {
         btnSubmit.innerHTML = "💾 Update Data PO";
@@ -776,14 +791,14 @@ async function hapusDataPO(rowIndex) {
 
     if (titleEl) titleEl.textContent = "Memproses...";
     if (msgEl) msgEl.textContent = "Sedang menghapus data dari server, mohon tunggu sebentar...";
-    
+
     if (iconContainer) {
         iconContainer.innerHTML = `<i id="modalIcon" class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
         iconContainer.style.background = "rgba(56, 189, 248, 0.15)";
         iconContainer.style.borderColor = "rgba(56, 189, 248, 0.4)";
         iconContainer.style.color = "#38bdf8";
     }
-    
+
     if (btnCancel) btnCancel.style.display = "none";
     if (btnConfirm) btnConfirm.style.display = "none";
 
@@ -864,7 +879,7 @@ function initEventListeners() {
             if (popupSearch) popupSearch.style.display = 'flex';
             if (searchInput) searchInput.value = '';
             if (isStitchThemeActive()) playStitchSound("tap");
-            
+
             if (!masterBarang || masterBarang.length === 0) {
                 renderList([{ kode_barang: '', nama_barang: 'Memuat data dari server...', pic: '' }]);
                 await loadMasterBarang();
@@ -928,7 +943,7 @@ function checkFormValidity() {
 
     if (!btnSubmit) return;
 
-    if (kode && kode !== "" && jumlah !== "" && parseInt(jumlah) > 0) {
+    if (kode && kode !== "" && jumlah !== "" && parseInt(jumlah, 10) > 0) {
         btnSubmit.disabled = false;
         btnSubmit.style.opacity = "1";
         btnSubmit.style.cursor = "pointer";
@@ -957,7 +972,7 @@ async function startCameraScanner() {
         await html5QrCode.start(
             { facingMode: "environment" },
             { fps: 10, qrbox: { width: 250, height: 250 } },
-            onScanSuccess, 
+            onScanSuccess,
             onScanFailure
         );
     } catch (err) {
@@ -1003,10 +1018,10 @@ async function onScanSuccess(decodedText) {
     });
 
     if (found) {
-        let kode = Array.isArray(found) ? found[0] : (found.kode_barang || found.kode || found.code || '');
-        let nama = Array.isArray(found) ? found[1] : (found.nama_barang || found.nama || found.name || '');
-        let pic = Array.isArray(found) ? found[2] : (found.pic || found.penanggung_jawab || '');
-        
+        const kode = Array.isArray(found) ? found[0] : (found.kode_barang || found.kode || found.code || '');
+        const nama = Array.isArray(found) ? found[1] : (found.nama_barang || found.nama || found.name || '');
+        const pic = Array.isArray(found) ? found[2] : (found.pic || found.penanggung_jawab || '');
+
         pilihBarang(kode, nama, pic);
         await showCustomModal({
             title: "Scan Berhasil",
@@ -1014,8 +1029,10 @@ async function onScanSuccess(decodedText) {
             type: "success"
         });
     } else {
-        document.getElementById('poKode').value = decodedText;
-        document.getElementById('triggerModal').textContent = decodedText;
+        const elKode = document.getElementById('poKode');
+        const elTrigger = document.getElementById('triggerModal');
+        if (elKode) elKode.value = decodedText;
+        if (elTrigger) elTrigger.textContent = decodedText;
         stopCameraScanner();
         checkFormValidity();
         if (isStitchThemeActive()) playStitchSound("tap");
@@ -1095,7 +1112,7 @@ async function submitPO(e) {
                 btn.innerHTML = `✨ Berhasil!`;
                 btn.style.backgroundColor = "#10b981";
             }
-            
+
             if (msg) {
                 msg.style.color = "#10b981";
                 msg.innerText = isEditMode ? "Data PO Berhasil Diperbarui di Kedua Sheet!" : "Data PO Berhasil Disimpan!";
@@ -1111,12 +1128,11 @@ async function submitPO(e) {
             if (document.getElementById('poNama')) document.getElementById('poNama').value = '';
             if (document.getElementById('poPic')) document.getElementById('poPic').value = '';
             if (document.getElementById('triggerModal')) document.getElementById('triggerModal').textContent = "-- Pilih Barang dari Master --";
-            
+
             if (btn) {
                 btn.innerHTML = "Kirim";
-                btn.style.background = ""; 
+                btn.style.background = "";
             }
-
         } else {
             if (isStitchThemeActive()) {
                 playStitchSound("warn");
@@ -1135,7 +1151,6 @@ async function submitPO(e) {
         }
 
         setTimeout(() => { if (msg) msg.innerText = ""; }, 3000);
-
     } catch (err) {
         if (isStitchThemeActive()) {
             playStitchSound("warn");
@@ -1202,9 +1217,10 @@ function handleLogout() {
 }
 
 function tambahJumlah(angka) {
-    let inputJumlah = document.getElementById('poJumlah');
-    let nilaiSekarang = parseInt(inputJumlah.value) || 0;
-    inputJumlah.value = nilaiSekarang + angka;
+    const inputJumlah = document.getElementById('poJumlah');
+    if (!inputJumlah) return;
+    const nilaiSekarang = parseInt(inputJumlah.value, 10) || 0;
+    inputJumlah.value = nilaiSekarang + Number(angka || 0);
     if (isStitchThemeActive()) playStitchSound("tap");
     checkFormValidity();
 }
@@ -1229,245 +1245,154 @@ function triggerGoogleLogin() {
     }
 }
 
-function initRealTimeWeather() {
-    const tempEl = document.getElementById('weatherTemp');
-    const condEl = document.getElementById('weatherCondition');
-    const locEl = document.getElementById('weatherLocation'); 
-    const iconEl = document.getElementById('weatherIconContainer');
+// =========================================================================
+// 🔔 POP-UP BANNER REKAP HARIAN DI DALAM APLIKASI
+// =========================================================================
+async function cekRekapOtomatis() {
+    const namaPicLogin = localStorage.getItem('po_user') || localStorage.getItem('gudang_staff_name') || "";
+    if (!namaPicLogin) return;
 
-    if (!tempEl) return;
+    const kemarin = new Date();
+    kemarin.setDate(kemarin.getDate() - 1);
+    const tanggalKemarin = formatDateLocal(kemarin);
+    const tanggalKemarinFormatted = kemarin.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    const fetchWeatherByGPS = () => {
-        if (!navigator.geolocation) { fetchDefaultWeather(-7.275, 112.793); return; }
-        if(locEl) locEl.textContent = "Menemukan lokasi...";
-        if(condEl) condEl.textContent = "Memuat Cuaca...";
+    const kunciKemarin = `banner_rekap_shown_${tanggalKemarin}_${namaPicLogin}`;
+    if (localStorage.getItem(kunciKemarin)) return;
 
-        let gpsResolved = false;
-        const fallbackTimer = setTimeout(() => { if (!gpsResolved) fetchDefaultWeather(-7.275, 112.793); }, 4000);
-
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                gpsResolved = true;
-                clearTimeout(fallbackTimer);
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-
-                try {
-                    const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`);
-                    const geoData = await geoRes.json();
-                    const address = geoData.address || {};
-                    const wilayah = address.village || address.suburb || address.city_district || address.city || "Lokasi Anda";
-                    if(locEl) locEl.textContent = wilayah;
-
-                    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
-                    const weatherData = await weatherRes.json();
-                    const temp = Math.round(weatherData.current.temperature_2m);
-                    const wCode = weatherData.current.weather_code;
-
-                    if(tempEl) tempEl.textContent = `${temp}°C`;
-                    const weatherInfo = getWeatherDescription(wCode);
-                    if(condEl) condEl.textContent = weatherInfo.text;
-                    if(iconEl) iconEl.innerHTML = `<i class="${weatherInfo.icon}"></i>`;
-                } catch (err) {
-                    fetchDefaultWeather(lat, lon);
-                }
-            }, 
-            () => {
-                gpsResolved = true;
-                clearTimeout(fallbackTimer);
-                fetchDefaultWeather(-7.275, 112.793);
-            }, 
-            { enableHighAccuracy: false, timeout: 3500, maximumAge: 60000 }
-        );
-    };
-
-    const triggerPermissionOnTouch = () => {
-        fetchWeatherByGPS();
-        window.removeEventListener('click', triggerPermissionOnTouch);
-        window.removeEventListener('touchstart', triggerPermissionOnTouch);
-    };
-
-    window.addEventListener('click', triggerPermissionOnTouch, { once: true });
-    window.addEventListener('touchstart', triggerPermissionOnTouch, { once: true });
-}
-
-async function fetchDefaultWeather(lat, lon) {
     try {
-        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
-        const weatherData = await weatherRes.json();
-        const tempEl = document.getElementById('weatherTemp');
-        const condEl = document.getElementById('weatherCondition');
-        const locEl = document.getElementById('weatherLocation');
-        const iconEl = document.getElementById('weatherIconContainer');
+        let totalPO = 0;
+        try {
+            const response = await fetch(`${WEB_APP_URL}?action=getRekap&pic=${encodeURIComponent(namaPicLogin)}&tanggal=${tanggalKemarin}`);
+            const hasil = await response.json();
+            if (hasil.status === "success" && typeof hasil.totalPO === 'number') {
+                totalPO = hasil.totalPO;
+            }
+        } catch (e) {
+            console.log("Skip getRekap Apps Script:", e);
+        }
 
-        if(tempEl) tempEl.textContent = `${Math.round(weatherData.current.temperature_2m)}°C`;
-        const info = getWeatherDescription(weatherData.current.weather_code);
-        if(condEl) condEl.textContent = info.text;
-        if(iconEl) iconEl.innerHTML = `<i class="${info.icon}"></i>`;
-        if(locEl) locEl.textContent = "Mulyorejo, Surabaya";
-    } catch(e) {
-        const condEl = document.getElementById('weatherCondition');
-        if(condEl) condEl.textContent = "Cerah Berawan";
+        const startYesterday = new Date(kemarin.getFullYear(), kemarin.getMonth(), kemarin.getDate(), 0, 0, 0).getTime();
+        const endYesterday = new Date(kemarin.getFullYear(), kemarin.getMonth(), kemarin.getDate(), 23, 59, 59, 999).getTime();
+
+        const historyRes = await fetch(`${FIREBASE_RTDB_URL}/gudang_nuhsantara/login_history.json?t=${Date.now()}`);
+        const historyData = await historyRes.json() || {};
+        let loginList = [];
+
+        Object.values(historyData).forEach(item => {
+            if (!item || !item.timestamp) return;
+            const ts = Number(item.timestamp);
+            const itemName = (item.name || "").toLowerCase();
+            const targetName = namaPicLogin.toLowerCase();
+
+            if ((itemName.includes(targetName) || targetName.includes(itemName)) && ts >= startYesterday && ts <= endYesterday) {
+                const d = new Date(ts);
+                const jamStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                loginList.push({
+                    ts,
+                    jam: `${jamStr} WIB`,
+                    modul: item.modul || 'Aplikasi'
+                });
+            }
+        });
+
+        loginList.sort((a, b) => a.ts - b.ts);
+
+        tampilkanBannerRekapHarian({
+            nama: namaPicLogin,
+            tanggalLabel: tanggalKemarinFormatted,
+            loginList: loginList,
+            totalPO: totalPO,
+            storageKey: kunciKemarin
+        });
+    } catch (err) {
+        console.error("Gagal memuat rekap otomatis:", err);
     }
 }
 
-function getWeatherDescription(code) {
-    if (code === 0) return { text: "Cerah", icon: "fa-solid fa-sun" };
-    if (code >= 1 && code <= 3) return { text: "Berawan", icon: "fa-solid fa-cloud-sun" };
-    if (code >= 45 && code <= 48) return { text: "Berkabut", icon: "fa-solid fa-smog" };
-    if (code >= 51 && code <= 67) return { text: "Gerimis / Hujan Ringan", icon: "fa-solid fa-cloud-rain" };
-    if (code >= 71 && code <= 77) return { text: "Salju", icon: "fa-solid fa-snowflake" };
-    if (code >= 80 && code <= 82) return { text: "Hujan Lebat", icon: "fa-solid fa-cloud-showers-heavy" };
-    if (code >= 95 && code <= 99) return { text: "Badai Petir", icon: "fa-solid fa-cloud-bolt" };
-    return { text: "Berawan", icon: "fa-solid fa-cloud" };
-}
-
-// =========================================================================
-// 🔔 POP-UP BANNER REKAP HARIAN DI DALAM APLIKASI (GABUNGAN LOGIN & INPUT PO)
-// =========================================================================
-async function cekRekapOtomatis() {
-  const namaPicLogin = localStorage.getItem('po_user') || localStorage.getItem('gudang_staff_name') || "";
-  if (!namaPicLogin) return;
-
-  const kemarin = new Date();
-  kemarin.setDate(kemarin.getDate() - 1); 
-  const tanggalKemarin = kemarin.toISOString().split('T')[0];
-  const tanggalKemarinFormatted = kemarin.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-  const kunciKemarin = `banner_rekap_shown_${tanggalKemarin}_${namaPicLogin}`;
-  if (localStorage.getItem(kunciKemarin)) return;
-
-  try {
-    let totalPO = 0;
-    try {
-      const response = await fetch(`${WEB_APP_URL}?action=getRekap&pic=${encodeURIComponent(namaPicLogin)}&tanggal=${tanggalKemarin}`);
-      const hasil = await response.json();
-      if (hasil.status === "success" && typeof hasil.totalPO === 'number') {
-        totalPO = hasil.totalPO;
-      }
-    } catch (e) { console.log("Skip getRekap Apps Script:", e); }
-
-    const startYesterday = new Date(kemarin.getFullYear(), kemarin.getMonth(), kemarin.getDate(), 0, 0, 0).getTime();
-    const endYesterday = new Date(kemarin.getFullYear(), kemarin.getMonth(), kemarin.getDate(), 23, 59, 59, 999).getTime();
-
-    const historyRes = await fetch(`${FIREBASE_RTDB_URL}/gudang_nuhsantara/login_history.json?t=${Date.now()}`);
-    const historyData = await historyRes.json() || {};
-    let loginList = [];
-
-    Object.values(historyData).forEach(item => {
-      if (!item || !item.timestamp) return;
-      const itemName = (item.name || "").toLowerCase();
-      const targetName = namaPicLogin.toLowerCase();
-
-      if ((itemName.includes(targetName) || targetName.includes(itemName)) && item.timestamp >= startYesterday && item.timestamp <= endYesterday) {
-        const d = new Date(Number(item.timestamp));
-        const jamStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        loginList.push({
-          jam: `${jamStr} WIB`,
-          modul: item.modul || 'Aplikasi'
-        });
-      }
-    });
-
-    loginList.sort((a, b) => a.jam.localeCompare(b.jam));
-
-    tampilkanBannerRekapHarian({
-      nama: namaPicLogin,
-      tanggalLabel: tanggalKemarinFormatted,
-      loginList: loginList,
-      totalPO: totalPO,
-      storageKey: kunciKemarin
-    });
-
-  } catch (err) {
-    console.error("Gagal memuat rekap otomatis:", err);
-  }
-}
-
 function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, storageKey }) {
-  const existing = document.getElementById('bannerRekapHarianModal');
-  if (existing) existing.remove();
+    const existing = document.getElementById('bannerRekapHarianModal');
+    if (existing) existing.remove();
 
-  const isStitch = isStitchThemeActive();
-  const cardBg = isStitch ? 'linear-gradient(145deg, #ffffff, #e0f2fe)' : 'linear-gradient(145deg, #0f172a, #1e293b)';
-  const cardBorder = isStitch ? '#7dd3fc' : 'rgba(56, 189, 248, 0.45)';
-  const titleColor = isStitch ? '#0369a1' : '#fff';
-  const textColor = isStitch ? '#334155' : '#cbd5e1';
-  const accentColor = isStitch ? '#0284c7' : '#38bdf8';
-  const listBoxBg = isStitch ? '#f0f9ff' : 'rgba(2, 6, 23, 0.65)';
-  const listBoxBorder = isStitch ? '#bae6fd' : '#334155';
-  const fontStack = isStitch
-    ? "'Fredoka', 'Nunito', 'Comic Sans MS', cursive, sans-serif"
-    : "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+    const isStitch = isStitchThemeActive();
+    const cardBg = isStitch ? 'linear-gradient(145deg, #ffffff, #e0f2fe)' : 'linear-gradient(145deg, #0f172a, #1e293b)';
+    const cardBorder = isStitch ? '#7dd3fc' : 'rgba(56, 189, 248, 0.45)';
+    const titleColor = isStitch ? '#0369a1' : '#fff';
+    const textColor = isStitch ? '#334155' : '#cbd5e1';
+    const accentColor = isStitch ? '#0284c7' : '#38bdf8';
+    const listBoxBg = isStitch ? '#f0f9ff' : 'rgba(2, 6, 23, 0.65)';
+    const listBoxBorder = isStitch ? '#bae6fd' : '#334155';
+    const fontStack = isStitch
+        ? "'Fredoka', 'Nunito', 'Comic Sans MS', cursive, sans-serif"
+        : "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
 
-  let listHtml = "";
-  if (loginList.length > 0) {
-    listHtml = loginList.map(log => `
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid ${isStitch ? '#e0f2fe' : 'rgba(255,255,255,0.06)'}; font-size: 11px;">
-        <span style="color: ${textColor};">📅 ${log.jam}</span>
-        <span style="color: ${accentColor}; font-weight: 600;">${log.modul}</span>
-        <span style="color: #10b981; font-size: 10px;">🟢 Masuk</span>
-      </div>
-    `).join('');
-  } else {
-    listHtml = `<div style="padding: 10px; text-align: center; color: #64748b; font-size: 11px;">Tidak ada riwayat sesi login tercatat kemarin.</div>`;
-  }
+    let listHtml = "";
+    if (loginList.length > 0) {
+        listHtml = loginList.map(log => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid ${isStitch ? '#e0f2fe' : 'rgba(255,255,255,0.06)'}; font-size: 11px;">
+                <span style="color: ${textColor};">📅 ${escapeHtml(log.jam)}</span>
+                <span style="color: ${accentColor}; font-weight: 600;">${escapeHtml(log.modul)}</span>
+                <span style="color: #10b981; font-size: 10px;">🟢 Masuk</span>
+            </div>
+        `).join('');
+    } else {
+        listHtml = `<div style="padding: 10px; text-align: center; color: #64748b; font-size: 11px;">Tidak ada riwayat sesi login tercatat kemarin.</div>`;
+    }
 
-  const modal = document.createElement('div');
-  modal.id = 'bannerRekapHarianModal';
-  modal.style.cssText = `
-    position: fixed; inset: 0; background: rgba(7, 11, 20, 0.85);
-    backdrop-filter: blur(10px); display: flex; justify-content: center;
-    align-items: center; z-index: 2147483647; padding: 18px; box-sizing: border-box;
-    font-family: ${fontStack};
-  `;
+    const modal = document.createElement('div');
+    modal.id = 'bannerRekapHarianModal';
+    modal.style.cssText = `
+        position: fixed; inset: 0; background: rgba(7, 11, 20, 0.85);
+        backdrop-filter: blur(10px); display: flex; justify-content: center;
+        align-items: center; z-index: 2147483647; padding: 18px; box-sizing: border-box;
+        font-family: ${fontStack};
+    `;
 
-  modal.innerHTML = `
-    <div style="background: ${cardBg}; border: 1.5px solid ${cardBorder}; border-radius: 20px; width: 100%; max-width: 420px; padding: 24px 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.45); color: ${titleColor};">
-      
-      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; border-bottom: 1px solid ${listBoxBorder}; padding-bottom: 12px;">
-        <div style="width: 42px; height: 42px; background: rgba(56, 189, 248, 0.15); border: 1px solid ${accentColor}; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: ${accentColor}; font-size: 18px; flex-shrink: 0;">
-          <i class="fa-solid fa-clipboard-check"></i>
+    modal.innerHTML = `
+        <div style="background: ${cardBg}; border: 1.5px solid ${cardBorder}; border-radius: 20px; width: 100%; max-width: 420px; padding: 24px 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.45); color: ${titleColor};">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; border-bottom: 1px solid ${listBoxBorder}; padding-bottom: 12px;">
+                <div style="width: 42px; height: 42px; background: rgba(56, 189, 248, 0.15); border: 1px solid ${accentColor}; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: ${accentColor}; font-size: 18px; flex-shrink: 0;">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: ${titleColor};">REKAP AKTIVITAS KEMARIN</h3>
+                    <div style="font-size: 11px; color: ${accentColor};">${escapeHtml(tanggalLabel)}</div>
+                </div>
+            </div>
+
+            <p style="font-size: 12.5px; color: ${textColor}; margin: 0 0 14px 0; line-height: 1.5;">
+                Halo <b style="color: ${accentColor};">${escapeHtml(nama)}</b>, berikut catatan kehadiran aplikasi dan produktivitas PO kamu kemarin:
+            </p>
+
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 12px; color: ${textColor};">
+                    <i class="fa-solid fa-file-invoice" style="color: #10b981; margin-right: 6px;"></i> Total Input PO Kemarin
+                </div>
+                <div style="font-size: 16px; font-weight: 800; color: #10b981; font-family: ${isStitch ? fontStack : 'monospace'};">
+                    ${totalPO} Kali
+                </div>
+            </div>
+
+            <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Sesi Login (${loginList.length}x)
+            </div>
+            <div style="background: ${listBoxBg}; border: 1px solid ${listBoxBorder}; border-radius: 10px; max-height: 165px; overflow-y: auto; margin-bottom: 18px; font-family: ${isStitch ? fontStack : 'monospace'};">
+                ${listHtml}
+            </div>
+
+            <button type="button" id="btnConfirmRekapHarian" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: #fff; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 12.5px; cursor: pointer; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+                ✔ MENGERTI, MULAI KERJA HARI INI
+            </button>
         </div>
-        <div>
-          <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: ${titleColor};">REKAP AKTIVITAS KEMARIN</h3>
-          <div style="font-size: 11px; color: ${accentColor};">${tanggalLabel}</div>
-        </div>
-      </div>
+    `;
 
-      <p style="font-size: 12.5px; color: ${textColor}; margin: 0 0 14px 0; line-height: 1.5;">
-        Halo <b style="color: ${accentColor};">${nama}</b>, berikut catatan kehadiran aplikasi dan produktivitas PO kamu kemarin:
-      </p>
+    document.body.appendChild(modal);
 
-      <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
-        <div style="font-size: 12px; color: ${textColor};">
-          <i class="fa-solid fa-file-invoice" style="color: #10b981; margin-right: 6px;"></i> Total Input PO Kemarin
-        </div>
-        <div style="font-size: 16px; font-weight: 800; color: #10b981; font-family: ${isStitch ? fontStack : 'monospace'};">
-          ${totalPO} Kali
-        </div>
-      </div>
-
-      <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
-        <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Sesi Login (${loginList.length}x)
-      </div>
-      <div style="background: ${listBoxBg}; border: 1px solid ${listBoxBorder}; border-radius: 10px; max-height: 165px; overflow-y: auto; margin-bottom: 18px; font-family: ${isStitch ? fontStack : 'monospace'};">
-        ${listHtml}
-      </div>
-
-      <button type="button" id="btnConfirmRekapHarian" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: #fff; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 12.5px; cursor: pointer; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
-        ✔ MENGERTI, MULAI KERJA HARI INI
-      </button>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  document.getElementById('btnConfirmRekapHarian').addEventListener('click', () => {
-    localStorage.setItem(storageKey, 'true');
-    if (isStitch) playStitchSound("tap");
-    modal.remove();
-  });
+    document.getElementById('btnConfirmRekapHarian').addEventListener('click', () => {
+        localStorage.setItem(storageKey, 'true');
+        if (isStitch) playStitchSound("tap");
+        modal.remove();
+    });
 }
 
 // ==========================================
@@ -1503,7 +1428,7 @@ function checkAndForceNotification() {
 
 function showForceNotificationModal() {
     let modal = document.getElementById('forceNotificationModal');
-    
+
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'forceNotificationModal';
@@ -1542,7 +1467,7 @@ function showForceNotificationModal() {
             if (permission === "granted") {
                 localStorage.setItem("gudang_notif_allowed", "true");
                 modal.style.display = 'none';
-                
+
                 let deviceToken = localStorage.getItem("gudang_device_token");
                 if (!deviceToken) {
                     deviceToken = "token_" + Math.random().toString(36).substring(2) + "_" + Date.now();
