@@ -98,7 +98,9 @@ function initPoThemeSystem() {
     const switchBtn = document.getElementById('btnSwitchPoTheme');
     if (switchBtn && !switchBtn.dataset.boundTheme) {
         switchBtn.dataset.boundTheme = "1";
-        switchBtn.addEventListener('click', () => {
+        switchBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             const nextTheme = isStitchThemeActive() ? 'dark' : 'stitch';
             applyPoTheme(nextTheme, true);
         });
@@ -107,12 +109,18 @@ function initPoThemeSystem() {
     const stitchAvatar = document.getElementById('poStitchAvatar');
     if (stitchAvatar && !stitchAvatar.dataset.boundAvatar) {
         stitchAvatar.dataset.boundAvatar = "1";
-        stitchAvatar.addEventListener('click', () => {
+        stitchAvatar.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             playStitchSound("tap");
             updateStitchSpeech();
         });
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    initPoThemeSystem();
+});
 
 // ==========================================
 // 🚀 AUTO-UPDATE & FORCE REFRESH SYSTEM
