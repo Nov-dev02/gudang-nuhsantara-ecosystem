@@ -491,6 +491,10 @@
       border-radius: 9px; font-size: 11.5px; font-weight: bold; cursor: pointer;
       font-family: monospace; display: flex; align-items: center; gap: 8px;
     }
+    .btn-admin:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
     /* LIVE CHAT DASHBOARD STYLES */
     .chat-layout {
@@ -591,14 +595,14 @@
       <h3 style="color: #fff; margin: 0 0 4px 0; font-size: 14px;">SYSTEM ACCESS GATE</h3>
       <p style="font-size: 10.5px; color: var(--text-desc); margin-bottom: 10px;">Masukkan PIN Akses Privat</p>
       
-      <input type="password" id="splashPinInput" maxlength="6" placeholder="••••">
+      <input type="password" id="splashPinInput" maxlength="8" placeholder="••••">
       <div id="splashPinError" style="color: #ef4444; font-size: 10px; margin-bottom: 10px; display: none;">PIN Akses Salah!</div>
       
       <button onclick="loginSplashBiometrik()" style="width: 100%; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 9px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11px; margin-bottom: 8px;">
         <i class="fa-solid fa-fingerprint"></i> Scan Sidik Jari System
       </button>
 
-      <button onclick="verifikasiSplashPin()" style="width: 100%; background: #0284c7; border: 1px solid var(--accent-blue); color: white; padding: 9px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11px;">
+      <button id="btnSplashSubmit" onclick="verifikasiSplashPin()" style="width: 100%; background: #0284c7; border: 1px solid var(--accent-blue); color: white; padding: 9px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11px;">
         Buka Dashboard
       </button>
     </div>
@@ -636,10 +640,11 @@
 
       <div class="sidebar-footer">
         <div style="color: #64748b; margin-bottom: 4px;">SYSTEM STATUS</div>
-        <div style="color: var(--accent-green); display: flex; align-items: center; gap: 6px;">
-          <span style="width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%;"></span> 
-          Cloud Database Active
+        <div id="sidebarCloudStatusRow" style="color: var(--accent-green); display: flex; align-items: center; gap: 6px;">
+          <span id="sidebarCloudDot" style="width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; flex-shrink: 0;"></span> 
+          <span id="sidebarCloudStatusText">Menghubungkan...</span>
         </div>
+        <div id="sidebarLastSyncText" style="color: #64748b; font-size: 9.5px; margin-top: 4px;">Sync: --:--:--</div>
       </div>
     </aside>
 
@@ -675,10 +680,10 @@
 
       <!-- MOBILE SYSTEM STATUS BAR -->
       <div class="mobile-status-bar">
-        <span style="color: #64748b;">SYSTEM STATUS</span>
-        <span style="color: var(--accent-green); display: inline-flex; align-items: center; gap: 6px; font-weight: bold;">
-          <span style="width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%;"></span>
-          Cloud Database Active
+        <span style="color: #64748b;">CLOUD SYNC</span>
+        <span id="mobileCloudStatusRow" style="color: var(--accent-green); display: inline-flex; align-items: center; gap: 6px; font-weight: bold;">
+          <span id="mobileCloudDot" style="width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%;"></span>
+          <span id="mobileCloudStatusText">Menghubungkan...</span>
         </span>
       </div>
 
@@ -978,9 +983,10 @@
       <div id="tab-admin" class="tab-pane">
         <div class="section-box" style="border-color: rgba(168, 85, 247, 0.4);">
           <div class="section-title" style="color: #a855f7;"><i class="fa-solid fa-user-gear"></i> SYSTEM / SUPER ADMIN CONTROLS</div>
-          <p style="font-size: 11.5px; color: var(--text-desc); margin: 0 0 16px 0; line-height: 1.4;">Kelola token lisensi NX pusat, buat token baru, atau paksa pembaruan aplikasi di seluruh perangkat staf.</p>
+          <p style="font-size: 11.5px; color: var(--text-desc); margin: 0 0 16px 0; line-height: 1.4;">Kelola token lisensi NX pusat, ubah PIN akses admin terenkripsi SHA-256, buat token baru, atau paksa pembaruan aplikasi di seluruh perangkat staf.</p>
           <div class="admin-controls">
             <button class="btn-admin" onclick="bukaModalAdmin('lisensi')" style="background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%); border-color: #c084fc;"><i class="fa-solid fa-key"></i> Panel Lisensi</button>
+            <button class="btn-admin" onclick="bukaModalAdmin('change_pin')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border-color: #38bdf8;"><i class="fa-solid fa-shield-halved"></i> Ganti PIN Admin</button>
             <button class="btn-admin" onclick="bukaModalAdmin('generator')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399;"><i class="fa-solid fa-code"></i> Generator</button>
             <button class="btn-admin" onclick="bukaModalAdmin('force_update')" style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); border-color: #f87171;"><i class="fa-solid fa-rotate"></i> Paksa Update</button>
           </div>
@@ -1020,7 +1026,7 @@
       <h3 style="color: #fff; margin: 0 0 4px 0; font-size: 14px;">SECURITY GATE</h3>
       <p id="adminModalSubtitle" style="font-size: 10.5px; color: var(--text-desc); margin-bottom: 10px;">Autentikasi Diperlukan</p>
       
-      <input type="password" id="adminPinInput" maxlength="6" placeholder="••••">
+      <input type="password" id="adminPinInput" maxlength="8" placeholder="••••">
       <div id="pinError" style="color: #ef4444; font-size: 10px; margin-bottom: 10px; display: none;">PIN Salah!</div>
       
       <button onclick="loginDenganBiometrikAsli()" style="width: 100%; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 9px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11px; margin-bottom: 8px;">
@@ -1029,7 +1035,7 @@
 
       <div style="display: flex; gap: 8px;">
         <button onclick="tutupModalAdmin()" style="flex: 1; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 9px; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11px;">Batal</button>
-        <button onclick="verifikasiPinAdmin()" style="flex: 1; background: #0284c7; border: 1px solid var(--accent-blue); color: white; padding: 9px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11px;">Masuk</button>
+        <button id="btnAdminPinSubmit" onclick="verifikasiPinAdmin()" style="flex: 1; background: #0284c7; border: 1px solid var(--accent-blue); color: white; padding: 9px; border-radius: 8px; cursor: pointer; font-family: monospace; font-weight: bold; font-size: 11px;">Masuk</button>
       </div>
     </div>
   </div>
@@ -1070,7 +1076,22 @@
     const CLOUD_CHATS_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/chats.json`;
     const CLOUD_LOGIN_HISTORY_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/login_history.json`;
     const CLOUD_REVIEWS_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/reviews.json`;
+    const CLOUD_SECURITY_ENDPOINT = `${FIREBASE_DB_URL}/gudang_nuhsantara/config/admin_pin_hash.json`;
     const CUSTOM_TEMPLATES_STORAGE_KEY = "gudang_custom_broadcast_templates";
+
+    // SHA-256 hash default tanpa menyertakan PIN teks polos di kode sumber
+    const DEFAULT_PIN_SHA256 = "f6642b16c637a9c1567aa6b17f67a3f57d47c8e99e81529f7887d8a8b24f682f";
+    const MAX_PIN_ATTEMPTS = 3;
+    const PIN_COOLDOWN_MS = 30000;
+
+    let cachedCloudPinHash = null;
+    let pinFailedAttempts = 0;
+    let pinLockUntil = 0;
+    let pinCooldownTimer = null;
+
+    // Tracking notifikasi suara chat staf masuk agar tidak berbunyi berulang
+    const notifiedStaffMsgKeys = new Set();
+    let isFirstChatLoad = true;
 
     const DEFAULT_BROADCAST_TEMPLATES = [
       { title: "Pengingat Cuaca Panas & Fisik", text: "Hai rekan-rekan tim gudang, cuaca hari ini cukup terik. Jangan lupa perbanyak minum air putih dan tetap jaga kesehatan fisik ya!" },
@@ -1098,6 +1119,157 @@
     let cachedLoginHistory = [];
     let cachedAuditLogs = [];
     let cachedReviews = [];
+
+    // --- [IDE 1] KEAMANAN PIN HASH SHA-256 + CLOUD + COOLDOWN ---
+    async function sha256Hex(plainText) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(String(plainText));
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function ambilHashPinAktif() {
+      try {
+        const res = await fetch(CLOUD_SECURITY_ENDPOINT + "?t=" + Date.now());
+        const cloudHash = await res.json();
+        if (typeof cloudHash === "string" && /^[0-9a-f]{64}$/i.test(cloudHash.trim())) {
+          cachedCloudPinHash = cloudHash.trim().toLowerCase();
+          return cachedCloudPinHash;
+        }
+      } catch (e) {}
+      return cachedCloudPinHash || DEFAULT_PIN_SHA256;
+    }
+
+    async function validasiPinTerproteksi(inputPin) {
+      const activeHash = await ambilHashPinAktif();
+      const inputHash = await sha256Hex(inputPin);
+      return inputHash === activeHash;
+    }
+
+    function updateUiPinCooldown() {
+      const remaining = Math.ceil((pinLockUntil - Date.now()) / 1000);
+      const splashErr = document.getElementById("splashPinError");
+      const adminErr = document.getElementById("pinError");
+      const btnSplash = document.getElementById("btnSplashSubmit");
+      const btnAdmin = document.getElementById("btnAdminPinSubmit");
+
+      if (remaining > 0) {
+        const msg = `Terlalu banyak percobaan salah. Tunggu ${remaining} detik...`;
+        if (splashErr) { splashErr.innerText = msg; splashErr.style.display = "block"; }
+        if (adminErr) { adminErr.innerText = msg; adminErr.style.display = "block"; }
+        if (btnSplash) btnSplash.disabled = true;
+        if (btnAdmin) btnAdmin.disabled = true;
+      } else {
+        clearInterval(pinCooldownTimer);
+        pinCooldownTimer = null;
+        pinFailedAttempts = 0;
+        if (splashErr) { splashErr.innerText = "PIN Akses Salah!"; splashErr.style.display = "none"; }
+        if (adminErr) { adminErr.innerText = "PIN Salah!"; adminErr.style.display = "none"; }
+        if (btnSplash) btnSplash.disabled = false;
+        if (btnAdmin) btnAdmin.disabled = false;
+      }
+    }
+
+    function catatKegagalanPin(errorElementId, defaultMsg) {
+      pinFailedAttempts++;
+      const errEl = document.getElementById(errorElementId);
+      if (pinFailedAttempts >= MAX_PIN_ATTEMPTS) {
+        pinLockUntil = Date.now() + PIN_COOLDOWN_MS;
+        updateUiPinCooldown();
+        if (!pinCooldownTimer) {
+          pinCooldownTimer = setInterval(updateUiPinCooldown, 1000);
+        }
+      } else if (errEl) {
+        const sisa = MAX_PIN_ATTEMPTS - pinFailedAttempts;
+        errEl.innerText = `${defaultMsg} (Sisa percobaan: ${sisa}x)`;
+        errEl.style.display = "block";
+      }
+    }
+
+    async function prosesUbahPinAdminBaru() {
+      const pinBaru = await tampilkanDashboardPrompt({
+        title: "UBAH PIN ADMIN BARU",
+        message: "Masukkan PIN baru (4 - 8 karakter angka/huruf). PIN akan disimpan dalam format hash SHA-256 ke Cloud:",
+        placeholder: "Masukkan PIN baru...",
+        confirmText: "Simpan PIN"
+      });
+      if (!pinBaru) return;
+      if (pinBaru.length < 4 || pinBaru.length > 8) {
+        showDashboardToast("Panjang PIN harus 4 sampai 8 karakter!", false);
+        return;
+      }
+      try {
+        const newHash = await sha256Hex(pinBaru);
+        await fetch(CLOUD_SECURITY_ENDPOINT, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newHash)
+        });
+        cachedCloudPinHash = newHash;
+        await catatLogAktivitas("Memperbarui PIN akses keamanan admin (SHA-256)");
+        muatAuditLogs();
+        showDashboardToast("PIN Admin berhasil diperbarui & diamankan!", true);
+      } catch (e) {
+        showDashboardToast("Gagal menyimpan PIN baru ke server!", false);
+      }
+    }
+
+    // --- [IDE 4] INDIKATOR STATUS KONEKSI FIREBASE & SYNC TERAKHIR ---
+    function updateCloudConnectionStatus(isOnline) {
+      const sideRow = document.getElementById("sidebarCloudStatusRow");
+      const sideDot = document.getElementById("sidebarCloudDot");
+      const sideText = document.getElementById("sidebarCloudStatusText");
+      const sideSync = document.getElementById("sidebarLastSyncText");
+
+      const mobRow = document.getElementById("mobileCloudStatusRow");
+      const mobDot = document.getElementById("mobileCloudDot");
+      const mobText = document.getElementById("mobileCloudStatusText");
+
+      const nowStr = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+      if (isOnline) {
+        if (sideRow) sideRow.style.color = "var(--accent-green)";
+        if (sideDot) sideDot.style.background = "var(--accent-green)";
+        if (sideText) sideText.innerText = "Cloud Database Active";
+        if (sideSync) sideSync.innerText = `Sync: ${nowStr} WIB`;
+
+        if (mobRow) mobRow.style.color = "var(--accent-green)";
+        if (mobDot) mobDot.style.background = "var(--accent-green)";
+        if (mobText) mobText.innerText = `Online • ${nowStr}`;
+      } else {
+        if (sideRow) sideRow.style.color = "#ef4444";
+        if (sideDot) sideDot.style.background = "#ef4444";
+        if (sideText) sideText.innerText = "Cloud Offline / Gangguan";
+        if (sideSync) sideSync.innerText = `Gagal: ${nowStr} WIB`;
+
+        if (mobRow) mobRow.style.color = "#ef4444";
+        if (mobDot) mobDot.style.background = "#ef4444";
+        if (mobText) mobText.innerText = "Offline / Gangguan";
+      }
+    }
+
+    // --- [IDE 3] BUNYI NOTIFIKASI CHAT MASUK & AUTO-PILOT ---
+    function playSoftNotificationChime(type = "chat") {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        if (type === "token") {
+          osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(987.77, audioCtx.currentTime + 0.12);
+        } else {
+          osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.1);
+        }
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.45);
+      } catch (e) {}
+    }
 
     // --- HELPER MODAL KONFIRMASI & INPUT KUSTOM ---
     function tampilkanDashboardConfirm(options = {}) {
@@ -1389,6 +1561,7 @@
 
     document.addEventListener("DOMContentLoaded", function() {
       initSplashScreenFlow();
+      ambilHashPinAktif();
       muatTemaDashboard();
       loadSavedWeatherCoords();
       updateWeatherClockUI();
@@ -1402,11 +1575,12 @@
       muatDaftarChatStaf();
       mulaiPantauBroadcastRealtime();
       
-      // ⚡ MENJALANKAN AUTO-PILOT BACKGROUND LISTENER SECARA OTOMATIS
+      // MENJALANKAN AUTO-PILOT BACKGROUND LISTENER SECARA OTOMATIS
       mulaiAutoPilotTokenListener();
 
       setInterval(updateWeatherClockUI, 1000);
       setInterval(fetchLiveWeatherWidget, 15 * 60 * 1000);
+      setInterval(initCommandCenterHUD, 10000);
       setInterval(muatStaffPresence, 3000); 
       setInterval(muatRiwayatLoginHarian, 5000);
       setInterval(muatUlasanStaf, 6000);
@@ -1588,7 +1762,7 @@
       showDashboardToast("Layar dashboard dikunci.", true);
     };
 
-    // --- HELPER PARSE TIMESTAMP TOKEN (SESUAI POLA NX GENERATOR: 18 PREFIX + NX + HEX + 18 SUFFIX) ---
+    // --- HELPER PARSE TIMESTAMP TOKEN ---
     function decodeNxTokenDate(token) {
         try {
             if (!token || typeof token !== "string") return null;
@@ -1635,7 +1809,7 @@
         });
     };
 
-    // --- FUNGSI AUTO-GENERATOR TOKEN 1 MINGGU (SAMA PERSIS DENGAN WEB NX GENERATOR) ---
+    // --- FUNGSI AUTO-GENERATOR TOKEN 1 MINGGU ---
     function generateAutomaticOneWeekToken() {
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() + 7);
@@ -1653,7 +1827,7 @@
         return randomPrefix + "NX" + timeHex + randomSuffix;
     }
 
-    // --- AUTO-PILOT BACKGROUND LISTENER (100% OTOMATIS TANPA KLIK) ---
+    // --- AUTO-PILOT BACKGROUND LISTENER (DENGAN NOTIFIKASI & AUDIT LOG) ---
     function mulaiAutoPilotTokenListener() {
         setInterval(async () => {
             try {
@@ -1666,16 +1840,14 @@
 
                     if (tokenReq && tokenReq.status === 'pending') {
                         const durasiReq = tokenReq.requested_duration || "1 Minggu (Otomatis System)";
-                        console.log(`⚡ Auto-Pilot mendeteksi request dari ${staffId}, memproses otomatis...`);
-                        
-                        await eksekusiAutoApproveStaf(staffId, durasiReq);
+                        await eksekusiAutoApproveStaf(staffId, room.staffName || staffId, durasiReq);
                     }
                 }
             } catch (e) {}
         }, 3000);
     }
 
-    async function eksekusiAutoApproveStaf(staffKey, durasiDiminta) {
+    async function eksekusiAutoApproveStaf(staffKey, staffLabel, durasiDiminta) {
         try {
             const tokenOtomatis = generateAutomaticOneWeekToken();
 
@@ -1699,7 +1871,10 @@
                 })
             });
 
-            console.log(`✅ Token otomatis 1 minggu berhasil dikirim ke ${staffKey}!`);
+            playSoftNotificationChime("token");
+            showDashboardToast(`Auto-Pilot: Token 1 minggu dikirim ke ${staffLabel}!`, true);
+            await catatLogAktivitas(`Auto-Pilot menerbitkan token 1 minggu untuk ${staffLabel}`);
+            muatAuditLogs();
             muatDaftarChatStaf();
         } catch (err) {
             console.error("Gagal memproses auto-approve:", err);
@@ -1821,9 +1996,22 @@
       }, 1200);
     }
 
-    function verifikasiSplashPin() {
+    async function verifikasiSplashPin() {
+      if (Date.now() < pinLockUntil) {
+        updateUiPinCooldown();
+        return;
+      }
       const pin = document.getElementById('splashPinInput').value.trim();
-      if (pin === "2026") { bukaSplashScreenDashboard(); } else { document.getElementById('splashPinError').style.display = 'block'; }
+      if (!pin) return;
+
+      const isValid = await validasiPinTerproteksi(pin);
+      if (isValid) {
+        pinFailedAttempts = 0;
+        bukaSplashScreenDashboard();
+      } else {
+        document.getElementById('splashPinInput').value = '';
+        catatKegagalanPin('splashPinError', 'PIN Akses Salah!');
+      }
     }
 
     async function loginSplashBiometrik() {
@@ -1842,6 +2030,7 @@
         }
         const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
         await navigator.credentials.get({ publicKey: { challenge, allowCredentials: [{ id: hexToBuffer(storedCredIdHex), type: "public-key", transports: ["internal"] }], userVerification: "required" } });
+        pinFailedAttempts = 0;
         bukaSplashScreenDashboard();
       } catch (err) { showDashboardToast("Verifikasi biometrik dibatalkan.", false); }
     }
@@ -1999,7 +2188,7 @@
       }
     }
 
-    // --- LIVE CHAT & CHAT STAF ---
+    // --- LIVE CHAT & CHAT STAF (DENGAN NOTIFIKASI PESAN BARU) ---
     async function muatDaftarChatStaf() {
       try {
         const res = await fetch(CLOUD_CHATS_ENDPOINT + "?t=" + Date.now());
@@ -2007,12 +2196,14 @@
         const roomsListEl = document.getElementById('chatRoomsList');
         let totalUnread = 0;
         let html = "";
+        let latestNewStaffToast = null;
 
         const staffKeys = Object.keys(data);
         const roomsEl = document.getElementById('txtActiveRoomsCount');
         const unreadSubEl = document.getElementById('txtChatUnreadSub');
 
         if (staffKeys.length === 0) {
+          isFirstChatLoad = false;
           if (roomsEl) roomsEl.innerText = "0 Room";
           if (unreadSubEl) unreadSubEl.innerText = "0 pesan belum dibaca";
           roomsListEl.innerHTML = `<div style="padding: 15px; color: var(--text-desc); text-align: center; font-size: 11px;">Belum ada chat masuk.</div>`;
@@ -2029,7 +2220,19 @@
 
           Object.keys(messages).forEach(msgKey => {
             const m = messages[msgKey];
-            if (m.sender === 'staff' && !m.read) unreadCount++;
+            const compositeKey = `${staffId}:${msgKey}`;
+            if (m.sender === 'staff' && !m.read) {
+              unreadCount++;
+              if (!notifiedStaffMsgKeys.has(compositeKey)) {
+                notifiedStaffMsgKeys.add(compositeKey);
+                if (!isFirstChatLoad && activeStaffRoom !== staffId) {
+                  latestNewStaffToast = {
+                    name: room.staffName || staffId,
+                    text: String(m.text || "").slice(0, 42)
+                  };
+                }
+              }
+            }
             lastMsg = m.text;
           });
 
@@ -2053,6 +2256,13 @@
             </div>
           `;
         });
+
+        isFirstChatLoad = false;
+
+        if (latestNewStaffToast) {
+          playSoftNotificationChime("chat");
+          showDashboardToast(`💬 Pesan baru dari ${latestNewStaffToast.name}: "${latestNewStaffToast.text}"`, true);
+        }
 
         if (roomsEl) roomsEl.innerText = `${staffKeys.length} Room`;
         if (unreadSubEl) unreadSubEl.innerText = totalUnread > 0 ? `${totalUnread} pesan belum dibaca` : "Semua pesan terbaca";
@@ -2521,6 +2731,7 @@
         tutupModalAdmin();
         tutupPanelNx();
         if (targetAksiAdmin === 'lisensi') bukaPanelNx();
+        else if (targetAksiAdmin === 'change_pin') prosesUbahPinAdminBaru();
         else if (targetAksiAdmin === 'generator') {
           catatLogAktivitas("Membuka NX Token Generator");
           muatAuditLogs();
@@ -2547,6 +2758,7 @@
             }
             const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
             await navigator.credentials.get({ publicKey: { challenge, allowCredentials: [{ id: hexToBuffer(storedCredIdHex), type: "public-key", transports: ["internal"] }], userVerification: "required" } });
+            pinFailedAttempts = 0;
             eksekusiAksiAdminTervalidasi();
         } catch (err) { showDashboardToast("Verifikasi biometrik dibatalkan.", false); }
     }
@@ -2634,12 +2846,19 @@
         const start = performance.now();
         try {
             const res = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
+            if (!res.ok) throw new Error("HTTP error");
             pingEl.innerText = `${Math.round(performance.now() - start)} ms`;
             const data = await res.json();
             statusText.innerText = data && data.locked ? "Terkunci" : "Normal";
             statusText.style.color = data && data.locked ? "#ef4444" : "#22c55e";
             globalExpiryDate = data && data.expiry ? new Date(data.expiry) : null;
-        } catch (e) { pingEl.innerText = "Offline"; }
+            updateCloudConnectionStatus(true);
+        } catch (e) {
+            pingEl.innerText = "Offline";
+            statusText.innerText = "Offline";
+            statusText.style.color = "#ef4444";
+            updateCloudConnectionStatus(false);
+        }
     }
 
     function updateRealtimeCountdown() {
@@ -2668,18 +2887,40 @@
       t.style.cssText = `position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; border: 1.5px solid ${success ? '#22c55e' : '#ef4444'}; color: #f8fafc; padding: 10px 18px; border-radius: 10px; font-family: monospace; font-size: 11px; z-index: 2147483647; box-shadow: 0 10px 25px rgba(0,0,0,0.8);`;
       t.innerHTML = `${success ? '✅' : '⚠️'} ${msg}`;
       document.body.appendChild(t);
-      setTimeout(() => t.remove(), 3000);
+      setTimeout(() => t.remove(), 3500);
     }
 
     function bukaModalAdmin(aksi) {
       targetAksiAdmin = aksi;
       document.getElementById('adminModal').style.display = 'flex';
       document.getElementById('adminPinInput').value = '';
-      document.getElementById('pinError').style.display = 'none';
+      if (Date.now() < pinLockUntil) {
+        updateUiPinCooldown();
+      } else {
+        document.getElementById('pinError').style.display = 'none';
+      }
       setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
     }
     function tutupModalAdmin() { document.getElementById('adminModal').style.display = 'none'; }
-    function verifikasiPinAdmin() { if (document.getElementById('adminPinInput').value.trim() === "2026") eksekusiAksiAdminTervalidasi(); else document.getElementById('pinError').style.display = 'block'; }
+
+    async function verifikasiPinAdmin() {
+      if (Date.now() < pinLockUntil) {
+        updateUiPinCooldown();
+        return;
+      }
+      const pin = document.getElementById('adminPinInput').value.trim();
+      if (!pin) return;
+
+      const isValid = await validasiPinTerproteksi(pin);
+      if (isValid) {
+        pinFailedAttempts = 0;
+        eksekusiAksiAdminTervalidasi();
+      } else {
+        document.getElementById('adminPinInput').value = '';
+        catatKegagalanPin('pinError', 'PIN Salah!');
+      }
+    }
+
     function bukaPanelNx() { document.getElementById('nxPanelModal').style.display = 'flex'; muatDataPanelDashboard(); }
     function tutupPanelNx() { document.getElementById('nxPanelModal').style.display = 'none'; }
 
