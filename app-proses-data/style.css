@@ -1,5 +1,10 @@
 /* ==========================================
-   🎨 VARIABEL WARNA DARK & LIGHT MODE
+   🎨 IMPORT FONT GEMES UNTUK TEMA STITCH
+   ========================================== */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+
+/* ==========================================
+   🎨 VARIABEL WARNA DARK, LIGHT & STITCH MODE
    ========================================== */
 :root {
   --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
@@ -13,6 +18,9 @@
   --status-bar-bg: rgba(15, 23, 42, 0.75);
   --fade-box-bg: rgba(30, 41, 59, 0.7);
   --log-bg: #030712;
+  --accent-primary: #38bdf8;
+  --accent-secondary: #22c55e;
+  --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 [data-theme="light"] {
@@ -27,9 +35,30 @@
   --status-bar-bg: rgba(241, 245, 249, 0.9);
   --fade-box-bg: rgba(241, 245, 249, 0.8);
   --log-bg: #0f172a;
+  --accent-primary: #0284c7;
+  --accent-secondary: #16a34a;
+  --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Transisi halus universal untuk perubahan warna Dark/Light Mode */
+/* 🌺 TEMA STITCH (EXPERIMENT 626 - OHANA EDITION) 🐾 */
+[data-theme="stitch"] {
+  --bg-gradient: radial-gradient(circle at top left, #7dd3fc 0%, #0284c7 45%, #1e3a8a 100%);
+  --card-bg: rgba(240, 249, 255, 0.95);
+  --card-border: #38bdf8;
+  --text-color: #0c4a6e;
+  --text-desc: #0369a1;
+  --textarea-bg: #ffffff;
+  --textarea-color: #0c4a6e;
+  --textarea-border: #7dd3fc;
+  --status-bar-bg: rgba(224, 242, 254, 0.92);
+  --fade-box-bg: linear-gradient(90deg, rgba(186, 230, 253, 0.85), rgba(254, 205, 211, 0.65));
+  --log-bg: #082f49;
+  --accent-primary: #0284c7;
+  --accent-secondary: #f43f5e;
+  --font-main: 'Fredoka', 'Segoe UI', sans-serif;
+}
+
+/* Transisi halus universal */
 *, *::before, *::after {
   transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease !important;
 }
@@ -42,7 +71,7 @@ html, body {
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-main);
   background: var(--bg-gradient);
   padding: 10px;
   color: var(--text-color);
@@ -52,6 +81,37 @@ body {
   justify-content: center; 
   align-items: center;     
   box-sizing: border-box;
+  position: relative;
+}
+
+/* Ornamen Latar Belakang Khusus Tema Stitch */
+[data-theme="stitch"] body::before {
+  content: "🌺 🐾 🌴 🌺 🐾";
+  position: fixed;
+  top: 14px;
+  right: 24px;
+  font-size: 20px;
+  letter-spacing: 6px;
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: 1;
+}
+
+[data-theme="stitch"] body::after {
+  content: "💙 OHANA MEANS FAMILY • EXPERIMENT 626 💙";
+  position: fixed;
+  bottom: 12px;
+  left: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #e0f2fe;
+  background: rgba(12, 74, 110, 0.55);
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(125, 211, 252, 0.5);
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* ==========================================
@@ -83,6 +143,25 @@ body {
   border: 1px solid var(--card-border);
   position: relative;
   overflow: visible;
+  z-index: 2;
+}
+
+/* Styling Khusus Kartu Utama Saat Tema Stitch */
+[data-theme="stitch"] .container {
+  border-radius: 28px;
+  border: 3px solid #38bdf8;
+  box-shadow: 0 20px 50px rgba(3, 105, 161, 0.45), 0 0 0 6px rgba(255, 255, 255, 0.25);
+}
+
+/* Telinga Lucu Stitch di Atas Container */
+[data-theme="stitch"] .container::before {
+  content: "🌺";
+  position: absolute;
+  top: -18px;
+  right: 28px;
+  font-size: 32px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  animation: floatServer 3s ease-in-out infinite;
 }
 
 /* ENTERPRISE STATUS BAR */
@@ -99,6 +178,15 @@ body {
   margin-bottom: 15px;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+[data-theme="stitch"] .enterprise-status-bar {
+  border-radius: 16px;
+  border: 1.5px solid #7dd3fc;
+}
+
+[data-theme="stitch"] #live-clock {
+  color: #0c4a6e !important;
 }
 
 .status-group {
@@ -120,6 +208,11 @@ body {
   color: #22c55e;
 }
 
+[data-theme="stitch"] .status-badge.active {
+  color: #0284c7;
+  font-family: 'Fredoka', sans-serif;
+}
+
 /* FADE-IN / FADE-OUT TEKS ROTATOR */
 .fade-text-container {
   width: 100%;
@@ -138,6 +231,11 @@ body {
   min-height: 46px;
 }
 
+[data-theme="stitch"] .fade-text-container {
+  border: 1.5px dashed #fb7185;
+  border-radius: 18px;
+}
+
 .fade-text-item {
   color: #38bdf8;
   font-size: 13px;
@@ -145,6 +243,11 @@ body {
   opacity: 1;
   transition: opacity 0.8s ease-in-out;
   white-space: nowrap;
+}
+
+[data-theme="stitch"] .fade-text-item {
+  color: #be123c;
+  font-weight: 600;
 }
 
 h2 {
@@ -155,6 +258,10 @@ h2 {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+[data-theme="stitch"] h2 {
+  color: #0284c7;
 }
 
 p.desc {
@@ -188,15 +295,26 @@ textarea {
   color: var(--textarea-color);
 }
 
+[data-theme="stitch"] textarea {
+  border-radius: 18px;
+  border: 2px solid #7dd3fc;
+  box-shadow: inset 0 2px 8px rgba(2, 132, 199, 0.08);
+}
+
 textarea:focus {
   border-color: #38bdf8;
   outline: none;
   box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
 }
+
+[data-theme="stitch"] textarea:focus {
+  border-color: #fb7185;
+  box-shadow: 0 0 0 4px rgba(251, 113, 133, 0.2);
+}
+
 /* ==========================================================================
    ANIMATED GRADIENT BORDER BUTTON (SMOOTH GPU OPTIMIZED)
    ========================================================================== */
-
 .btn-process-glow {
   position: relative !important;
   display: flex !important;
@@ -214,8 +332,6 @@ textarea:focus {
   transform: translateZ(0); 
   transition: transform 0.3s ease, box-shadow 0.3s ease !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
-  
-  /* Lebar sesuai keinginanmu (tidak full/panjang) */
   width: auto !important;
   min-width: 160px !important;
   max-width: 100% !important;
@@ -224,11 +340,9 @@ textarea:focus {
   box-sizing: border-box !important;
 }
 
-/* Garis Cahaya Gradasi Berputar untuk Tombol Kapsul */
 .btn-process-glow::before {
   content: '';
   position: absolute;
-  /* Gunakan ukuran lebih besar dan center persis supaya muternya pas di border kapsul */
   top: -150%;
   left: -150%;
   right: -150%;
@@ -256,8 +370,28 @@ textarea:focus {
   transition: background 0.3s ease;
 }
 
+/* Tombol Execute Versi Stitch */
+[data-theme="stitch"] .btn-process-glow {
+  background: #0284c7 !important;
+  box-shadow: 0 8px 22px rgba(2, 132, 199, 0.45) !important;
+}
+[data-theme="stitch"] .btn-process-glow::before {
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    transparent 260deg,
+    #fb7185 320deg,
+    #ffffff 350deg,
+    transparent 360deg
+  );
+}
+[data-theme="stitch"] .btn-process-glow::after {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+}
+[data-theme="stitch"] .btn-process-glow:hover::after {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+}
 
-/* Wrapper Teks & Ikon */
 .btn-content {
   position: relative;
   z-index: 3;
@@ -283,7 +417,10 @@ textarea:focus {
   transition: transform 0.3s ease;
 }
 
-/* Spinner & Standby Config */
+[data-theme="stitch"] #btnText i {
+  color: #fde047;
+}
+
 .spinner, #btnSpinner {
   display: none !important;
   width: 20px !important;
@@ -301,15 +438,10 @@ textarea:focus {
 }
 
 @keyframes rotateBorder {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* Hover & Active States yang Halus */
 .btn-process-glow:hover {
   transform: translateY(-2px) translateZ(0) !important;
   box-shadow: 0 0 25px rgba(52, 211, 153, 0.4) !important;
@@ -345,6 +477,13 @@ textarea:focus {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+}
+
+[data-theme="stitch"] #log {
+    border: 2px solid #38bdf8;
+    border-radius: 16px;
+    color: #7dd3fc;
+    text-shadow: 0 0 6px rgba(125, 211, 252, 0.4);
 }
 
 #logText {
@@ -392,14 +531,8 @@ textarea:focus {
 }
 
 @keyframes fadeInDown {
-  from {
-    transform: translateY(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 @keyframes fadeOutToast {
@@ -536,6 +669,10 @@ textarea:focus {
   animation: terminalBlink 0.8s infinite;
 }
 
+[data-theme="stitch"] .terminal-cursor {
+  background-color: #38bdf8;
+}
+
 @keyframes terminalBlink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
@@ -566,9 +703,15 @@ textarea:focus {
 .container.run-animation .anim-4 { animation: contentFadeIn 0.4s ease 0.46s forwards !important; opacity: 0; }
 .container.run-animation .anim-5 { animation: contentFadeIn 0.4s ease 0.58s forwards !important; opacity: 0; }
 
+/* POSISI SWITCH 3 TEMA (DARK -> LIGHT -> STITCH) */
 [data-theme="light"] #themeSwitchThumb {
-  transform: translateX(26px) !important;
+  transform: translateX(22px) !important;
   background: #f59e0b !important;
+}
+
+[data-theme="stitch"] #themeSwitchThumb {
+  transform: translateX(44px) !important;
+  background: #fb7185 !important;
 }
 
 @keyframes continuousFlow {
@@ -587,46 +730,6 @@ textarea:focus {
 
 #boot-progress-fill.running {
   animation: continuousFlow 29s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-}
-
-/* Tombol Refresh Cyberpunk Glitch */
-#btn-refresh {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(236, 72, 153, 0.15));
-  border: 1px solid #c084fc;
-  color: #f472b6;
-  padding: 4px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: monospace;
-  transition: all 0.2s ease;
-}
-
-#btn-refresh:hover {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(236, 72, 153, 0.35));
-  box-shadow: 0 0 15px rgba(192, 132, 252, 0.6);
-}
-
-.glitch-spin {
-  animation: glitchAnim 0.4s infinite linear alternate, spin 1s linear infinite;
-  filter: drop-shadow(0 0 8px #e879f9);
-  display: inline-block;
-}
-
-@keyframes glitchAnim {
-  0% { transform: translate(0, 0) rotate(0deg); }
-  20% { transform: translate(-2px, 2px) rotate(70deg); }
-  40% { transform: translate(-2px, -2px) rotate(140deg); }
-  60% { transform: translate(2px, 2px) rotate(210deg); }
-  80% { transform: translate(2px, -2px) rotate(280deg); }
-  100% { transform: translate(0, 0) rotate(360deg); }
-}
-
-@keyframes spin {
-  100% { transform: rotate(360deg); }
 }
 
 /* Styling Tombol Header Modern & Glassmorphism */
@@ -648,12 +751,32 @@ textarea:focus {
   backdrop-filter: blur(4px);
 }
 
+[data-theme="light"] .btn-action {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.06);
+  border-color: #cbd5e1;
+}
+
+[data-theme="stitch"] .btn-action {
+  color: #0c4a6e;
+  background: #e0f2fe;
+  border: 1.5px solid #38bdf8;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
 .btn-action:hover {
   background: rgba(56, 189, 248, 0.15);
   border-color: #38bdf8;
   color: #ffffff;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+}
+
+[data-theme="stitch"] .btn-action:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #fb7185;
 }
 
 .btn-action:active {
@@ -667,6 +790,14 @@ textarea:focus {
   transition: transform 0.3s ease;
 }
 
+[data-theme="stitch"] .btn-action i {
+  color: #fb7185;
+}
+
+[data-theme="stitch"] .btn-action:hover i {
+  color: #fde047;
+}
+
 .btn-action:hover .fa-rotate-right {
   transform: rotate(180deg);
 }
@@ -674,10 +805,44 @@ textarea:focus {
 .btn-action:hover .fa-gear {
   transform: rotate(45deg);
 }
+
+/* Penyesuaian Header Box dan Badge saat Tema Stitch */
+[data-theme="stitch"] .header-brand-box {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border: 2px solid #7dd3fc !important;
+  border-radius: 18px !important;
+}
+
+[data-theme="stitch"] #rowCounter {
+  background: #e0f2fe !important;
+  border-color: #38bdf8 !important;
+  color: #0c4a6e !important;
+  font-weight: 600;
+}
+
+[data-theme="stitch"] #dailyCounterBadge {
+  background: #ffe4e6 !important;
+  border-color: #fb7185 !important;
+  color: #be123c !important;
+  font-weight: 600;
+}
+
+[data-theme="stitch"] .footer-credits {
+  color: #0369a1 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="stitch"] .footer-operators {
+  color: #e11d48 !important;
+}
+
+[data-theme="stitch"] .footer-operators span {
+  color: #0284c7 !important;
+}
+
 /* ==========================================
    💎 MODAL DEVELOPER PROFILE (GLASSMORPHISM)
    ========================================== */
-/* Pastikan modal disembunyikan secara mutlak di awal */
 #developerModal {
   display: none !important;
 }
@@ -688,26 +853,21 @@ textarea:focus {
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: transparent !important; /* Menghilangkan background hitam transparan total */
-  backdrop-filter: none !important; /* Menghilangkan efek blur di luar modal */
+  background: transparent !important;
+  backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  display: none; /* Default tersembunyi */
+  display: none;
   z-index: 2147483647 !important;
   box-sizing: border-box !important;
-  pointer-events: none !important; /* Supaya klik di luar modal bisa menembus ke halaman utama */
-}
-
-@keyframes fadeInModal {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  pointer-events: none !important;
 }
 
 .glass-modal-content {
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
-  transform: translate(-50%, -50%) !important; /* Presisi pas di tengah layar */
-  background: rgba(15, 23, 42, 0.98) !important; /* Background dalam modal tetap elegan dan solid */
+  transform: translate(-50%, -50%) !important;
+  background: rgba(15, 23, 42, 0.98) !important;
   border: 1px solid rgba(56, 189, 248, 0.4) !important;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(56, 189, 248, 0.25) !important;
   border-radius: 20px !important;
@@ -717,7 +877,7 @@ textarea:focus {
   overflow-y: auto !important;
   color: #f8fafc !important;
   font-family: inherit !important;
-  pointer-events: auto !important; /* Mengaktifkan kembali klik di dalam kotak modal */
+  pointer-events: auto !important;
 }
 
 .glass-modal-header {
@@ -874,7 +1034,7 @@ textarea:focus {
   color: #0f172a !important;
   box-shadow: 0 0 15px rgba(56, 189, 248, 0.4) !important;
 }
-/* Penyesuaian khusus ukuran tombol Developer agar ramping dan proporsional */
+
 button[onclick*="openDeveloperModal"], 
 .btn-developer {
   padding: 6px 12px !important;
@@ -883,32 +1043,3 @@ button[onclick*="openDeveloperModal"],
   min-height: unset !important;
   border-radius: 8px !important;
 }
-.btn-back-dashboard {
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(56, 189, 248, 0.4);
-  color: #38bdf8;
-  padding: 8px 14px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-family: monospace;
-  font-weight: bold;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-  z-index: 9999;
-  transition: all 0.3s ease;
-}
-.btn-back-dashboard:hover {
-  background: #0284c7;
-  color: white;
-  border-color: #38bdf8;
-  transform: translateY(-2px);
-}
-
-
