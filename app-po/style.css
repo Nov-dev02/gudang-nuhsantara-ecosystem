@@ -271,7 +271,8 @@ input[type="number"]:focus {
     color: #38bdf8;
 }
 
-button {
+#btnLogin,
+#btnSubmit {
     width: 100%;
     padding: 12px;
     background: #38bdf8;
@@ -285,7 +286,8 @@ button {
     margin-top: 8px;
 }
 
-button:hover {
+#btnLogin:hover,
+#btnSubmit:hover {
     background: #0ea5e9;
 }
 
@@ -344,6 +346,10 @@ button:hover {
     color: #fff;
     font-size: 13px;
     margin-top: 0;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 .btn-logout:hover {
@@ -366,6 +372,7 @@ button:hover {
     cursor: pointer;
     margin-top: 0;
     width: 100%;
+    font-size: 14px;
 }
 
 .btn-modal-trigger:hover {
