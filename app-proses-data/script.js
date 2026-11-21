@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', syncGasUrlFromCloud);
 
 let currentDownloadUrl = "";
 const SCRIPT_URL_REKAPAN = "https://script.google.com/macros/s/AKfycbzLud58sY-o4azbshEww7-JSXCLoZ2sbmALaS2z6aRhmT-Q_vvXCzlDn4NqzBCedZpS/exec";
-
 // ==========================================
 // 🎨 SCRIPT PENGATUR TEMA DARK / LIGHT / STITCH
 // ==========================================
@@ -54,30 +53,29 @@ function cycleTheme() {
 }
 
 function toggleDarkLightMode() {
-  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-  if (currentTheme === 'stitch') {
-    setTheme('dark');
-  } else {
-    setTheme(currentTheme === 'light' ? 'dark' : 'light');
-  }
+  cycleTheme();
 }
 
 function updateThemeButtonUI(theme) {
   const thumbEl = document.getElementById('themeSwitchThumb');
+  const labelEl = document.getElementById('themeNameLabel');
 
   if (theme === 'light') {
+    if (labelEl) labelEl.textContent = 'Light';
     if (thumbEl) {
       thumbEl.style.transform = 'translateX(22px)';
       thumbEl.style.background = '#f59e0b';
       thumbEl.innerHTML = '<i class="fa-solid fa-sun" style="font-size: 11px; color: #070b14;"></i>';
     }
   } else if (theme === 'stitch') {
+    if (labelEl) labelEl.textContent = 'Stitch';
     if (thumbEl) {
       thumbEl.style.transform = 'translateX(44px)';
       thumbEl.style.background = '#fb7185';
       thumbEl.innerHTML = '<i class="fa-solid fa-paw" style="font-size: 11px; color: #ffffff;"></i>';
     }
   } else {
+    if (labelEl) labelEl.textContent = 'Dark';
     if (thumbEl) {
       thumbEl.style.transform = 'translateX(0px)';
       thumbEl.style.background = '#38bdf8';
@@ -91,16 +89,18 @@ document.addEventListener('DOMContentLoaded', () => {
   setTheme(savedTheme);
 
   const stitchMascot = document.getElementById('stitchMascotFloat');
-  if (stitchMascot) {
+  if (stitchMascot && !stitchMascot.dataset.boundClick) {
+    stitchMascot.dataset.boundClick = '1';
     stitchMascot.addEventListener('click', () => {
       if (typeof showNxToast === 'function') {
         showNxToast("Ohana means family! 💙 Experiment 626 siap bantu gudang!", "🐾");
-      } else {
+      } else if (typeof showCustomToastNotification === 'function') {
         showCustomToastNotification("Ohana means family! 💙 Experiment 626 siap bantu gudang!", "#38bdf8");
       }
     });
   }
 });
+
 
 // ==========================================
 // 🛡️ DATABASE & VERIFIKASI OPERATOR SHIFT
