@@ -35,120 +35,152 @@ let currentDownloadUrl = "";
 const SCRIPT_URL_REKAPAN = "https://script.google.com/macros/s/AKfycbzLud58sY-o4azbshEww7-JSXCLoZ2sbmALaS2z6aRhmT-Q_vvXCzlDn4NqzBCedZpS/exec";
 
 // ==========================================
-// 🎨 SCRIPT PENGATUR TOGGLE TEMA DARK / LIGHT
+// 🎨 SCRIPT PENGATUR TEMA DARK / LIGHT / STITCH
 // ==========================================
+const THEME_ORDER = ['dark', 'light', 'stitch'];
+
+function setTheme(theme) {
+  const validTheme = THEME_ORDER.includes(theme) ? theme : 'dark';
+  document.documentElement.setAttribute('data-theme', validTheme);
+  localStorage.setItem('gudang_theme', validTheme);
+  updateThemeButtonUI(validTheme);
+}
+
+function cycleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  const currentIndex = THEME_ORDER.indexOf(currentTheme);
+  const nextTheme = THEME_ORDER[(currentIndex + 1) % THEME_ORDER.length];
+  setTheme(nextTheme);
+}
+
 function toggleDarkLightMode() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('gudang_theme', newTheme);
-    updateThemeButtonUI(newTheme);
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  if (currentTheme === 'stitch') {
+    setTheme('dark');
+  } else {
+    setTheme(currentTheme === 'light' ? 'dark' : 'light');
+  }
 }
 
 function updateThemeButtonUI(theme) {
-    const thumbEl = document.getElementById('themeSwitchThumb');
-    
-    if (theme === 'light') {
-        if (thumbEl) {
-            thumbEl.style.transform = 'translateX(26px)';
-            thumbEl.style.background = '#f59e0b';
-            thumbEl.innerHTML = '<i class="fa-solid fa-sun" style="font-size: 11px; color: #070b14;"></i>';
-        }
-    } else {
-        if (thumbEl) {
-            thumbEl.style.transform = 'translateX(0px)';
-            thumbEl.style.background = '#38bdf8';
-            thumbEl.innerHTML = '<i class="fa-solid fa-moon" style="font-size: 11px; color: #070b14;"></i>';
-        }
+  const thumbEl = document.getElementById('themeSwitchThumb');
+
+  if (theme === 'light') {
+    if (thumbEl) {
+      thumbEl.style.transform = 'translateX(22px)';
+      thumbEl.style.background = '#f59e0b';
+      thumbEl.innerHTML = '<i class="fa-solid fa-sun" style="font-size: 11px; color: #070b14;"></i>';
     }
+  } else if (theme === 'stitch') {
+    if (thumbEl) {
+      thumbEl.style.transform = 'translateX(44px)';
+      thumbEl.style.background = '#fb7185';
+      thumbEl.innerHTML = '<i class="fa-solid fa-paw" style="font-size: 11px; color: #ffffff;"></i>';
+    }
+  } else {
+    if (thumbEl) {
+      thumbEl.style.transform = 'translateX(0px)';
+      thumbEl.style.background = '#38bdf8';
+      thumbEl.innerHTML = '<i class="fa-solid fa-moon" style="font-size: 11px; color: #070b14;"></i>';
+    }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('gudang_theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeButtonUI(savedTheme);
+  const savedTheme = localStorage.getItem('gudang_theme') || 'dark';
+  setTheme(savedTheme);
+
+  const stitchMascot = document.getElementById('stitchMascotFloat');
+  if (stitchMascot) {
+    stitchMascot.addEventListener('click', () => {
+      if (typeof showNxToast === 'function') {
+        showNxToast("Ohana means family! 💙 Experiment 626 siap bantu gudang!", "🐾");
+      } else {
+        showCustomToastNotification("Ohana means family! 💙 Experiment 626 siap bantu gudang!", "#38bdf8");
+      }
+    });
+  }
 });
 
 // ==========================================
 // 🛡️ DATABASE & VERIFIKASI OPERATOR SHIFT
 // ==========================================
 const operatorsProfile = {
-  "IRGI": { 
-    id: "GDN-001", 
-    name: "IRGI", 
-    photo: "https://raw.githubusercontent.com/Nov-dev02/Gudang-Web-App/main/img/IRGI.jpg" 
+  "IRGI": {
+    id: "GDN-001",
+    name: "IRGI",
+    photo: "https://raw.githubusercontent.com/Nov-dev02/Gudang-Web-App/main/img/IRGI.jpg"
   },
-  "DWI": { 
-    id: "GDN-003", 
-    name: "DWI", 
-    photo: "" 
+  "DWI": {
+    id: "GDN-003",
+    name: "DWI",
+    photo: ""
   },
-  "ERIKA": { 
-    id: "GDN-004", 
-    name: "ERIKA", 
-    photo: "" 
+  "ERIKA": {
+    id: "GDN-004",
+    name: "ERIKA",
+    photo: ""
   }
 };
 
 function setOperatorProfile(namaOperator) {
-    const elName = document.getElementById('operatorName');
-    const elId = document.getElementById('operatorId');
-    const elAvatarBox = document.getElementById('operatorAvatarBox');
-    const settingBtn = document.getElementById('settingBtn');
-    
-    if (!namaOperator) {
-        if (elName) elName.innerText = "---";
-        if (elId) elId.innerText = "ID: ---";
-        if (elAvatarBox) {
-            elAvatarBox.innerHTML = '<i class="fa-solid fa-lock"></i>';
-            elAvatarBox.style.background = 'rgba(239, 68, 68, 0.2)';
-            elAvatarBox.style.color = '#ef4444';
-        }
-        
-        if (settingBtn) {
-            settingBtn.disabled = true;
-            settingBtn.style.opacity = '0.5';
-            settingBtn.style.cursor = 'not-allowed';
-        }
-        return;
+  const elName = document.getElementById('operatorName');
+  const elId = document.getElementById('operatorId');
+  const elAvatarBox = document.getElementById('operatorAvatarBox');
+  const settingBtn = document.getElementById('settingBtn');
+
+  if (!namaOperator) {
+    if (elName) elName.innerText = "---";
+    if (elId) elId.innerText = "ID: ---";
+    if (elAvatarBox) {
+      elAvatarBox.innerHTML = '<i class="fa-solid fa-lock"></i>';
+      elAvatarBox.style.background = 'rgba(239, 68, 68, 0.2)';
+      elAvatarBox.style.color = '#ef4444';
     }
 
     if (settingBtn) {
-        settingBtn.disabled = false;
-        settingBtn.style.opacity = '1';
-        settingBtn.style.cursor = 'pointer';
+      settingBtn.disabled = true;
+      settingBtn.style.opacity = '0.5';
+      settingBtn.style.cursor = 'not-allowed';
     }
+    return;
+  }
 
-    const cleanName = namaOperator.toUpperCase();
-    const profile = operatorsProfile[cleanName] || { id: "GDN-999", name: namaOperator, photo: "" };
-    
-    if (elName) elName.innerText = profile.name;
-    if (elId) elId.innerText = `ID: ${profile.id}`;
-    
-    if (elAvatarBox) {
-        elAvatarBox.style.color = '';
-        if (profile.photo && profile.photo.trim() !== "") {
-            elAvatarBox.innerHTML = `<img src="${profile.photo}" alt="${profile.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 3px;">`;
-            elAvatarBox.style.background = 'transparent';
-        } else {
-            const initials = profile.name.slice(0, 2).toUpperCase();
-            elAvatarBox.innerHTML = initials;
-            elAvatarBox.style.background = 'rgba(56, 189, 248, 0.3)';
-        }
+  if (settingBtn) {
+    settingBtn.disabled = false;
+    settingBtn.style.opacity = '1';
+    settingBtn.style.cursor = 'pointer';
+  }
+
+  const cleanName = namaOperator.toUpperCase();
+  const profile = operatorsProfile[cleanName] || { id: "GDN-999", name: namaOperator, photo: "" };
+
+  if (elName) elName.innerText = profile.name;
+  if (elId) elId.innerText = `ID: ${profile.id}`;
+
+  if (elAvatarBox) {
+    elAvatarBox.style.color = '';
+    if (profile.photo && profile.photo.trim() !== "") {
+      elAvatarBox.innerHTML = `<img src="${profile.photo}" alt="${profile.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 3px;">`;
+      elAvatarBox.style.background = 'transparent';
+    } else {
+      const initials = profile.name.slice(0, 2).toUpperCase();
+      elAvatarBox.innerHTML = initials;
+      elAvatarBox.style.background = 'rgba(56, 189, 248, 0.3)';
     }
+  }
 }
 
 function verifyOperatorLogin() {
   const inputEl = document.getElementById('inputOperatorKey');
-  if (!inputEl) return;  
-  
+  if (!inputEl) return;
+
   const inputVal = inputEl.value.trim().toUpperCase();
   const errorMsg = document.getElementById('loginErrorMsg');
   const alertBox = document.getElementById('loginAlertBox');
   const modal = document.getElementById('loginModal');
 
-  const activeShiftOperator = typeof getActiveOperator === 'function' ? getActiveOperator() : "DWI";
+  const activeShiftOperator = (typeof window.getActiveOperator === 'function' ? window.getActiveOperator() : "DWI") || "DWI";
   const activeProfile = operatorsProfile[activeShiftOperator];
 
   const isInputValid = (inputVal === activeShiftOperator) || (activeProfile && inputVal === activeProfile.id);
@@ -159,28 +191,26 @@ function verifyOperatorLogin() {
       loginTime: new Date().getTime()
     };
     localStorage.setItem('gudang_active_operator', JSON.stringify(sessionData));
-    
+
     if (errorMsg) errorMsg.style.display = 'none';
     if (alertBox) {
       alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span id="alertSuccessText">Verifikasi Berhasil! Selamat Bertugas, ${activeShiftOperator}!</span>`;
       alertBox.style.top = '0px';
     }
     setOperatorProfile(activeShiftOperator);
-    
+
     setTimeout(() => {
       if (modal) {
         modal.style.opacity = '0';
-        setTimeout(() => { 
-          modal.style.display = 'none'; 
-          
+        setTimeout(() => {
+          modal.style.display = 'none';
+
           const welcomeAudio = new Audio(`https://raw.githubusercontent.com/Nov-dev02/Gudang-Web-App/main/audio/${activeShiftOperator}.mp3?v=99`);
           welcomeAudio.volume = 0.9;
           welcomeAudio.play().catch(err => console.log("Audio play blocked/error:", err));
-
         }, 300);
       }
     }, 1000);
-
   } else {
     if (errorMsg) {
       errorMsg.innerHTML = `<i class="fa-solid fa-circle-xmark" style="margin-right: 4px;"></i> Access Denied! Harap masukkan operator yang valid`;
@@ -194,9 +224,9 @@ function updateRowCounter() {
   const rowCounter = document.getElementById('rowCounter');
   if (!textarea || !rowCounter) return;
 
-  let text = textarea.value;
-  let lines = text.split('\n').filter(line => line.trim() !== '');
-  let totalLines = lines.length;
+  const text = textarea.value;
+  const lines = text.split('\n').filter(line => line.trim() !== '');
+  const totalLines = lines.length;
 
   if (totalLines === 0) {
     rowCounter.innerHTML = `<i class="fa-solid fa-chart-bar" style="margin-right: 5px; color: #38bdf8;"></i> 0 baris data`;
@@ -207,13 +237,13 @@ function updateRowCounter() {
   let tiktokCount = 0;
 
   lines.forEach(rawLine => {
-    let line = rawLine.trim();
-    let upperLine = line.toUpperCase();
+    const line = rawLine.trim();
+    const upperLine = line.toUpperCase();
 
     const shopeePattern = /^\d{6}[A-Z0-9]{8}$/i;
-    const isTiktok = upperLine.startsWith('JY') || 
-                     upperLine.startsWith('TG') || 
-                     upperLine.startsWith('GTL') || 
+    const isTiktok = upperLine.startsWith('JY') ||
+                     upperLine.startsWith('TG') ||
+                     upperLine.startsWith('GTL') ||
                      upperLine.includes('TIKTOK');
 
     if (shopeePattern.test(line)) {
@@ -224,7 +254,7 @@ function updateRowCounter() {
   });
 
   if (shopeeCount > 0 || tiktokCount > 0) {
-    rowCounter.innerHTML = `<i class="fa-solid fa-chart-bar" style="margin-right: 5px; color: #38bdf8;"></i> ${totalLines.toLocaleString()} baris <span style="font-size: 10px; opacity: 0.85; margin-left: 4px; font-weight: normal;">(Shopee: ${shopeeCount} | TikTok:${tiktokCount})</span>`;
+    rowCounter.innerHTML = `<i class="fa-solid fa-chart-bar" style="margin-right: 5px; color: #38bdf8;"></i> ${totalLines.toLocaleString()} baris <span style="font-size: 10px; opacity: 0.85; margin-left: 4px; font-weight: normal;">(Shopee: ${shopeeCount} | TikTok: ${tiktokCount})</span>`;
   } else {
     rowCounter.innerHTML = `<i class="fa-solid fa-chart-bar" style="margin-right: 5px; color: #38bdf8;"></i> ${totalLines.toLocaleString()} baris data`;
   }
@@ -250,16 +280,16 @@ if (document.readyState === 'loading') {
 async function processData() {
   const textarea = document.getElementById('shopeeData');
   const rowCounter = document.getElementById('rowCounter');
-  
+
   if (!textarea) return;
   const shopeeData = textarea.value.trim();
-  
+
   const btn = document.getElementById('submitBtn');
   const btnSpinner = document.getElementById('btnSpinner');
   const btnText = document.getElementById('btnText');
   const logDiv = document.getElementById('log');
   const logTextSpan = document.getElementById('logText');
-  
+
   if (!shopeeData) {
     if (typeof showNxCustomAlert === 'function') {
       showNxCustomAlert("Silakan paste data Shopee & TikTok terlebih dahulu ya!", false);
@@ -276,12 +306,12 @@ async function processData() {
   if (logDiv) logDiv.style.display = 'block';
   if (logTextSpan) logTextSpan.innerHTML = '[' + new Date().toLocaleTimeString() + '] <i class="fa-solid fa-network-wired" style="color: #22c55e; margin-right: 6px;"></i>Menghubungkan ke Cloud Database Google Drive...';
   if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
-  
+
   await new Promise(resolve => setTimeout(resolve, 600));
-  
+
   if (logTextSpan) logTextSpan.innerHTML += '<br>[' + new Date().toLocaleTimeString() + '] <i class="fa-solid fa-magnifying-glass" style="color: #22c55e; margin-right: 6px;"></i>Memvalidasi format data Shopee & TikTok Shop...';
   if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
-  
+
   try {
     await new Promise(resolve => setTimeout(resolve, 700));
     if (logTextSpan) logTextSpan.innerHTML += '<br>[' + new Date().toLocaleTimeString() + '] <i class="fa-solid fa-bolt" style="color: #22c55e; margin-right: 6px;"></i>Mengirim payload ke database... (Mohon tunggu sebentar)';
@@ -296,7 +326,7 @@ async function processData() {
       body: JSON.stringify({ shopeeData: shopeeData }),
       signal: controller.signal
     });
-    
+
     clearTimeout(timeoutId);
 
     if (!response.ok) {
@@ -304,7 +334,7 @@ async function processData() {
     }
 
     const result = await response.text();
-    let res = JSON.parse(result);
+    const res = JSON.parse(result);
 
     if (res.status === 'success') {
       await new Promise(resolve => setTimeout(resolve, 400));
@@ -313,10 +343,10 @@ async function processData() {
 
       const now = new Date();
       const formattedSyncTime = `${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} - ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })} WIB`;
-      
+
       localStorage.setItem('gudang_last_sync', formattedSyncTime);
       updateLastSyncDisplay(formattedSyncTime);
-      
+
       const messageLines = res.message ? res.message.split('\n') : [];
       for (let i = 0; i < messageLines.length; i++) {
         if (messageLines[i].trim() !== '') {
@@ -325,16 +355,16 @@ async function processData() {
           if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
         }
       }
-      
+
       textarea.value = '';
       if (rowCounter) rowCounter.innerHTML = `<i class="fa-solid fa-chart-bar" style="margin-right: 5px; color: #38bdf8;"></i> 0 baris data`;
 
       playSuccessSound();
       addCumulativeTotal(messageLines.length);
-      
+
       currentDownloadUrl = res.downloadUrl || res.fileUrl || res.spreadsheetUrl || "";
       window.globalServerResponse = res;
-      
+
       setTimeout(() => {
         const modalKonfirmasi = document.getElementById('modalKonfirmasi');
         if (modalKonfirmasi) {
@@ -343,13 +373,11 @@ async function processData() {
           showCustomAlert(res.message || "Transaksi selesai.", currentDownloadUrl);
         }
       }, 1200);
-
     } else {
       if (logTextSpan) logTextSpan.innerHTML += '<br>[' + new Date().toLocaleTimeString() + '] <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444; margin-right: 6px;"></i>Error: ' + res.message;
       if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
       setTimeout(() => { showCustomAlert('Terjadi Kesalahan: ' + res.message, ''); }, 800);
     }
-
   } catch (error) {
     let errorMessage = error.message;
     if (error.name === 'AbortError') {
@@ -359,7 +387,7 @@ async function processData() {
     if (logDiv) logDiv.scrollTop = logDiv.scrollHeight;
     setTimeout(() => { showCustomAlert('Terjadi Kesalahan: ' + errorMessage, ''); }, 800);
   }
-  
+
   if (btn) btn.disabled = false;
   if (btnSpinner) btnSpinner.style.setProperty('display', 'none', 'important');
   if (btnText) {
@@ -375,15 +403,15 @@ function showCustomAlert(message, downloadUrl) {
   const downloadBtn = document.getElementById('downloadBtn');
   const progressBar = document.getElementById('downloadProgressBar');
   const downloadBtnText = document.getElementById('downloadBtnText');
-  
+
   if (progressBar) progressBar.style.width = '0%';
   if (downloadBtnText) downloadBtnText.innerHTML = '<i class="fa-solid fa-download" style="margin-right: 6px;"></i> Download Laporan Excel';
   if (downloadBtn) downloadBtn.disabled = false;
-  
+
   if (downloadBtn) {
     downloadBtn.style.display = (downloadUrl && downloadUrl.trim() !== "") ? 'flex' : 'none';
   }
-  
+
   const modal = document.getElementById('customAlertModal');
   if (modal) modal.style.display = 'flex';
 }
@@ -454,7 +482,6 @@ async function downloadExcelWithProgress(serverResponse) {
       }
       closeCustomAlert();
     }, 600);
-
   } catch (err) {
     console.error("Gagal mendownload file:", err);
     if (typeof showNxCustomAlert === 'function') {
@@ -497,15 +524,20 @@ function initTextFadeRotator() {
       fadeIndex = (fadeIndex + 1) % fadeTexts.length;
       textEl.innerText = fadeTexts[fadeIndex];
       textEl.style.opacity = 1;
-    }, 800); 
-  }, 5000); 
+    }, 800);
+  }, 5000);
 }
 
 function updateLastSyncDisplay(timeString) {
   const lastSyncEl = document.getElementById('last-sync-text');
   if (lastSyncEl) {
-    if (timeString) { lastSyncEl.innerText = timeString; lastSyncEl.style.color = "#38bdf8"; }
-    else { lastSyncEl.innerText = "Belum ada"; lastSyncEl.style.color = "#e2e8f0"; }
+    if (timeString) {
+      lastSyncEl.innerText = timeString;
+      lastSyncEl.style.color = "#38bdf8";
+    } else {
+      lastSyncEl.innerText = "Belum ada";
+      lastSyncEl.style.color = "#e2e8f0";
+    }
   }
 }
 
@@ -516,14 +548,14 @@ function initLastSync() {
 
 document.addEventListener('DOMContentLoaded', initLastSync);
 
-function openDeveloperModal() { 
-  const modal = document.getElementById('developerModal'); 
-  if (modal) modal.style.setProperty('display', 'flex', 'important'); 
+function openDeveloperModal() {
+  const modal = document.getElementById('developerModal');
+  if (modal) modal.style.setProperty('display', 'flex', 'important');
 }
 
-function closeDeveloperModal() { 
-  const modal = document.getElementById('developerModal'); 
-  if (modal) modal.style.setProperty('display', 'none', 'important'); 
+function closeDeveloperModal() {
+  const modal = document.getElementById('developerModal');
+  if (modal) modal.style.setProperty('display', 'none', 'important');
 }
 
 function playSuccessSound() {
@@ -543,27 +575,33 @@ function playSuccessSound() {
   } catch (e) {}
 }
 
-function getCumulativeTotal() { return parseInt(localStorage.getItem('gudang_total_alltime') || '0', 10); }
+function getCumulativeTotal() {
+  return parseInt(localStorage.getItem('gudang_total_alltime') || '0', 10);
+}
+
 function addCumulativeTotal(amount) {
-  let newTotal = getCumulativeTotal() + amount;
+  const newTotal = getCumulativeTotal() + amount;
   localStorage.setItem('gudang_total_alltime', newTotal);
   renderCumulativeCounter();
 }
 
 function renderCumulativeCounter() {
   const badge = document.getElementById('dailyCounterBadge');
-  if (badge) badge.innerHTML = `<i class="fa-solid fa-box-archive" style="margin-right: 5px; color: #38bdf8;"></i> Total: ${getCumulativeTotal().toLocaleString()} paket`;
+  if (badge) {
+    badge.innerHTML = `<i class="fa-solid fa-box-archive" style="margin-right: 5px; color: #38bdf8;"></i> Total: ${getCumulativeTotal().toLocaleString()} paket`;
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   renderCumulativeCounter();
-  
+
   const savedSession = localStorage.getItem('gudang_active_operator');
   const modal = document.getElementById('loginModal');
-  
+
   if (savedSession) {
     try {
-      let operatorName = "", loginTime = 0;
+      let operatorName = "";
+      let loginTime = 0;
       if (savedSession.startsWith('{')) {
         const session = JSON.parse(savedSession);
         operatorName = session.name ? session.name.toUpperCase() : "";
@@ -572,10 +610,10 @@ document.addEventListener('DOMContentLoaded', () => {
         operatorName = savedSession.toUpperCase();
         loginTime = new Date().getTime();
       }
-      
+
       const currentTime = new Date().getTime();
       const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
-      
+
       if ((currentTime - loginTime) < oneWeekMilliseconds && operatorsProfile[operatorName]) {
         setOperatorProfile(operatorName);
         if (modal) modal.style.display = 'none';
@@ -596,8 +634,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function pilihYaPending() {
-  document.getElementById('modalKonfirmasi').style.display = 'none';
-  document.getElementById('modalInputPending').style.display = 'flex';
+  const modalKonfirmasi = document.getElementById('modalKonfirmasi');
+  const modalInputPending = document.getElementById('modalInputPending');
+  if (modalKonfirmasi) modalKonfirmasi.style.display = 'none';
+  if (modalInputPending) modalInputPending.style.display = 'flex';
   const inputEl = document.getElementById('inputNoTrx');
   if (inputEl) inputEl.focus();
 }
@@ -605,20 +645,20 @@ function pilihYaPending() {
 function selesaiDanDownload() {
   const modalInput = document.getElementById('modalInputPending');
   if (modalInput) modalInput.style.display = 'none';
-  
-  const msg = (window.globalServerResponse && window.globalServerResponse.message) 
-    ? window.globalServerResponse.message 
+
+  const msg = (window.globalServerResponse && window.globalServerResponse.message)
+    ? window.globalServerResponse.message
     : "Transaksi selesai dan laporan berhasil diproses!";
-    
+
   const url = currentDownloadUrl || (window.globalServerResponse && (window.globalServerResponse.downloadUrl || window.globalServerResponse.fileUrl || window.globalServerResponse.spreadsheetUrl)) || "";
-  
+
   showCustomAlert(msg, url);
 }
 
 async function kirimAksiPendingCancel(actionType) {
   const inputEl = document.getElementById('inputNoTrx');
   const noTransaksi = inputEl ? inputEl.value.trim() : '';
-  
+
   if (!noTransaksi) {
     if (typeof showNxCustomAlert === 'function') {
       showNxCustomAlert("Harap masukkan atau scan Nomor Transaksi terlebih dahulu!", false);
@@ -671,7 +711,7 @@ async function kirimAksiPendingCancel(actionType) {
       const listLog = document.getElementById('listLogPending');
       if (listLog) {
         if (listLog.children.length === 1 && listLog.children[0].style.color === 'rgb(100, 116, 139)') {
-          listLog.innerHTML = ''; 
+          listLog.innerHTML = '';
         }
         const badgeColor = actionType === 'pending' ? '#f59e0b' : '#ef4444';
         listLog.innerHTML += `<li><b style="color:${badgeColor}">[${actionType.toUpperCase()}]</b> TRX: ${noTransaksi}</li>`;
@@ -698,12 +738,10 @@ async function kirimAksiPendingCancel(actionType) {
         if (toast) toast.classList.remove('show');
         showCustomAlert(res.message || `Transaksi ${noTransaksi} berhasil diproses.`, foundUrl);
       }, 1500);
-
-    } else { 
+    } else {
       throw new Error(res.message || "Gagal memproses data.");
     }
-
-  } catch (error) { 
+  } catch (error) {
     if (typeof showNxCustomAlert === 'function') {
       showNxCustomAlert("Terjadi kesalahan: " + error.message, false);
     }
@@ -739,25 +777,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Event Listener Tap-To-Enter Gate tanpa pointer-events bug
 document.addEventListener('DOMContentLoaded', () => {
-    const gate = document.getElementById('tap-to-enter-gate');
-    
-    if (gate) {
-        gate.addEventListener('click', () => {
-            const welcomeAudio = new Audio(`https://raw.githubusercontent.com/Nov-dev02/Gudang-Web-App/main/audio/Welcome.mp3?v=${new Date().getTime()}`);
-            welcomeAudio.volume = 0.9;
-            welcomeAudio.play().catch(err => console.log("Audio welcome error:", err));
+  const gate = document.getElementById('tap-to-enter-gate');
 
-            gate.style.opacity = '0';
-            setTimeout(() => {
-                gate.style.display = 'none';
-            }, 500);
-        }, { once: true });
-    }
+  if (gate) {
+    gate.addEventListener('click', () => {
+      const welcomeAudio = new Audio(`https://raw.githubusercontent.com/Nov-dev02/Gudang-Web-App/main/audio/Welcome.mp3?v=${new Date().getTime()}`);
+      welcomeAudio.volume = 0.9;
+      welcomeAudio.play().catch(err => console.log("Audio welcome error:", err));
+
+      gate.style.opacity = '0';
+      setTimeout(() => {
+        gate.style.display = 'none';
+      }, 500);
+    }, { once: true });
+  }
 });
 
 async function ambilDanPasteRekapan(btn) {
   const originalText = '<i class="fa-solid fa-rotate"></i> Sync';
-  
+
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> Loading...';
@@ -766,26 +804,25 @@ async function ambilDanPasteRekapan(btn) {
   try {
     const response = await fetch(SCRIPT_URL_REKAPAN);
     const res = await response.json();
-    
+
     if (res.error) {
       if (typeof showNxCustomAlert === 'function') showNxCustomAlert("Error: " + res.error, false);
       return;
     }
-    
+
     if (!res.transactions || res.transactions.length === 0) {
       if (typeof showNxCustomAlert === 'function') showNxCustomAlert("Tidak ada No Transaksi yang ditemukan di Kolom H sheet 'ALL'!", false);
       return;
     }
-    
+
     const teksGabungan = res.transactions.join('\n');
-    const textarea = document.querySelector('textarea'); 
+    const textarea = document.querySelector('textarea');
     if (textarea) {
       textarea.value = teksGabungan;
       textarea.dispatchEvent(new Event('input'));
     } else {
       if (typeof showNxCustomAlert === 'function') showNxCustomAlert("Kotak teks (textarea) tidak ditemukan!", false);
     }
-    
   } catch (err) {
     if (typeof showNxCustomAlert === 'function') showNxCustomAlert("Gagal mengambil data rekapan: " + err, false);
   } finally {
@@ -800,7 +837,7 @@ async function refreshAplikasi() {
   const btnRefresh = document.getElementById('btn-refresh');
   const iconRefresh = document.getElementById('icon-refresh');
   const textRefresh = document.getElementById('text-refresh');
-  
+
   if (textRefresh) textRefresh.innerText = "Memuat...";
   if (iconRefresh) iconRefresh.classList.add('glitch-spin');
   if (btnRefresh) btnRefresh.style.pointerEvents = "none";
@@ -813,10 +850,9 @@ async function refreshAplikasi() {
       window.location.reload();
       return;
     }
-    
+
     if (textRefresh) textRefresh.innerText = "Berhasil!";
     setTimeout(() => { if (textRefresh) textRefresh.innerText = "Refresh"; }, 1500);
-
   } catch (error) {
     console.error("Gagal memuat data:", error);
     if (textRefresh) textRefresh.innerText = "Gagal!";
@@ -884,7 +920,6 @@ async function simpanGasUrl() {
     setTimeout(() => {
       window.location.reload();
     }, 1500);
-
   } else {
     showCustomToastNotification("Harap masukkan URL GAS yang valid!", "#f43f5e");
   }
@@ -934,7 +969,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const gate = document.getElementById('tap-to-enter-gate');
     const boot = document.getElementById('boot-screen');
-    
+
     if (gate) gate.style.display = 'none';
     if (boot) boot.style.display = 'none';
 
