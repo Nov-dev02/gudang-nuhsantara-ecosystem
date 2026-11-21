@@ -603,6 +603,15 @@ html[data-theme="stitch"] #poSection {
     box-shadow: 0 14px 32px rgba(2, 132, 199, 0.14);
 }
 
+html[data-theme="stitch"] .po-header-badge {
+    background: #e0f2fe;
+    border-color: #7dd3fc;
+}
+
+html[data-theme="stitch"] .po-header-badge span {
+    color: #0369a1;
+}
+
 html[data-theme="stitch"] .header-po h2 {
     background: linear-gradient(90deg, #0284c7 0%, #2563eb 50%, #0284c7 100%) !important;
     -webkit-background-clip: text !important;
@@ -617,14 +626,14 @@ html[data-theme="stitch"] .clock {
 }
 
 html[data-theme="stitch"] .po-theme-switch-btn {
-    background: linear-gradient(135deg, #e0f2fe, #fce7f3);
-    border: 1.5px solid #38bdf8;
-    color: #0369a1;
+    background: linear-gradient(135deg, #e0f2fe, #fce7f3) !important;
+    border: 1.5px solid #38bdf8 !important;
+    color: #0369a1 !important;
     box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
 }
 
 html[data-theme="stitch"] .po-theme-switch-btn:hover {
-    background: linear-gradient(135deg, #bae6fd, #fbcfe8);
+    background: linear-gradient(135deg, #bae6fd, #fbcfe8) !important;
 }
 
 html[data-theme="stitch"] .user-greeting {
@@ -878,15 +887,15 @@ html[data-theme="stitch"] .po-theme-switch-btn {
 
 html[data-theme="stitch"] .po-weather-card,
 html[data-theme="stitch"] .po-speech-bubble {
-    font-size: 12.5px;
+    font-size: 12px;
 }
 
-/* Mobile compact spacing */
+/* Mobile compact spacing + ruang aman maskot & tombol chat */
 @media (max-width: 480px) {
     .container {
         padding: 12px;
     }
     .login-box, #poSection {
-        padding: 18px 15px;
+        padding: 18px 15px 96px 15px;
     }
 }
