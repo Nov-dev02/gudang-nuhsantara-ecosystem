@@ -108,10 +108,14 @@
             flex-direction: column;
             gap: 12px;
             padding: 6px 0;
+            pointer-events: none;
         }
 
         .po-skel-content {
-            transition: opacity 0.25s ease;
+            position: relative;
+            z-index: 2;
+            pointer-events: auto;
+            transition: opacity 0.2s ease;
         }
 
         body.po-skeleton-active .po-skel-layer {
@@ -120,7 +124,6 @@
 
         body.po-skeleton-active .po-skel-content {
             opacity: 0;
-            pointer-events: none;
             height: 0;
             overflow: hidden;
         }
@@ -297,8 +300,16 @@
         .po-wx-anim-sun { animation: poWxSpinSun 14s linear infinite; transform-origin: center; }
         .po-wx-anim-rain { animation: poWxRainDrop 1.1s linear infinite; }
 
-        /* HEADER KANAN ATAS & TOMBOL SWITCH TEMA STITCH (ANTI-MELAR) */
+        /* HEADER KANAN ATAS & TOMBOL SWITCH TEMA STITCH (ANTI-MELAR & ALWAYS CLICKABLE) */
+        .header-po {
+            position: relative;
+            z-index: 20;
+        }
+
         .po-header-actions {
+            position: relative !important;
+            z-index: 30 !important;
+            pointer-events: auto !important;
             display: flex !important;
             align-items: center !important;
             justify-content: flex-end !important;
@@ -316,6 +327,11 @@
         }
 
         .po-theme-switch-btn {
+            position: relative !important;
+            z-index: 40 !important;
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+            -webkit-tap-highlight-color: rgba(56, 189, 248, 0.3);
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -344,6 +360,10 @@
         }
 
         .header-po .btn-logout {
+            position: relative !important;
+            z-index: 35 !important;
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
             width: auto !important;
             min-width: 0 !important;
             flex: 0 0 auto !important;
@@ -483,7 +503,6 @@
     <div class="container">
         <!-- Login Section -->
         <div id="loginSection" class="login-box hidden po-skel-wrapper">
-            <!-- Skeleton Shimmer Halaman Login -->
             <div class="po-skel-layer" aria-hidden="true">
                 <div class="po-skel-bar" style="width: 52%; height: 22px; margin: 4px auto;"></div>
                 <div class="po-skel-bar" style="width: 74%; height: 13px; margin: 0 auto 8px auto;"></div>
@@ -570,7 +589,6 @@
 
         <!-- PO Form Section -->
         <div id="poSection" class="hidden po-skel-wrapper">
-            <!-- Skeleton Shimmer Halaman Utama Input PO -->
             <div class="po-skel-layer" aria-hidden="true">
                 <div class="po-skel-bar" style="width: 46%; height: 16px;"></div>
                 <div class="po-skel-bar" style="width: 68%; height: 22px;"></div>
@@ -699,7 +717,7 @@
         </div>
     </div>
 
-    <!-- MODAL ULASAN APLIKASI (MUNCUL SEKALI SAJA BESOK) -->
+    <!-- MODAL ULASAN APLIKASI -->
     <div id="modalUlasanPo" style="display: none; position: fixed; inset: 0; z-index: 2147483647; align-items: center; justify-content: center; background: rgba(7, 11, 20, 0.88); backdrop-filter: blur(10px); padding: 18px; box-sizing: border-box;">
         <div style="width: 100%; max-width: 420px; background: linear-gradient(145deg, #0f172a, #1e293b); border: 1.5px solid rgba(56, 189, 248, 0.45); border-radius: 18px; padding: 22px 20px; color: #f8fafc; font-family: monospace; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.92); box-sizing: border-box;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -836,7 +854,7 @@
             poSkeletonStarted = true;
             document.body.classList.add('po-skeleton-active');
             clearTimeout(poSkeletonTimer);
-            poSkeletonTimer = setTimeout(selesaiSkeletonAppPo, 1800);
+            poSkeletonTimer = setTimeout(selesaiSkeletonAppPo, 900);
         }
 
         function selesaiSkeletonAppPo() {
@@ -881,67 +899,18 @@
                     clearInterval(poll);
                     observer.disconnect();
                 }
-            }, 150);
+            }, 120);
 
             setTimeout(() => {
                 clearInterval(poll);
                 observer.disconnect();
-                mulaiSkeletonSetelahSplash();
-            }, 3200);
+                selesaiSkeletonAppPo();
+            }, 1500);
         }
 
         window.addEventListener('DOMContentLoaded', function() {
             localStorage.removeItem('gudang_welcome_ecosystem_shown');
             pantauSplashScreen();
-        });
-    </script>
-
-    <!-- SCRIPT SWITCH TEMA STITCH & SAPAAN MASKOT -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const btnTheme = document.getElementById("btnSwitchPoTheme");
-            const stitchAvatar = document.getElementById("poStitchAvatar");
-            const stitchBubble = document.getElementById("poStitchBubble");
-            const themeKey = "gudang_po_theme";
-
-            const sapaanStitch = [
-                "Aloha! Ohana siap bantu input PO hari ini! 🌺",
-                "Cek kode & jumlah PO dulu sebelum kirim ya! 📦",
-                "Semangat kerjanya bro! Jangan lupa istirahat sebentar 💙",
-                "QR scanner siap dipakai kalau buru-buru! 📷"
-            ];
-            let sapaanIdx = 0;
-
-            function terapkanTemaPo(themeName) {
-                if (themeName === "stitch") {
-                    document.documentElement.setAttribute("data-theme", "stitch");
-                    if (btnTheme) btnTheme.textContent = "🌙 Gelap";
-                } else {
-                    document.documentElement.removeAttribute("data-theme");
-                    if (btnTheme) btnTheme.textContent = "🐾 Stitch";
-                }
-            }
-
-            const savedTheme = localStorage.getItem(themeKey);
-            if (savedTheme === "stitch") {
-                terapkanTemaPo("stitch");
-            }
-
-            if (btnTheme) {
-                btnTheme.addEventListener("click", function() {
-                    const isStitch = document.documentElement.getAttribute("data-theme") === "stitch";
-                    const nextTheme = isStitch ? "dark" : "stitch";
-                    localStorage.setItem(themeKey, nextTheme);
-                    terapkanTemaPo(nextTheme);
-                });
-            }
-
-            if (stitchAvatar && stitchBubble) {
-                stitchAvatar.addEventListener("click", function() {
-                    sapaanIdx = (sapaanIdx + 1) % sapaanStitch.length;
-                    stitchBubble.textContent = sapaanStitch[sapaanIdx];
-                });
-            }
         });
     </script>
 
