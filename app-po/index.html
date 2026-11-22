@@ -141,6 +141,12 @@
             font-family: monospace;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
         }
+
+        [data-theme="stitch"] .po-weather-card,
+        html[data-theme="stitch"] .po-weather-card {
+            overflow: visible !important;
+        }
+
         .po-wx-top {
             display: flex;
             flex-direction: column;
@@ -239,25 +245,23 @@
             background: rgba(56, 189, 248, 0.25) !important;
         }
 
-        /* STITCH UTUH TANPA KOTAK / TANPA BORDER, LEBIH BESAR */
+        /* MURNI KARAKTER STITCH TANPA WADAH KOTAK */
         .po-stitch-roam-box {
             display: none;
             position: absolute;
             left: 12px;
             top: 12px;
-            width: 88px;
-            height: 98px;
+            width: auto;
+            height: auto;
             z-index: 6;
-            cursor: pointer;
+            pointer-events: none;
             user-select: none;
             -webkit-user-select: none;
             background: transparent !important;
             border: none !important;
-            border-radius: 0 !important;
             padding: 0 !important;
             box-shadow: none !important;
             outline: none !important;
-            box-sizing: border-box;
             transition: left 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95),
                         top 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95),
                         transform 0.2s ease;
@@ -266,18 +270,12 @@
 
         [data-theme="stitch"] .po-stitch-roam-box,
         html[data-theme="stitch"] .po-stitch-roam-box {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
+            display: inline-block !important;
         }
 
         .po-stitch-roam-inner {
             position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: inline-block;
             animation: poStitchRoamBob 1.6s ease-in-out infinite;
             transition: transform 0.25s ease;
         }
@@ -287,11 +285,13 @@
         }
 
         .po-stitch-roam-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            pointer-events: none;
+            display: block;
+            height: 115px;
+            width: auto;
+            pointer-events: auto;
+            cursor: pointer;
             -webkit-user-drag: none;
+            filter: drop-shadow(0 6px 10px rgba(2, 132, 199, 0.28));
         }
 
         .po-stitch-roam-lid {
@@ -828,10 +828,10 @@
                         </div>
                     </div>
 
-                    <!-- Stitch Utuh Bergerak Pindah-Pindah di Dalam Kotak Cuaca (Tanpa Kotak) -->
-                    <div id="poStitchRoamBox" class="po-stitch-roam-box" role="button" tabindex="0" title="Klik Stitch!" onclick="klikStitchRoam(event)">
+                    <!-- Murni Karakter Stitch Bergerak Pindah-Pindah di Kotak Cuaca -->
+                    <div id="poStitchRoamBox" class="po-stitch-roam-box">
                         <div id="poStitchRoamInner" class="po-stitch-roam-inner">
-                            <img src="stitch.png" alt="Stitch Bergerak" class="po-stitch-roam-img" draggable="false" />
+                            <img src="stitch.png" alt="Stitch Bergerak" class="po-stitch-roam-img" draggable="false" onclick="klikStitchRoam(event)" />
                             <span class="po-stitch-roam-lid left"></span>
                             <span class="po-stitch-roam-lid right"></span>
                         </div>
@@ -1184,11 +1184,11 @@
             ];
 
             function posisikanBubbleDekatStitch() {
-                const box = document.getElementById("poStitchRoamBox");
+                const img = document.querySelector(".po-stitch-roam-img");
                 const bubble = document.getElementById("poStitchRoamBubble");
-                if (!box || !bubble) return;
+                if (!img || !bubble) return;
 
-                const rect = box.getBoundingClientRect();
+                const rect = img.getBoundingClientRect();
                 const bubbleWidth = bubble.offsetWidth || 175;
                 const bubbleHeight = bubble.offsetHeight || 42;
                 const margin = 10;
@@ -1216,8 +1216,10 @@
                 if (style.display === "none") return;
 
                 const pad = 10;
-                const maxLeft = Math.max(pad, card.clientWidth - box.offsetWidth - pad);
-                const maxTop = Math.max(pad, card.clientHeight - box.offsetHeight - pad);
+                const roamWidth = box.offsetWidth || 105;
+                const roamHeight = box.offsetHeight || 115;
+                const maxLeft = Math.max(pad, card.clientWidth - roamWidth - pad);
+                const maxTop = Math.max(pad, card.clientHeight - roamHeight - pad);
 
                 const currentLeft = parseFloat(box.style.left) || pad;
                 const nextLeft = Math.round(pad + Math.random() * (maxLeft - pad));
@@ -1242,7 +1244,7 @@
             window.klikStitchRoam = function(event) {
                 if (event) event.stopPropagation();
 
-                const box = document.getElementById("poStitchRoamBox");
+                const inner = document.getElementById("poStitchRoamInner");
                 const bubble = document.getElementById("poStitchRoamBubble");
                 if (!bubble) return;
 
@@ -1251,10 +1253,13 @@
                 bubble.classList.add("show");
                 posisikanBubbleDekatStitch();
 
-                if (box) {
-                    box.style.transform = "scale(1.1)";
+                if (inner) {
+                    const isLeft = inner.classList.contains("facing-left");
+                    inner.style.transform = isLeft ? "scaleX(-1) scale(1.1)" : "scale(1.1)";
                     setTimeout(() => {
-                        if (box) box.style.transform = "scale(1)";
+                        if (inner) {
+                            inner.style.transform = isLeft ? "scaleX(-1)" : "";
+                        }
                     }, 200);
                 }
 
@@ -1265,10 +1270,6 @@
             };
 
             document.addEventListener("DOMContentLoaded", function() {
-                const box = document.getElementById("poStitchRoamBox");
-                if (box) {
-                    box.addEventListener("click", window.klikStitchRoam);
-                }
                 setTimeout(pindahPosisiStitchDiKotak, 400);
                 clearInterval(roamTimer);
                 roamTimer = setInterval(pindahPosisiStitchDiKotak, 2800);
