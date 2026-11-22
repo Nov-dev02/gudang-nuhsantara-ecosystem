@@ -589,7 +589,7 @@ input[readonly] {
 }
 
 /* ============================================================
-   🐾 TEMA STITCH CERAH & BERSIH ([data-theme="stitch"])
+   🐾 TEMA STITCH CERAH & BERSIH (html[data-theme="stitch"])
    ============================================================ */
 html[data-theme="stitch"] body {
     background: linear-gradient(155deg, #e0f2fe 0%, #bae6fd 48%, #f0f9ff 100%);
@@ -847,7 +847,7 @@ html[data-theme="stitch"] .footer-app {
 }
 
 /* ============================================================
-   🔤 FONT KHUSUS TEMA STITCH ([data-theme="stitch"])
+   🔤 FONT KHUSUS TEMA STITCH (html[data-theme="stitch"])
    ============================================================ */
 html[data-theme="stitch"],
 html[data-theme="stitch"] *,
