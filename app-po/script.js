@@ -69,17 +69,24 @@ function applyPoTheme(themeName, playSound = false) {
     const isStitch = themeName === 'stitch';
     if (isStitch) {
         document.documentElement.setAttribute('data-theme', 'stitch');
+        document.documentElement.classList.add('theme-stitch');
     } else {
         document.documentElement.removeAttribute('data-theme');
+        document.documentElement.classList.remove('theme-stitch');
+        const roamBubble = document.getElementById('poStitchRoamBubble');
+        if (roamBubble) roamBubble.classList.remove('show');
     }
 
-    localStorage.setItem(PO_THEME_STORAGE_KEY, isStitch ? 'stitch' : 'dark');
+    try {
+        localStorage.setItem(PO_THEME_STORAGE_KEY, isStitch ? 'stitch' : 'dark');
+    } catch (e) {}
 
     const switchBtn = document.getElementById('btnSwitchPoTheme');
     if (switchBtn) {
         switchBtn.innerHTML = isStitch
             ? `<i class="fa-solid fa-moon"></i> Gelap`
             : `🐾 Stitch`;
+        switchBtn.setAttribute("aria-pressed", isStitch ? "true" : "false");
     }
 
     const savedUser = localStorage.getItem('po_user');
@@ -92,7 +99,12 @@ function applyPoTheme(themeName, playSound = false) {
 }
 
 function initPoThemeSystem() {
-    const savedTheme = localStorage.getItem(PO_THEME_STORAGE_KEY) || 'dark';
+    let savedTheme = 'dark';
+    try {
+        if (localStorage.getItem(PO_THEME_STORAGE_KEY) === 'stitch') {
+            savedTheme = 'stitch';
+        }
+    } catch (e) {}
     applyPoTheme(savedTheme, false);
 
     const switchBtn = document.getElementById('btnSwitchPoTheme');
@@ -112,6 +124,7 @@ function initPoThemeSystem() {
         stitchAvatar.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            if (!isStitchThemeActive()) return;
             playStitchSound("tap");
             updateStitchSpeech();
         });
