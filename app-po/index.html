@@ -753,7 +753,7 @@
     </style>
 
     <!-- Terapkan Tema Stitch / Default sejak awal sebelum halaman dirender -->
-    <script>
+      <script>
         (function() {
             const PO_THEME_KEY = "gudang_po_theme";
 
@@ -794,11 +794,25 @@
                 }
 
                 sinkronkanLabelTombolTema(isStitch);
+
+                const savedUser = localStorage.getItem("po_user");
+                if (savedUser && typeof window.setDynamicGreeting === "function") {
+                    window.setDynamicGreeting(savedUser);
+                }
+                if (isStitch && typeof window.updateStitchSpeech === "function") {
+                    window.updateStitchSpeech();
+                }
+                if (isStitch && typeof window.pindahPosisiStitchDiKotak === "function") {
+                    setTimeout(() => window.pindahPosisiStitchDiKotak(), 60);
+                }
             };
 
             window.toggleTemaStitchGlobal = function() {
                 const saatIniStitch = document.documentElement.getAttribute("data-theme") === "stitch";
                 window.terapkanTemaGlobalPo(saatIniStitch ? "dark" : "stitch");
+                if (typeof window.playStitchSound === "function") {
+                    window.playStitchSound("tap");
+                }
             };
 
             let temaAwal = "dark";
@@ -810,6 +824,7 @@
             window.terapkanTemaGlobalPo(temaAwal);
         })();
     </script>
+
 </head>
 <body class="po-skeleton-active">
 
