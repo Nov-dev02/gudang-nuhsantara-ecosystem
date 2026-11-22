@@ -131,6 +131,8 @@
 
         /* WIDGET CUACA & JAM LINGKARAN DI APP PO */
         .po-weather-card {
+            position: relative;
+            overflow: hidden;
             background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.92) 100%);
             border: 1px solid rgba(56, 189, 248, 0.25);
             border-radius: 16px;
@@ -235,6 +237,114 @@
         }
         .po-wx-gps-btn:hover {
             background: rgba(56, 189, 248, 0.25) !important;
+        }
+
+        /* STITCH UTUH BERGERAK PINDAH-PINDAH DI DALAM KOTAK CUACA */
+        .po-stitch-roam-box {
+            display: none;
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            width: 60px;
+            height: 68px;
+            z-index: 6;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            background: rgba(15, 23, 42, 0.72);
+            border: 1.5px solid rgba(56, 189, 248, 0.55);
+            border-radius: 14px;
+            padding: 3px;
+            box-sizing: border-box;
+            box-shadow: 0 8px 18px rgba(2, 132, 199, 0.28);
+            transition: left 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95),
+                        top 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95),
+                        transform 0.2s ease;
+            will-change: left, top, transform;
+        }
+
+        [data-theme="stitch"] .po-stitch-roam-box,
+        html[data-theme="stitch"] .po-stitch-roam-box {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .po-stitch-roam-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: poStitchRoamBob 1.6s ease-in-out infinite;
+            transition: transform 0.25s ease;
+        }
+
+        .po-stitch-roam-inner.facing-left {
+            transform: scaleX(-1);
+        }
+
+        .po-stitch-roam-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            -webkit-user-drag: none;
+        }
+
+        .po-stitch-roam-lid {
+            position: absolute;
+            top: 30%;
+            width: 11%;
+            height: 6.5%;
+            background: #13254c;
+            border-radius: 50%;
+            transform: scaleY(0);
+            transform-origin: top center;
+            pointer-events: none;
+            z-index: 3;
+            animation: poEyeBlink 4.4s infinite;
+        }
+
+        .po-stitch-roam-lid.left {
+            left: 36.8%;
+        }
+
+        .po-stitch-roam-lid.right {
+            right: 36.8%;
+        }
+
+        @keyframes poStitchRoamBob {
+            0%, 100% { transform: translateY(0px) rotate(-1.5deg); }
+            50% { transform: translateY(-4px) rotate(1.5deg); }
+        }
+
+        .po-stitch-roam-bubble {
+            position: fixed;
+            display: none;
+            max-width: 190px;
+            padding: 7px 11px;
+            border-radius: 12px;
+            background: #f0f9ff;
+            color: #0c4a6e;
+            border: 2px solid #38bdf8;
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.35);
+            font-family: monospace;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.35;
+            z-index: 2147483646;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(4px) scale(0.96);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .po-stitch-roam-bubble.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0) scale(1);
         }
 
         /* TOMBOL AKSI RIWAYAT PO: 1 KOLOM, 2 ICON SAJA */
@@ -716,7 +826,17 @@
                             <div style="font-size: 11px; font-weight: bold; color: #fff; margin-top: 3px;">--° / --°</div>
                         </div>
                     </div>
+
+                    <!-- Stitch Utuh Bergerak Pindah-Pindah di Dalam Kotak Cuaca -->
+                    <div id="poStitchRoamBox" class="po-stitch-roam-box" role="button" tabindex="0" title="Klik Stitch!" onclick="klikStitchRoam(event)">
+                        <div id="poStitchRoamInner" class="po-stitch-roam-inner">
+                            <img src="stitch.png" alt="Stitch Bergerak" class="po-stitch-roam-img" draggable="false" />
+                            <span class="po-stitch-roam-lid left"></span>
+                            <span class="po-stitch-roam-lid right"></span>
+                        </div>
+                    </div>
                 </section>
+                <div id="poStitchRoamBubble" class="po-stitch-roam-bubble" role="status" aria-live="polite"></div>
 
                 <p class="subtitle">Buat PO barang gudang dengan mudah</p>
 
@@ -1047,6 +1167,119 @@
             });
         })();
     </script>
+
+    <!-- SCRIPT STITCH UTUH BERGERAK PINDAH-PINDAH DI KOTAK CUACA + BUBBLE TEKS SAAT DIKLIK -->
+    <script>
+        (function() {
+            let roamTimer = null;
+            let bubbleHideTimer = null;
+
+            const kataStitch = [
+                "Aloha! Stitch lagi jalan di sini! 🌺",
+                "Jangan lupa cek kode & jumlah PO ya! 💙",
+                "Wush~ pindah posisi dulu biar nggak bosen! ✨",
+                "Semangat terus bro, gudang aman terkendali! 🐾",
+                "Cuaca aman, lanjut input PO-nya! 😄"
+            ];
+
+            function posisikanBubbleDekatStitch() {
+                const box = document.getElementById("poStitchRoamBox");
+                const bubble = document.getElementById("poStitchRoamBubble");
+                if (!box || !bubble) return;
+
+                const rect = box.getBoundingClientRect();
+                const bubbleWidth = bubble.offsetWidth || 175;
+                const bubbleHeight = bubble.offsetHeight || 42;
+                const margin = 10;
+
+                let topPos = rect.top - bubbleHeight - 8;
+                if (topPos < margin) {
+                    topPos = rect.bottom + 8;
+                }
+
+                let leftPos = rect.left + rect.width / 2 - bubbleWidth / 2;
+                leftPos = Math.max(margin, Math.min(leftPos, window.innerWidth - bubbleWidth - margin));
+
+                bubble.style.left = `${Math.round(leftPos)}px`;
+                bubble.style.top = `${Math.round(topPos)}px`;
+            }
+
+            function pindahPosisiStitchDiKotak() {
+                const card = document.getElementById("poWeatherWidget");
+                const box = document.getElementById("poStitchRoamBox");
+                const inner = document.getElementById("poStitchRoamInner");
+                const bubble = document.getElementById("poStitchRoamBubble");
+                if (!card || !box) return;
+
+                const style = window.getComputedStyle(box);
+                if (style.display === "none") return;
+
+                const pad = 10;
+                const maxLeft = Math.max(pad, card.clientWidth - box.offsetWidth - pad);
+                const maxTop = Math.max(pad, card.clientHeight - box.offsetHeight - pad);
+
+                const currentLeft = parseFloat(box.style.left) || pad;
+                const nextLeft = Math.round(pad + Math.random() * (maxLeft - pad));
+                const nextTop = Math.round(pad + Math.random() * (maxTop - pad));
+
+                if (inner) {
+                    if (nextLeft < currentLeft - 4) {
+                        inner.classList.add("facing-left");
+                    } else if (nextLeft > currentLeft + 4) {
+                        inner.classList.remove("facing-left");
+                    }
+                }
+
+                box.style.left = `${nextLeft}px`;
+                box.style.top = `${nextTop}px`;
+
+                if (bubble && bubble.classList.contains("show")) {
+                    setTimeout(posisikanBubbleDekatStitch, 120);
+                }
+            }
+
+            window.klikStitchRoam = function(event) {
+                if (event) event.stopPropagation();
+
+                const box = document.getElementById("poStitchRoamBox");
+                const bubble = document.getElementById("poStitchRoamBubble");
+                if (!bubble) return;
+
+                const pesan = kataStitch[Math.floor(Math.random() * kataStitch.length)];
+                bubble.textContent = pesan;
+                bubble.classList.add("show");
+                posisikanBubbleDekatStitch();
+
+                if (box) {
+                    box.style.transform = "scale(1.1)";
+                    setTimeout(() => {
+                        if (box) box.style.transform = "scale(1)";
+                    }, 200);
+                }
+
+                clearTimeout(bubbleHideTimer);
+                bubbleHideTimer = setTimeout(() => {
+                    bubble.classList.remove("show");
+                }, 2800);
+            };
+
+            document.addEventListener("DOMContentLoaded", function() {
+                const box = document.getElementById("poStitchRoamBox");
+                if (box) {
+                    box.addEventListener("click", window.klikStitchRoam);
+                }
+                setTimeout(pindahPosisiStitchDiKotak, 400);
+                clearInterval(roamTimer);
+                roamTimer = setInterval(pindahPosisiStitchDiKotak, 2800);
+            });
+
+            window.addEventListener("resize", () => {
+                pindahPosisiStitchDiKotak();
+                posisikanBubbleDekatStitch();
+            });
+            window.addEventListener("scroll", posisikanBubbleDekatStitch, { passive: true });
+        })();
+    </script>
     
     <script>
   document.addEventListener("DOMContentLoaded", function() {
@@ -1365,7 +1598,8 @@
 
     async function inisialisasiLiveChatStaf(name) {
       safeStaffKey = name.replace(/[^a-zA-Z0-9_-]/g, '_');
-      document.getElementById('floatingChatBtn').style.display = 'flex';
+      const oldBtn = document.getElementById('floatingChatBtn');
+      if (oldBtn) oldBtn.style.display = 'flex';
 
       await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/staffName.json`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(name)
@@ -1391,11 +1625,12 @@
 
     window.toggleChatWidget = function() {
       const box = document.getElementById('chatWidgetBox');
+      if (!box) return;
       if (box.style.display === 'flex') {
         box.style.display = 'none';
       } else {
         box.style.display = 'flex';
-        setTimeout(() => document.getElementById('inputChatPo').focus(), 100);
+        setTimeout(() => document.getElementById('inputChatPo')?.focus(), 100);
       }
     };
 
@@ -1481,8 +1716,9 @@
         const container = document.getElementById('chatWidgetMessagesContainer');
         const typingEl = document.getElementById('typingIndicatorPo');
         const badgeEl = document.getElementById('chatUnreadBadgePo');
+        if (!container) return;
 
-        typingEl.style.display = isSystemTyping ? 'block' : 'none';
+        if (typingEl) typingEl.style.display = isSystemTyping ? 'block' : 'none';
 
         let html = "";
         let unreadFromSystem = 0;
@@ -1568,14 +1804,17 @@
         container.innerHTML = html || `<div style="color: #94a3b8; text-align: center; margin: auto;">Mulai percakapan...</div>`;
         container.scrollTop = container.scrollHeight;
 
-        if (unreadFromSystem > 0 && document.getElementById('chatWidgetBox').style.display !== 'flex') {
-          badgeEl.innerText = unreadFromSystem;
-          badgeEl.style.display = 'inline-block';
-        } else {
-          badgeEl.style.display = 'none';
+        const chatBoxEl = document.getElementById('chatWidgetBox');
+        if (badgeEl) {
+          if (unreadFromSystem > 0 && chatBoxEl && chatBoxEl.style.display !== 'flex') {
+            badgeEl.innerText = unreadFromSystem;
+            badgeEl.style.display = 'inline-block';
+          } else {
+            badgeEl.style.display = 'none';
+          }
         }
 
-        if (document.getElementById('chatWidgetBox').style.display === 'flex' && Object.keys(systemUpdates).length > 0) {
+        if (chatBoxEl && chatBoxEl.style.display === 'flex' && Object.keys(systemUpdates).length > 0) {
           await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
             method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(systemUpdates)
           });
@@ -1635,6 +1874,7 @@
 
     window.kirimPesanStaff = async function() {
       const inputEl = document.getElementById('inputChatPo');
+      if (!inputEl) return;
       const text = inputEl.value.trim();
       if (!text || !safeStaffKey) return;
 
