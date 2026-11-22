@@ -239,24 +239,25 @@
             background: rgba(56, 189, 248, 0.25) !important;
         }
 
-        /* STITCH UTUH BERGERAK PINDAH-PINDAH DI DALAM KOTAK CUACA */
+        /* STITCH UTUH TANPA KOTAK / TANPA BORDER, LEBIH BESAR */
         .po-stitch-roam-box {
             display: none;
             position: absolute;
             left: 12px;
             top: 12px;
-            width: 60px;
-            height: 68px;
+            width: 88px;
+            height: 98px;
             z-index: 6;
             cursor: pointer;
             user-select: none;
             -webkit-user-select: none;
-            background: rgba(15, 23, 42, 0.72);
-            border: 1.5px solid rgba(56, 189, 248, 0.55);
-            border-radius: 14px;
-            padding: 3px;
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            outline: none !important;
             box-sizing: border-box;
-            box-shadow: 0 8px 18px rgba(2, 132, 199, 0.28);
             transition: left 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95),
                         top 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95),
                         transform 0.2s ease;
@@ -827,7 +828,7 @@
                         </div>
                     </div>
 
-                    <!-- Stitch Utuh Bergerak Pindah-Pindah di Dalam Kotak Cuaca -->
+                    <!-- Stitch Utuh Bergerak Pindah-Pindah di Dalam Kotak Cuaca (Tanpa Kotak) -->
                     <div id="poStitchRoamBox" class="po-stitch-roam-box" role="button" tabindex="0" title="Klik Stitch!" onclick="klikStitchRoam(event)">
                         <div id="poStitchRoamInner" class="po-stitch-roam-inner">
                             <img src="stitch.png" alt="Stitch Bergerak" class="po-stitch-roam-img" draggable="false" />
@@ -1192,9 +1193,9 @@
                 const bubbleHeight = bubble.offsetHeight || 42;
                 const margin = 10;
 
-                let topPos = rect.top - bubbleHeight - 8;
+                let topPos = rect.top - bubbleHeight - 6;
                 if (topPos < margin) {
-                    topPos = rect.bottom + 8;
+                    topPos = rect.bottom + 6;
                 }
 
                 let leftPos = rect.left + rect.width / 2 - bubbleWidth / 2;
