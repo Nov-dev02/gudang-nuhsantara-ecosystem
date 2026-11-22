@@ -16,7 +16,7 @@ function isStitchThemeActive() {
     return document.documentElement.getAttribute('data-theme') === 'stitch';
 }
 
-function playStitchSound(mode = "tap") {
+window.playStitchSound = function(mode = "tap") {
     if (!isStitchThemeActive()) return;
     try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -45,9 +45,9 @@ function playStitchSound(mode = "tap") {
             osc.stop(now + idx * 0.065 + 0.15);
         });
     } catch (e) {}
-}
+};
 
-function updateStitchSpeech(customText = null) {
+window.updateStitchSpeech = function(customText = null) {
     const bubble = document.getElementById('poStitchBubble');
     if (!bubble) return;
 
@@ -63,40 +63,59 @@ function updateStitchSpeech(customText = null) {
         "Klik aku kalau butuh semangat tambahan bro! 💙"
     ];
     bubble.textContent = daftarPesan[Math.floor(Math.random() * daftarPesan.length)];
-}
+};
 
 function applyPoTheme(themeName, playSound = false) {
     const isStitch = themeName === 'stitch';
-    if (isStitch) {
-        document.documentElement.setAttribute('data-theme', 'stitch');
-        document.documentElement.classList.add('theme-stitch');
+    const resolved = isStitch ? 'stitch' : 'dark';
+
+    if (typeof window.terapkanTemaGlobalPo === 'function') {
+        window.terapkanTemaGlobalPo(resolved);
     } else {
-        document.documentElement.removeAttribute('data-theme');
-        document.documentElement.classList.remove('theme-stitch');
-        const roamBubble = document.getElementById('poStitchRoamBubble');
-        if (roamBubble) roamBubble.classList.remove('show');
-    }
+        if (isStitch) {
+            document.documentElement.setAttribute('data-theme', 'stitch');
+            document.documentElement.classList.add('theme-stitch');
+            if (document.body) {
+                document.body.setAttribute('data-theme', 'stitch');
+                document.body.classList.add('theme-stitch');
+            }
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            document.documentElement.classList.remove('theme-stitch');
+            if (document.body) {
+                document.body.removeAttribute('data-theme');
+                document.body.classList.remove('theme-stitch');
+            }
+            const roamBubble = document.getElementById('poStitchRoamBubble');
+            if (roamBubble) roamBubble.classList.remove('show');
+        }
 
-    try {
-        localStorage.setItem(PO_THEME_STORAGE_KEY, isStitch ? 'stitch' : 'dark');
-    } catch (e) {}
+        try {
+            localStorage.setItem(PO_THEME_STORAGE_KEY, resolved);
+        } catch (e) {}
 
-    const switchBtn = document.getElementById('btnSwitchPoTheme');
-    if (switchBtn) {
-        switchBtn.innerHTML = isStitch
-            ? `<i class="fa-solid fa-moon"></i> Gelap`
-            : `🐾 Stitch`;
-        switchBtn.setAttribute("aria-pressed", isStitch ? "true" : "false");
+        const switchBtn = document.getElementById('btnSwitchPoTheme');
+        if (switchBtn) {
+            switchBtn.innerHTML = isStitch
+                ? `<i class="fa-solid fa-moon"></i> Gelap`
+                : `🐾 Stitch`;
+            switchBtn.setAttribute("aria-pressed", isStitch ? "true" : "false");
+        }
     }
 
     const savedUser = localStorage.getItem('po_user');
     if (savedUser) setDynamicGreeting(savedUser);
 
     if (isStitch) {
-        updateStitchSpeech();
-        if (playSound) playStitchSound("tap");
+        window.updateStitchSpeech();
+        if (playSound) window.playStitchSound("tap");
     }
 }
+
+window.toggleTemaStitchGlobal = function() {
+    const nextTheme = isStitchThemeActive() ? 'dark' : 'stitch';
+    applyPoTheme(nextTheme, true);
+};
 
 function initPoThemeSystem() {
     let savedTheme = 'dark';
@@ -107,16 +126,8 @@ function initPoThemeSystem() {
     } catch (e) {}
     applyPoTheme(savedTheme, false);
 
-    const switchBtn = document.getElementById('btnSwitchPoTheme');
-    if (switchBtn && !switchBtn.dataset.boundTheme) {
-        switchBtn.dataset.boundTheme = "1";
-        switchBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const nextTheme = isStitchThemeActive() ? 'dark' : 'stitch';
-            applyPoTheme(nextTheme, true);
-        });
-    }
+    // Sengaja tidak memasang addEventListener('click') di #btnSwitchPoTheme
+    // karena di index.html sudah memakai onclick="toggleTemaStitchGlobal()" (mencegah double toggle).
 
     const stitchAvatar = document.getElementById('poStitchAvatar');
     if (stitchAvatar && !stitchAvatar.dataset.boundAvatar) {
@@ -125,8 +136,8 @@ function initPoThemeSystem() {
             e.preventDefault();
             e.stopPropagation();
             if (!isStitchThemeActive()) return;
-            playStitchSound("tap");
-            updateStitchSpeech();
+            window.playStitchSound("tap");
+            window.updateStitchSpeech();
         });
     }
 }
@@ -416,7 +427,7 @@ function setDynamicGreeting(username) {
     }
 
     const motivasiAcak = daftarMotivasi[Math.floor(Math.random() * daftarMotivasi.length)];
-    const subColor = isStitchThemeActive() ? '#475569' : '#94a3b8';
+    const subColor = isStitchThemeActive() ? '#bae6fd' : '#94a3b8';
     greetingEl.innerHTML = `Selamat ${waktu}, <b>${escapeHtml(username)}</b>! <br><span style="font-size: 11px; color: ${subColor};">${escapeHtml(motivasiAcak)}</span>`;
 }
 
@@ -459,6 +470,12 @@ function tampilkanLogin() {
     const poSec = document.getElementById('poSection');
     if (loginSec) loginSec.classList.remove('hidden');
     if (poSec) poSec.classList.add('hidden');
+
+    let savedTheme = 'dark';
+    try {
+        if (localStorage.getItem(PO_THEME_STORAGE_KEY) === 'stitch') savedTheme = 'stitch';
+    } catch (e) {}
+    applyPoTheme(savedTheme, false);
 }
 
 function tampilkanFormPO(username) {
@@ -466,6 +483,12 @@ function tampilkanFormPO(username) {
     const poSec = document.getElementById('poSection');
     if (loginSec) loginSec.classList.add('hidden');
     if (poSec) poSec.classList.remove('hidden');
+
+    let savedTheme = 'dark';
+    try {
+        if (localStorage.getItem(PO_THEME_STORAGE_KEY) === 'stitch') savedTheme = 'stitch';
+    } catch (e) {}
+    applyPoTheme(savedTheme, false);
 
     setDynamicGreeting(username);
     loadMasterBarang();
@@ -658,8 +681,8 @@ function pilihBarang(kode, nama, pic) {
     checkFormValidity();
 
     if (isStitchThemeActive()) {
-        playStitchSound("tap");
-        updateStitchSpeech(`Sip! Barang "${nama}" terpilih. Tinggal isi jumlahnya ya! 🐾`);
+        window.playStitchSound("tap");
+        window.updateStitchSpeech(`Sip! Barang "${nama}" terpilih. Tinggal isi jumlahnya ya! 🐾`);
     }
 
     setTimeout(() => {
@@ -671,7 +694,7 @@ function pilihBarang(kode, nama, pic) {
 function openRiwayatModal() {
     const modal = document.getElementById('riwayatModal');
     if (modal) modal.style.display = 'flex';
-    if (isStitchThemeActive()) playStitchSound("tap");
+    if (isStitchThemeActive()) window.playStitchSound("tap");
     loadRiwayatPOData();
 }
 
@@ -781,8 +804,8 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     }
 
     if (isStitchThemeActive()) {
-        playStitchSound("tap");
-        updateStitchSpeech(`Mode edit aktif untuk "${nama}". Silakan ubah lalu simpan! ✏️`);
+        window.playStitchSound("tap");
+        window.updateStitchSpeech(`Mode edit aktif untuk "${nama}". Silakan ubah lalu simpan! ✏️`);
     }
 
     closeRiwayatModal();
@@ -837,7 +860,7 @@ async function hapusDataPO(rowIndex) {
         const result = await response.json();
 
         if (result.status === 'success') {
-            if (isStitchThemeActive()) playStitchSound("success");
+            if (isStitchThemeActive()) window.playStitchSound("success");
             if (titleEl) titleEl.textContent = "Berhasil";
             if (msgEl) msgEl.textContent = "Data PO berhasil dihapus!";
             if (iconContainer) {
@@ -899,7 +922,7 @@ function initEventListeners() {
         triggerModal.addEventListener('click', async function() {
             if (popupSearch) popupSearch.style.display = 'flex';
             if (searchInput) searchInput.value = '';
-            if (isStitchThemeActive()) playStitchSound("tap");
+            if (isStitchThemeActive()) window.playStitchSound("tap");
 
             if (!masterBarang || masterBarang.length === 0) {
                 renderList([{ kode_barang: '', nama_barang: 'Memuat data dari server...', pic: '' }]);
@@ -1056,7 +1079,7 @@ async function onScanSuccess(decodedText) {
         if (elTrigger) elTrigger.textContent = decodedText;
         stopCameraScanner();
         checkFormValidity();
-        if (isStitchThemeActive()) playStitchSound("tap");
+        if (isStitchThemeActive()) window.playStitchSound("tap");
         await showCustomModal({
             title: "Kode Ditemukan",
             message: `Kode terdeteksi: ${decodedText} (Dimasukkan manual)`,
@@ -1125,8 +1148,8 @@ async function submitPO(e) {
             }
 
             if (isStitchThemeActive()) {
-                playStitchSound("success");
-                updateStitchSpeech(isEditMode ? "Yeay! Data PO berhasil diperbarui! 🎉" : "Mantap Ohana! PO baru sudah tersimpan! 🚀");
+                window.playStitchSound("success");
+                window.updateStitchSpeech(isEditMode ? "Yeay! Data PO berhasil diperbarui! 🎉" : "Mantap Ohana! PO baru sudah tersimpan! 🚀");
             }
 
             if (btn) {
@@ -1156,8 +1179,8 @@ async function submitPO(e) {
             }
         } else {
             if (isStitchThemeActive()) {
-                playStitchSound("warn");
-                updateStitchSpeech("Waduh gagal simpan, coba cek lagi datanya ya bro!");
+                window.playStitchSound("warn");
+                window.updateStitchSpeech("Waduh gagal simpan, coba cek lagi datanya ya bro!");
             }
             await showCustomModal({
                 title: "Gagal",
@@ -1174,8 +1197,8 @@ async function submitPO(e) {
         setTimeout(() => { if (msg) msg.innerText = ""; }, 3000);
     } catch (err) {
         if (isStitchThemeActive()) {
-            playStitchSound("warn");
-            updateStitchSpeech("Koneksi internet terputus sebentar, coba kirim ulang ya!");
+            window.playStitchSound("warn");
+            window.updateStitchSpeech("Koneksi internet terputus sebentar, coba kirim ulang ya!");
         }
         if (msg) {
             msg.style.color = "#ef4444";
@@ -1242,7 +1265,7 @@ function tambahJumlah(angka) {
     if (!inputJumlah) return;
     const nilaiSekarang = parseInt(inputJumlah.value, 10) || 0;
     inputJumlah.value = nilaiSekarang + Number(angka || 0);
-    if (isStitchThemeActive()) playStitchSound("tap");
+    if (isStitchThemeActive()) window.playStitchSound("tap");
     checkFormValidity();
 }
 
@@ -1411,7 +1434,7 @@ function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, st
 
     document.getElementById('btnConfirmRekapHarian').addEventListener('click', () => {
         localStorage.setItem(storageKey, 'true');
-        if (isStitch) playStitchSound("tap");
+        if (isStitch) window.playStitchSound("tap");
         modal.remove();
     });
 }
