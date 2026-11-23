@@ -1204,3 +1204,31 @@ html[data-theme="cat"] .po-speech-bubble {
         border-radius: 16px !important;
     }
 }
+/* Tampilkan penuh "Nuhsantara Merchandise" di HP tanpa terpotong "..." */
+.header-po .po-header-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 4px 8px;
+}
+
+.header-po .po-header-badge span {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0.3px !important;
+}
+
+@media (max-width: 480px) {
+    .header-po {
+        gap: 6px;
+    }
+    .header-po .po-header-badge {
+        padding: 3px 7px;
+    }
+    .header-po .po-header-badge span {
+        font-size: 8.5px !important;
+    }
+}
+
