@@ -1176,8 +1176,34 @@ html[data-theme="cat"] .po-speech-bubble {
     font-size: 13.5px !important;
 }
 
+/* Tampilkan "Nuhsantara Merchandise" satu baris penuh di HP */
+.header-po .po-header-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 4px 8px;
+}
+
+.header-po .po-header-badge span {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0.3px !important;
+}
+
 /* Mobile compact spacing + ukuran besar maskot & bubble kiri bawah */
 @media (max-width: 480px) {
+    .header-po {
+        gap: 6px;
+    }
+    .header-po .po-header-badge {
+        padding: 3px 6px;
+    }
+    .header-po .po-header-badge span {
+        font-size: 7.8px !important;
+        letter-spacing: 0.15px !important;
+    }
     .container {
         padding: 12px;
     }
@@ -1204,32 +1230,3 @@ html[data-theme="cat"] .po-speech-bubble {
         border-radius: 16px !important;
     }
 }
-/* Tampilkan "Nuhsantara Merchandise" satu baris penuh di HP */
-.header-po .po-header-badge {
-    display: inline-flex;
-    align-items: center;
-    max-width: 100%;
-    padding: 4px 8px;
-}
-
-.header-po .po-header-badge span {
-    overflow: visible !important;
-    text-overflow: clip !important;
-    white-space: nowrap !important;
-    line-height: 1.2 !important;
-    letter-spacing: 0.3px !important;
-}
-
-@media (max-width: 480px) {
-    .header-po {
-        gap: 6px;
-    }
-    .header-po .po-header-badge {
-        padding: 3px 6px;
-    }
-    .header-po .po-header-badge span {
-        font-size: 7.8px !important;
-        letter-spacing: 0.15px !important;
-    }
-}
-
