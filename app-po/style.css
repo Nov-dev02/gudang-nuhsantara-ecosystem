@@ -1204,7 +1204,7 @@ html[data-theme="cat"] .po-speech-bubble {
         border-radius: 16px !important;
     }
 }
-/* Tampilkan penuh "Nuhsantara Merchandise" di HP tanpa terpotong "..." */
+/* Tampilkan "Nuhsantara Merchandise" satu baris penuh di HP */
 .header-po .po-header-badge {
     display: inline-flex;
     align-items: center;
@@ -1215,8 +1215,8 @@ html[data-theme="cat"] .po-speech-bubble {
 .header-po .po-header-badge span {
     overflow: visible !important;
     text-overflow: clip !important;
-    white-space: normal !important;
-    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
     letter-spacing: 0.3px !important;
 }
 
@@ -1225,10 +1225,11 @@ html[data-theme="cat"] .po-speech-bubble {
         gap: 6px;
     }
     .header-po .po-header-badge {
-        padding: 3px 7px;
+        padding: 3px 6px;
     }
     .header-po .po-header-badge span {
-        font-size: 8.5px !important;
+        font-size: 7.8px !important;
+        letter-spacing: 0.15px !important;
     }
 }
 
