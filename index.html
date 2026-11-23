@@ -5,7 +5,7 @@
   <link rel="apple-touch-icon" href="gudang-eco-512.png">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#04080f">
+  <meta name="theme-color" content="#070d19">
   <title>Gudang Nuhsantara - Enterprise SaaS Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="manifest" href="manifest.json">
@@ -17,24 +17,22 @@
   </script>
   <style>
     :root {
-      --bg-main: #04080f;
-      --bg-tint: #071326;
-      --sidebar-bg: rgba(6, 12, 24, 0.96);
-      --card-bg: rgba(10, 19, 36, 0.82);
-      --card-elevated: rgba(14, 26, 48, 0.92);
-      --card-border: rgba(34, 211, 238, 0.28);
+      --bg-main: #050913;
+      --bg-tint: #09152b;
+      --sidebar-bg: rgba(8, 14, 28, 0.96);
+      --card-bg: rgba(13, 22, 41, 0.78);
+      --card-elevated: rgba(18, 30, 56, 0.88);
+      --card-border: rgba(56, 189, 248, 0.26);
       --text-main: #f8fafc;
       --text-desc: #94a3b8;
-      --accent-blue: #22d3ee;
-      --accent-dark: #0891b2;
-      --accent-darker: #0e7490;
-      --accent-soft: rgba(34, 211, 238, 0.14);
-      --accent-soft-strong: rgba(34, 211, 238, 0.26);
-      --accent-ring: rgba(34, 211, 238, 0.48);
-      --accent-glow: rgba(34, 211, 238, 0.34);
+      --accent-blue: #38bdf8;
+      --accent-dark: #0284c7;
+      --accent-darker: #0369a1;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --accent-soft-strong: rgba(56, 189, 248, 0.28);
+      --accent-ring: rgba(56, 189, 248, 0.48);
+      --accent-glow: rgba(56, 189, 248, 0.34);
       --accent-green: #22c55e;
-      --cyber-grid-color: rgba(34, 211, 238, 0.045);
-      --cyber-scanline: rgba(34, 211, 238, 0.03);
     }
 
     *, *::before, *::after {
@@ -47,12 +45,9 @@
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background:
-        linear-gradient(to right, var(--cyber-grid-color) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--cyber-grid-color) 1px, transparent 1px),
         radial-gradient(ellipse 75% 45% at 80% 0%, var(--accent-soft) 0%, transparent 62%),
         radial-gradient(ellipse 55% 40% at 10% 95%, var(--accent-soft) 0%, transparent 60%),
-        linear-gradient(180deg, var(--bg-tint) 0%, var(--bg-main) 50%, var(--bg-main) 100%);
-      background-size: 28px 28px, 28px 28px, 100% 100%, 100% 100%, 100% 100%;
+        linear-gradient(180deg, var(--bg-tint) 0%, var(--bg-main) 48%, var(--bg-main) 100%);
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
@@ -589,142 +584,17 @@
     }
     .btn-quick-copy:hover { background: var(--accent-blue); color: var(--bg-main); }
 
-    /* CYBER SECURITY / HACKER BOTTOM DECK */
-    .cyber-sec-deck {
-      background:
-        repeating-linear-gradient(
-          0deg,
-          var(--cyber-scanline) 0px,
-          var(--cyber-scanline) 2px,
-          transparent 2px,
-          transparent 5px
-        ),
-        linear-gradient(155deg, rgba(6, 12, 22, 0.95) 0%, var(--card-elevated) 60%, rgba(3, 6, 12, 0.98) 100%);
-      border: 1px solid var(--accent-ring);
-      border-radius: 22px;
-      padding: 20px;
-      font-family: monospace;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.65), 0 0 26px var(--accent-soft);
-    }
-    .cyber-sec-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      padding-bottom: 12px;
-      border-bottom: 1px dashed var(--accent-ring);
-      margin-bottom: 14px;
-    }
-    .cyber-sec-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 11.5px;
-      font-weight: 800;
-      color: var(--accent-blue);
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-    }
-    .cyber-live-pill {
-      font-size: 10px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      background: rgba(34, 197, 94, 0.14);
-      border: 1px solid rgba(34, 197, 94, 0.45);
-      color: #4ade80;
-      font-weight: bold;
-    }
-    .cyber-telemetry-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .cyber-mini-stat {
-      background: rgba(2, 6, 15, 0.78);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      border-left: 3px solid var(--accent-blue);
-      border-radius: 12px;
-      padding: 10px 12px;
-    }
-    .cyber-mini-stat .k { font-size: 9.5px; color: var(--text-desc); text-transform: uppercase; }
-    .cyber-mini-stat .v { font-size: 12px; font-weight: 800; color: #fff; margin-top: 3px; }
-
-    .cyber-modes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
-      gap: 9px;
-      margin-bottom: 14px;
-    }
-    .cyber-mode-btn {
-      background: rgba(2, 6, 15, 0.78);
+    /* Theme Swatches */
+    .theme-swatch-btn {
+      flex: 1; min-width: 110px; padding: 10px 12px;
+      background: rgba(2, 6, 23, 0.72);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #e2e8f0;
-      border-radius: 12px;
-      padding: 10px 11px;
-      cursor: pointer;
-      font-family: monospace;
-      font-size: 11px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      text-align: left;
+      color: #e2e8f0; border-radius: 12px; cursor: pointer;
+      font-size: 11px; font-family: monospace; font-weight: bold;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     }
-    .cyber-mode-btn:hover {
-      border-color: var(--accent-blue);
-      background: var(--accent-soft);
-      transform: translateY(-2px);
-    }
-    .cyber-mode-btn.active-mode {
-      border-color: var(--accent-blue);
-      background: var(--accent-soft-strong);
-      color: #fff;
-      box-shadow: 0 0 16px var(--accent-glow);
-    }
+    .theme-swatch-btn:hover { border-color: var(--accent-blue); background: var(--accent-soft); }
     .theme-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-
-    .cyber-cli-box {
-      background: #02050b;
-      border: 1px solid var(--accent-ring);
-      border-radius: 14px;
-      padding: 12px;
-    }
-    .cyber-cli-output {
-      font-size: 10.5px;
-      line-height: 1.5;
-      color: var(--accent-blue);
-      max-height: 92px;
-      overflow-y: auto;
-      margin-bottom: 8px;
-      white-space: pre-wrap;
-    }
-    .cyber-cli-form {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .cyber-cli-prompt {
-      color: #22c55e;
-      font-size: 11px;
-      font-weight: bold;
-      white-space: nowrap;
-    }
-    .cyber-cli-input {
-      flex: 1;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid #334155;
-      color: #f8fafc;
-      border-radius: 8px;
-      padding: 7px 10px;
-      font-family: monospace;
-      font-size: 11px;
-      outline: none;
-    }
-    .cyber-cli-input:focus { border-color: var(--accent-blue); }
 
     /* Admin Controls */
     .admin-controls { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -820,7 +690,6 @@
       .btn-quick-lock span.lock-label { display: none; }
       .wx-top-grid { grid-template-columns: 1fr; gap: 10px; }
       .weather-hero-card { padding: 15px; border-radius: 20px; }
-      .cyber-sec-deck { padding: 15px; border-radius: 18px; }
       .chat-layout { grid-template-columns: 1fr; height: auto; }
       .chat-rooms-list { height: 150px; }
     }
@@ -1087,57 +956,24 @@
           </div>
         </div>
 
-        <!-- CYBER SECURITY / HACKER BOTTOM DECK -->
-        <section class="cyber-sec-deck" id="cyberSecurityDeck">
-          <div class="cyber-sec-header">
-            <div class="cyber-sec-tag">
-              <i class="fa-solid fa-user-secret"></i> CYBER SECURITY & SOC DECK
-            </div>
-            <span class="cyber-live-pill" id="cyberModeBadge">● MODE: CYBER CYAN</span>
-          </div>
-
-          <div class="cyber-telemetry-grid">
-            <div class="cyber-mini-stat">
-              <div class="k">Auth & PIN Guard</div>
-              <div class="v" id="cyberPinGuardStatus">SHA-256 ARMED</div>
-            </div>
-            <div class="cyber-mini-stat">
-              <div class="k">Intrusion Counter</div>
-              <div class="v" id="cyberIntrusionCount">0 Fail / 3 Max</div>
-            </div>
-            <div class="cyber-mini-stat">
-              <div class="k">Auto-Lock Timer</div>
-              <div class="v" id="cyberAutoLockReadout">10 MIN IDLE</div>
-            </div>
-          </div>
-
-          <div style="font-size: 10px; color: var(--text-desc); margin-bottom: 8px; text-transform: uppercase;">
-            <i class="fa-solid fa-terminal"></i> Pilih Tema & Mode Keamanan Sistem:
-          </div>
-          <div class="cyber-modes-grid">
-            <button type="button" id="btnTheme-cyan" class="cyber-mode-btn active-mode" onclick="ubahTemaDashboard('cyan')">
-              <span class="theme-dot" style="background: #22d3ee; box-shadow: 0 0 8px #22d3ee;"></span> Cyber Cyan
+        <!-- THEME SWITCHER (TEMBUS SAMPAI KE AKAR) -->
+        <div class="section-box">
+          <div class="section-title"><span><i class="fa-solid fa-palette"></i> TEMA WARNA AKSEN DASHBOARD (FULL ROOT)</span></div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="theme-swatch-btn" onclick="ubahTemaDashboard('blue')">
+              <span class="theme-dot" style="background: #38bdf8; box-shadow: 0 0 8px #38bdf8;"></span> Cyber Blue
             </button>
-            <button type="button" id="btnTheme-hacker" class="cyber-mode-btn" onclick="ubahTemaDashboard('hacker')">
-              <span class="theme-dot" style="background: #00ff66; box-shadow: 0 0 8px #00ff66;"></span> Hacker Matrix
+            <button type="button" class="theme-swatch-btn" onclick="ubahTemaDashboard('purple')">
+              <span class="theme-dot" style="background: #c084fc; box-shadow: 0 0 8px #c084fc;"></span> Purple
             </button>
-            <button type="button" id="btnTheme-redteam" class="cyber-mode-btn" onclick="ubahTemaDashboard('redteam')">
-              <span class="theme-dot" style="background: #ff2e63; box-shadow: 0 0 8px #ff2e63;"></span> Red Team Ops
+            <button type="button" class="theme-swatch-btn" onclick="ubahTemaDashboard('green')">
+              <span class="theme-dot" style="background: #22c55e; box-shadow: 0 0 8px #22c55e;"></span> Green
             </button>
-            <button type="button" id="btnTheme-phantom" class="cyber-mode-btn" onclick="ubahTemaDashboard('phantom')">
-              <span class="theme-dot" style="background: #c084fc; box-shadow: 0 0 8px #c084fc;"></span> Phantom Violet
+            <button type="button" class="theme-swatch-btn" onclick="ubahTemaDashboard('gold')">
+              <span class="theme-dot" style="background: #fbbf24; box-shadow: 0 0 8px #fbbf24;"></span> Gold
             </button>
           </div>
-
-          <div class="cyber-cli-box">
-            <div id="cyberCliOutput" class="cyber-cli-output">[SEC-OS] Terminal siap. Ketik: help, status, scan, lock, atau theme hacker</div>
-            <form class="cyber-cli-form" onsubmit="jalankanPerintahCyberCli(event)">
-              <span class="cyber-cli-prompt">root@nuhsantara:~#</span>
-              <input type="text" id="cyberCliInput" class="cyber-cli-input" placeholder="Ketik perintah (help / scan / status / lock)..." autocomplete="off" />
-              <button type="submit" class="btn-accent-primary" style="padding: 7px 12px; border-radius: 8px; font-size: 10.5px;">Exec</button>
-            </form>
-          </div>
-        </section>
+        </div>
       </div>
 
       <!-- ================= TAB 2: LIVE STAF ONLINE ================= -->
@@ -1458,77 +1294,6 @@
     let cachedReviews = [];
     let droneBubbleTimer = null;
 
-    // --- CYBER SECURITY DECK TELEMETRY & CLI ---
-    function syncCyberDeckTelemetry() {
-      const failEl = document.getElementById("cyberIntrusionCount");
-      const guardEl = document.getElementById("cyberPinGuardStatus");
-      const lockEl = document.getElementById("cyberAutoLockReadout");
-
-      if (failEl) {
-        const remSec = Math.max(0, Math.ceil((pinLockUntil - Date.now()) / 1000));
-        failEl.innerText = remSec > 0
-          ? `LOCKDOWN (${remSec}s)`
-          : `${pinFailedAttempts} Fail / ${MAX_PIN_ATTEMPTS} Max`;
-        failEl.style.color = remSec > 0 || pinFailedAttempts > 0 ? "#f87171" : "#4ade80";
-      }
-      if (guardEl) {
-        guardEl.innerText = cachedCloudPinHash ? "SHA-256 CLOUD SYNC" : "SHA-256 ARMED";
-      }
-      if (lockEl) {
-        const mins = getAutoLockMinutes();
-        lockEl.innerText = mins > 0 ? `${mins} MIN IDLE` : "MANUAL ONLY";
-      }
-    }
-
-    function appendCyberCliLog(line) {
-      const out = document.getElementById("cyberCliOutput");
-      if (!out) return;
-      const now = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      out.textContent += `\n[${now}] ${line}`;
-      out.scrollTop = out.scrollHeight;
-    }
-
-    window.jalankanPerintahCyberCli = function(e) {
-      e.preventDefault();
-      const input = document.getElementById("cyberCliInput");
-      if (!input) return;
-      const raw = input.value.trim();
-      if (!raw) return;
-      input.value = "";
-      appendCyberCliLog(`> ${raw}`);
-
-      const cmd = raw.toLowerCase();
-      if (cmd === "help") {
-        appendCyberCliLog("Perintah: help | status | scan | lock | clear | theme <cyan|hacker|redteam|phantom>");
-      } else if (cmd === "status") {
-        const sys = document.getElementById("hudSystemStatusText")?.innerText || "Normal";
-        const ping = document.getElementById("hudPingText")?.innerText || "-- ms";
-        const staf = document.getElementById("txtOnlineCountOverview")?.innerText || "0 Aktif";
-        appendCyberCliLog(`STATUS => System: ${sys} | Gateway: ${ping} | Staf: ${staf}`);
-      } else if (cmd === "scan") {
-        appendCyberCliLog("Memindai endpoint Firebase, PIN SHA-256 & timer idle...");
-        initCommandCenterHUD();
-        syncCyberDeckTelemetry();
-        setTimeout(() => appendCyberCliLog("SCAN SELESAI => Tidak ada anomali sesi terdeteksi."), 450);
-      } else if (cmd === "lock") {
-        appendCyberCliLog("Mengunci layar dashboard...");
-        kunciLayarDashboard();
-      } else if (cmd === "clear") {
-        const out = document.getElementById("cyberCliOutput");
-        if (out) out.textContent = "[SEC-OS] Console dibersihkan.";
-      } else if (cmd.startsWith("theme ")) {
-        const chosen = cmd.replace("theme ", "").trim();
-        if (THEME_PRESETS[chosen]) {
-          ubahTemaDashboard(chosen);
-          appendCyberCliLog(`Tema keamanan diubah ke: ${chosen.toUpperCase()}`);
-        } else {
-          appendCyberCliLog("Tema tidak dikenal. Gunakan: cyan, hacker, redteam, phantom.");
-        }
-      } else {
-        appendCyberCliLog(`Perintah '${raw}' tidak dikenali. Ketik 'help'.`);
-      }
-    };
-
     // --- MINI ROBOT DRONE INTERACTION ---
     function syncDroneHealthVisor(isAlert) {
       const bot = document.getElementById("gnDroneBot");
@@ -1596,7 +1361,6 @@
           ? `Kunci layar otomatis jika tidak ada aktivitas selama ${mins} menit.`
           : "Auto-lock idle sedang dinonaktifkan (hanya kunci manual).";
       }
-      syncCyberDeckTelemetry();
     }
 
     window.ubahDurasiAutoLock = function(val) {
@@ -1641,7 +1405,6 @@
         const cloudHash = await res.json();
         if (typeof cloudHash === "string" && /^[0-9a-f]{64}$/i.test(cloudHash.trim())) {
           cachedCloudPinHash = cloudHash.trim().toLowerCase();
-          syncCyberDeckTelemetry();
           return cachedCloudPinHash;
         }
       } catch (e) {}
@@ -1676,13 +1439,10 @@
         if (btnSplash) btnSplash.disabled = false;
         if (btnAdmin) btnAdmin.disabled = false;
       }
-      syncCyberDeckTelemetry();
     }
 
     function catatKegagalanPin(errorElementId, defaultMsg) {
       pinFailedAttempts++;
-      syncCyberDeckTelemetry();
-      appendCyberCliLog(`ALERT: Percobaan PIN gagal ke-${pinFailedAttempts}/${MAX_PIN_ATTEMPTS}`);
       const errEl = document.getElementById(errorElementId);
       if (pinFailedAttempts >= MAX_PIN_ATTEMPTS) {
         pinLockUntil = Date.now() + PIN_COOLDOWN_MS;
@@ -1713,7 +1473,6 @@
           method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newHash)
         });
         cachedCloudPinHash = newHash;
-        syncCyberDeckTelemetry();
         await catatLogAktivitas("Memperbarui PIN akses keamanan admin (SHA-256)");
         muatAuditLogs();
         showDashboardToast("PIN Admin berhasil diperbarui & diamankan!", true);
@@ -2055,7 +1814,6 @@
       ambilHashPinAktif();
       muatTemaDashboard();
       updateAutoLockHintUI();
-      syncCyberDeckTelemetry();
       initAutoLockMonitor();
       loadSavedWeatherCoords();
       updateWeatherClockUI();
@@ -2400,7 +2158,7 @@
       if (Date.now() < pinLockUntil) { updateUiPinCooldown(); return; }
       const pin = document.getElementById('splashPinInput').value.trim();
       if (!pin) return;
-      if (await validasiPinTerproteksi(pin)) { pinFailedAttempts = 0; syncCyberDeckTelemetry(); bukaSplashScreenDashboard(); }
+      if (await validasiPinTerproteksi(pin)) { pinFailedAttempts = 0; bukaSplashScreenDashboard(); }
       else { document.getElementById('splashPinInput').value = ''; catatKegagalanPin('splashPinError', 'PIN Akses Salah!'); }
     }
 
@@ -2421,7 +2179,6 @@
         const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
         await navigator.credentials.get({ publicKey: { challenge, allowCredentials: [{ id: hexToBuffer(storedCredIdHex), type: "public-key", transports: ["internal"] }], userVerification: "required" } });
         pinFailedAttempts = 0;
-        syncCyberDeckTelemetry();
         bukaSplashScreenDashboard();
       } catch (err) { showDashboardToast("Verifikasi biometrik dibatalkan.", false); }
     }
@@ -3059,58 +2816,48 @@
         const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
         await navigator.credentials.get({ publicKey: { challenge, allowCredentials: [{ id: hexToBuffer(storedCredIdHex), type: "public-key", transports: ["internal"] }], userVerification: "required" } });
         pinFailedAttempts = 0;
-        syncCyberDeckTelemetry();
         eksekusiAksiAdminTervalidasi();
       } catch (err) { showDashboardToast("Verifikasi biometrik dibatalkan.", false); }
     }
 
-    // --- CYBER SECURITY / HACKER THEME PRESETS ---
+    // --- TEMA WARNA TEMBUS SAMPAI KE AKAR ---
     const THEME_PRESETS = {
-      cyan: {
-        label: "CYBER CYAN",
-        bgMain: "#04080f", bgTint: "#071326", sidebarBg: "rgba(6, 12, 24, 0.96)",
-        cardBg: "rgba(10, 19, 36, 0.82)", cardElevated: "rgba(14, 26, 48, 0.92)",
-        accent: "#22d3ee", dark: "#0891b2", darker: "#0e7490",
-        border: "rgba(34, 211, 238, 0.28)", soft: "rgba(34, 211, 238, 0.14)",
-        softStrong: "rgba(34, 211, 238, 0.26)", ring: "rgba(34, 211, 238, 0.48)",
-        glow: "rgba(34, 211, 238, 0.34)", grid: "rgba(34, 211, 238, 0.045)",
-        scanline: "rgba(34, 211, 238, 0.03)", metaColor: "#04080f"
+      blue: {
+        bgMain: "#050913", bgTint: "#09152b", sidebarBg: "rgba(8, 14, 28, 0.96)",
+        cardBg: "rgba(13, 22, 41, 0.78)", cardElevated: "rgba(18, 30, 56, 0.88)",
+        accent: "#38bdf8", dark: "#0284c7", darker: "#0369a1",
+        border: "rgba(56, 189, 248, 0.26)", soft: "rgba(56, 189, 248, 0.15)",
+        softStrong: "rgba(56, 189, 248, 0.28)", ring: "rgba(56, 189, 248, 0.48)",
+        glow: "rgba(56, 189, 248, 0.34)", metaColor: "#070d19"
       },
-      hacker: {
-        label: "HACKER MATRIX",
-        bgMain: "#020905", bgTint: "#051a0e", sidebarBg: "rgba(3, 12, 7, 0.97)",
-        cardBg: "rgba(6, 20, 12, 0.85)", cardElevated: "rgba(9, 29, 17, 0.94)",
-        accent: "#00ff66", dark: "#059669", darker: "#047857",
-        border: "rgba(0, 255, 102, 0.28)", soft: "rgba(0, 255, 102, 0.12)",
-        softStrong: "rgba(0, 255, 102, 0.24)", ring: "rgba(0, 255, 102, 0.48)",
-        glow: "rgba(0, 255, 102, 0.32)", grid: "rgba(0, 255, 102, 0.055)",
-        scanline: "rgba(0, 255, 102, 0.035)", metaColor: "#020905"
-      },
-      redteam: {
-        label: "RED TEAM OPS",
-        bgMain: "#0b0307", bgTint: "#1f0711", sidebarBg: "rgba(15, 4, 9, 0.97)",
-        cardBg: "rgba(24, 7, 14, 0.85)", cardElevated: "rgba(34, 10, 20, 0.94)",
-        accent: "#ff2e63", dark: "#be123c", darker: "#9f1239",
-        border: "rgba(255, 46, 99, 0.3)", soft: "rgba(255, 46, 99, 0.14)",
-        softStrong: "rgba(255, 46, 99, 0.26)", ring: "rgba(255, 46, 99, 0.5)",
-        glow: "rgba(255, 46, 99, 0.34)", grid: "rgba(255, 46, 99, 0.05)",
-        scanline: "rgba(255, 46, 99, 0.035)", metaColor: "#0b0307"
-      },
-      phantom: {
-        label: "PHANTOM VIOLET",
-        bgMain: "#070412", bgTint: "#14092c", sidebarBg: "rgba(12, 7, 24, 0.97)",
-        cardBg: "rgba(20, 12, 38, 0.85)", cardElevated: "rgba(28, 17, 52, 0.94)",
+      purple: {
+        bgMain: "#080512", bgTint: "#160a2e", sidebarBg: "rgba(14, 8, 26, 0.96)",
+        cardBg: "rgba(23, 13, 42, 0.8)", cardElevated: "rgba(33, 19, 58, 0.9)",
         accent: "#c084fc", dark: "#9333ea", darker: "#7e22ce",
-        border: "rgba(192, 132, 252, 0.3)", soft: "rgba(192, 132, 252, 0.15)",
+        border: "rgba(192, 132, 252, 0.28)", soft: "rgba(192, 132, 252, 0.16)",
         softStrong: "rgba(192, 132, 252, 0.28)", ring: "rgba(192, 132, 252, 0.48)",
-        glow: "rgba(192, 132, 252, 0.34)", grid: "rgba(192, 132, 252, 0.05)",
-        scanline: "rgba(192, 132, 252, 0.03)", metaColor: "#070412"
+        glow: "rgba(192, 132, 252, 0.32)", metaColor: "#140b24"
+      },
+      green: {
+        bgMain: "#040d09", bgTint: "#082116", sidebarBg: "rgba(6, 18, 13, 0.96)",
+        cardBg: "rgba(10, 28, 20, 0.8)", cardElevated: "rgba(15, 39, 28, 0.9)",
+        accent: "#22c55e", dark: "#16a34a", darker: "#15803d",
+        border: "rgba(34, 197, 94, 0.28)", soft: "rgba(34, 197, 94, 0.15)",
+        softStrong: "rgba(34, 197, 94, 0.27)", ring: "rgba(34, 197, 94, 0.46)",
+        glow: "rgba(34, 197, 94, 0.3)", metaColor: "#081c12"
+      },
+      gold: {
+        bgMain: "#0e0a04", bgTint: "#241806", sidebarBg: "rgba(18, 13, 6, 0.96)",
+        cardBg: "rgba(28, 20, 9, 0.8)", cardElevated: "rgba(38, 28, 13, 0.9)",
+        accent: "#fbbf24", dark: "#d97706", darker: "#b45309",
+        border: "rgba(251, 191, 36, 0.28)", soft: "rgba(251, 191, 36, 0.16)",
+        softStrong: "rgba(251, 191, 36, 0.28)", ring: "rgba(251, 191, 36, 0.48)",
+        glow: "rgba(251, 191, 36, 0.3)", metaColor: "#1d1506"
       }
     };
 
     function ubahTemaDashboard(warna) {
-      const key = THEME_PRESETS[warna] ? warna : "cyan";
-      const preset = THEME_PRESETS[key];
+      const preset = THEME_PRESETS[warna] || THEME_PRESETS.blue;
       const root = document.documentElement;
       root.style.setProperty('--bg-main', preset.bgMain);
       root.style.setProperty('--bg-tint', preset.bgTint);
@@ -3125,28 +2872,15 @@
       root.style.setProperty('--accent-soft-strong', preset.softStrong);
       root.style.setProperty('--accent-ring', preset.ring);
       root.style.setProperty('--accent-glow', preset.glow);
-      root.style.setProperty('--cyber-grid-color', preset.grid);
-      root.style.setProperty('--cyber-scanline', preset.scanline);
 
       const metaTheme = document.querySelector('meta[name="theme-color"]');
       if (metaTheme) metaTheme.setAttribute('content', preset.metaColor);
 
-      document.querySelectorAll('.cyber-mode-btn').forEach(btn => btn.classList.remove('active-mode'));
-      const activeBtn = document.getElementById(`btnTheme-${key}`);
-      if (activeBtn) activeBtn.classList.add('active-mode');
-
-      const badge = document.getElementById('cyberModeBadge');
-      if (badge) badge.textContent = `● MODE: ${preset.label}`;
-
-      localStorage.setItem('gudang_admin_theme', key);
-      showDashboardToast(`Mode keamanan ${preset.label} aktif!`, true);
+      localStorage.setItem('gudang_admin_theme', warna);
+      showDashboardToast(`Tema ${warna.toUpperCase()} aktif sampai ke akar!`, true);
     }
 
-    function muatTemaDashboard() {
-      const saved = localStorage.getItem('gudang_admin_theme') || 'cyan';
-      ubahTemaDashboard(saved);
-    }
-
+    function muatTemaDashboard() { ubahTemaDashboard(localStorage.getItem('gudang_admin_theme') || 'blue'); }
     function salinLinkModul(path) { navigator.clipboard.writeText(new URL(path, window.location.href).href).then(() => showDashboardToast("Tautan disalin!", true)); }
 
     async function eksekusiKirimBroadcastAktif() {
@@ -3268,7 +3002,7 @@
       if (Date.now() < pinLockUntil) { updateUiPinCooldown(); return; }
       const pin = document.getElementById('adminPinInput').value.trim();
       if (!pin) return;
-      if (await validasiPinTerproteksi(pin)) { pinFailedAttempts = 0; syncCyberDeckTelemetry(); eksekusiAksiAdminTervalidasi(); }
+      if (await validasiPinTerproteksi(pin)) { pinFailedAttempts = 0; eksekusiAksiAdminTervalidasi(); }
       else { document.getElementById('adminPinInput').value = ''; catatKegagalanPin('pinError', 'PIN Salah!'); }
     }
 
