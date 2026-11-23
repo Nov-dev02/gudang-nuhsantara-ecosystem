@@ -1125,7 +1125,7 @@
                 if (savedUser && typeof window.setDynamicGreeting === "function") {
                     window.setDynamicGreeting(savedUser);
                 }
-                if (isStitch && typeof window.updateStitchSpeech === "function") {
+                if ((isStitch || isCat) && typeof window.updateStitchSpeech === "function") {
                     window.updateStitchSpeech();
                 }
                 if ((isStitch || isCat) && typeof window.pindahPosisiStitchDiKotak === "function") {
