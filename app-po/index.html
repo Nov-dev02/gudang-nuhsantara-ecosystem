@@ -150,6 +150,14 @@
             color: #0f172a !important;
         }
 
+        html[data-theme="cat"] .po-weather-card {
+            overflow: visible !important;
+            background: linear-gradient(135deg, #fffaf5 0%, #ffedd5 100%) !important;
+            border: 1.5px solid #fdba74 !important;
+            box-shadow: 0 10px 24px rgba(234, 88, 12, 0.14) !important;
+            color: #431407 !important;
+        }
+
         .po-wx-top {
             display: flex;
             flex-direction: column;
@@ -173,10 +181,18 @@
             justify-content: center;
             flex-shrink: 0;
         }
+        html[data-theme="cat"] .po-wx-dial {
+            border-color: #f97316;
+            background: #fff7ed;
+            box-shadow: 0 0 16px rgba(249, 115, 22, 0.18);
+        }
         .po-wx-dial .po-wx-day-mini {
             font-size: 9px;
             color: #94a3b8;
             text-transform: uppercase;
+        }
+        html[data-theme="cat"] .po-wx-dial .po-wx-day-mini {
+            color: #9a3412;
         }
         .po-wx-dial .po-wx-time-mini {
             font-size: 15px;
@@ -185,9 +201,15 @@
             letter-spacing: 0.5px;
             line-height: 1.15;
         }
+        html[data-theme="cat"] .po-wx-dial .po-wx-time-mini {
+            color: #431407;
+        }
         .po-wx-dial .po-wx-sec-mini {
             font-size: 9px;
             color: #38bdf8;
+        }
+        html[data-theme="cat"] .po-wx-dial .po-wx-sec-mini {
+            color: #ea580c;
         }
         .po-wx-loc-row {
             display: inline-flex;
@@ -207,6 +229,20 @@
             border-radius: 12px;
             padding: 10px 12px;
         }
+        html[data-theme="cat"] .po-wx-now-box {
+            background: rgba(255, 255, 255, 0.78);
+            border-color: rgba(251, 146, 60, 0.35);
+        }
+        html[data-theme="cat"] #poWxTempNow,
+        html[data-theme="cat"] #poWxConditionLabel,
+        html[data-theme="cat"] #poWxDateFull,
+        html[data-theme="cat"] #poWxMinMaxToday,
+        html[data-theme="cat"] #poWxHumidityWind {
+            color: #431407 !important;
+        }
+        html[data-theme="cat"] #poWxLocationText {
+            color: #c2410c !important;
+        }
         .po-wx-forecast {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -221,6 +257,13 @@
             border-radius: 10px;
             padding: 7px 5px;
             text-align: center;
+        }
+        html[data-theme="cat"] .po-wx-pill {
+            background: rgba(255, 255, 255, 0.75);
+            border-color: rgba(251, 146, 60, 0.28);
+        }
+        html[data-theme="cat"] .po-wx-pill div {
+            color: #431407 !important;
         }
         .po-wx-gps-btn {
             background: rgba(56, 189, 248, 0.14) !important;
@@ -246,6 +289,69 @@
         }
         .po-wx-gps-btn:hover {
             background: rgba(56, 189, 248, 0.25) !important;
+        }
+        html[data-theme="cat"] .po-wx-gps-btn {
+            background: rgba(249, 115, 22, 0.14) !important;
+            border: 1px solid rgba(249, 115, 22, 0.45) !important;
+            color: #c2410c !important;
+        }
+
+        /* ==========================================
+           KARAKTER LOGIN (PENGGANTI ROBOT SVG)
+           ========================================== */
+        html:not([data-theme="stitch"]):not([data-theme="cat"]) #robotContainer {
+            display: none !important;
+        }
+
+        html[data-theme="stitch"] #robotContainer,
+        html[data-theme="cat"] #robotContainer {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .po-login-mascot-frame {
+            position: relative;
+            width: 88px;
+            height: 88px;
+            border-radius: 22px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: poStitchFloat 3.4s ease-in-out infinite;
+        }
+
+        html[data-theme="stitch"] .po-login-mascot-frame {
+            background: #040711;
+            border: 2px solid #38bdf8;
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.28);
+        }
+
+        html[data-theme="cat"] .po-login-mascot-frame {
+            background: #fff7ed;
+            border: 2px solid #f97316;
+            box-shadow: 0 8px 20px rgba(234, 88, 12, 0.25);
+        }
+
+        .po-login-mascot-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+            -webkit-user-drag: none;
+        }
+
+        html[data-theme="stitch"] .po-login-mascot-img {
+            transform: scale(2.35) translateY(-1.5%);
+            transform-origin: 50% 49%;
+        }
+
+        html[data-theme="cat"] .po-login-mascot-img {
+            transform: scale(1.06);
+            transform-origin: center center;
         }
 
         /* ==========================================
@@ -325,6 +431,112 @@
             box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15) !important;
         }
 
+        /* ==========================================
+           🐱 TEMA KUCING OREN GEMOY (html[data-theme="cat"]) - TEMBUS LOGIN
+           ========================================== */
+        html[data-theme="cat"] body {
+            background: linear-gradient(160deg, #fff7ed 0%, #ffedd5 55%, #fed7aa 100%) !important;
+            color: #431407 !important;
+        }
+
+        html[data-theme="cat"] #loginSection {
+            background: linear-gradient(155deg, #fffdf9 0%, #fff7ed 62%, #ffedd5 100%) !important;
+            border: 1.5px solid #fdba74 !important;
+            box-shadow: 0 14px 32px rgba(234, 88, 12, 0.16) !important;
+            color: #431407 !important;
+        }
+
+        html[data-theme="cat"] #loginSection h2 {
+            color: #c2410c !important;
+            text-shadow: none !important;
+        }
+
+        html[data-theme="cat"] #loginSection .subtitle,
+        html[data-theme="cat"] #loginSection label {
+            color: #9a3412 !important;
+        }
+
+        html[data-theme="cat"] #loginSection input {
+            background: #ffffff !important;
+            border: 1.5px solid #fed7aa !important;
+            color: #431407 !important;
+        }
+
+        html[data-theme="cat"] #loginSection input::placeholder {
+            color: #a8a29e !important;
+            opacity: 1 !important;
+        }
+
+        html[data-theme="cat"] #loginSection .input-icon,
+        html[data-theme="cat"] #loginSection .eye-icon {
+            color: #ea580c !important;
+        }
+
+        html[data-theme="cat"] #loginSection #btnLogin {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+            border: 1px solid #fb923c !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 18px rgba(234, 88, 12, 0.28) !important;
+        }
+
+        html[data-theme="cat"] #loginSection #btnGoogleLogin {
+            background: #fff7ed !important;
+            border: 1.5px solid #fdba74 !important;
+            color: #c2410c !important;
+        }
+
+        html[data-theme="cat"] #loginSection .robot-bubble {
+            background: #ffedd5 !important;
+            color: #431407 !important;
+            border: 1.5px solid #fb923c !important;
+            font-weight: 700 !important;
+        }
+
+        html[data-theme="cat"] #poSection {
+            background: linear-gradient(160deg, #fffdf9 0%, #fff7ed 100%) !important;
+            border: 1.5px solid #fdba74 !important;
+            box-shadow: 0 14px 32px rgba(234, 88, 12, 0.15) !important;
+            border-radius: 20px !important;
+            padding: 16px !important;
+            color: #431407 !important;
+        }
+
+        html[data-theme="cat"] #poSection label,
+        html[data-theme="cat"] #poSection .subtitle {
+            color: #9a3412 !important;
+        }
+
+        html[data-theme="cat"] #poSection input,
+        html[data-theme="cat"] #poSection select,
+        html[data-theme="cat"] #poSection textarea,
+        html[data-theme="cat"] #poSection .btn-modal-trigger {
+            background: #ffffff !important;
+            border-color: #fdba74 !important;
+            color: #431407 !important;
+        }
+
+        html[data-theme="cat"] #poSection #btnSubmit {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+            border: 1px solid #fb923c !important;
+            color: #ffffff !important;
+        }
+
+        html[data-theme="cat"] .po-theme-switch-btn {
+            background: #fff7ed !important;
+            border-color: #ea580c !important;
+            color: #c2410c !important;
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.16) !important;
+        }
+
+        html[data-theme="cat"] .po-header-badge {
+            background: rgba(249, 115, 22, 0.14) !important;
+            border-color: rgba(234, 88, 12, 0.35) !important;
+        }
+
+        html[data-theme="cat"] .po-header-badge span {
+            color: #c2410c !important;
+        }
+
         .po-login-theme-chip {
             display: none;
             align-items: center;
@@ -346,7 +558,14 @@
             display: inline-flex !important;
         }
 
-        /* MURNI KARAKTER STITCH TANPA WADAH KOTAK */
+        html[data-theme="cat"] .po-login-theme-chip {
+            display: inline-flex !important;
+            border-color: #fb923c !important;
+            background: #ffedd5 !important;
+            color: #c2410c !important;
+        }
+
+        /* MURNI KARAKTER ROAMING (STITCH / KUCING OREN) TANPA WADAH KOTAK */
         .po-stitch-roam-box {
             display: none;
             position: absolute;
@@ -369,7 +588,8 @@
             will-change: left, top, transform;
         }
 
-        html[data-theme="stitch"] .po-stitch-roam-box {
+        html[data-theme="stitch"] .po-stitch-roam-box,
+        html[data-theme="cat"] .po-stitch-roam-box {
             display: inline-block !important;
         }
 
@@ -394,6 +614,11 @@
             filter: drop-shadow(0 6px 12px rgba(2, 132, 199, 0.24));
         }
 
+        html[data-theme="cat"] .po-stitch-roam-img {
+            border-radius: 16px;
+            filter: drop-shadow(0 6px 12px rgba(234, 88, 12, 0.24));
+        }
+
         @media (min-width: 640px) {
             .po-stitch-roam-img {
                 height: 132px;
@@ -412,6 +637,10 @@
             pointer-events: none;
             z-index: 3;
             animation: poEyeBlink 4.4s infinite;
+        }
+
+        html[data-theme="cat"] .po-stitch-roam-lid {
+            background: #7c2d12;
         }
 
         .po-stitch-roam-lid.left {
@@ -448,17 +677,25 @@
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
-        html[data-theme="stitch"] .po-stitch-roam-bubble.show {
+        html[data-theme="stitch"] .po-stitch-roam-bubble.show,
+        html[data-theme="cat"] .po-stitch-roam-bubble.show {
             display: block;
             opacity: 1;
             transform: translateY(0) scale(1);
         }
 
-        /* PAKSA SEMBUNYI SEMUA ELEMEN STITCH SAAT MODE NORMAL/GELAP */
-        html:not([data-theme="stitch"]) .po-stitch-roam-box,
-        html:not([data-theme="stitch"]) .po-stitch-mascot,
-        html:not([data-theme="stitch"]) #poStitchRoamBubble,
-        html:not([data-theme="stitch"]) #poStitchBubble {
+        html[data-theme="cat"] .po-stitch-roam-bubble {
+            background: #fff7ed;
+            color: #431407;
+            border-color: #f97316;
+            box-shadow: 0 8px 20px rgba(234, 88, 12, 0.22);
+        }
+
+        /* PAKSA SEMBUNYI SEMUA ELEMEN MASKOT SAAT MODE NORMAL/GELAP */
+        html:not([data-theme="stitch"]):not([data-theme="cat"]) .po-stitch-roam-box,
+        html:not([data-theme="stitch"]):not([data-theme="cat"]) .po-stitch-mascot,
+        html:not([data-theme="stitch"]):not([data-theme="cat"]) #poStitchRoamBubble,
+        html:not([data-theme="stitch"]):not([data-theme="cat"]) #poStitchBubble {
             display: none !important;
             opacity: 0 !important;
             pointer-events: none !important;
@@ -528,7 +765,7 @@
         .po-wx-anim-sun { animation: poWxSpinSun 14s linear infinite; transform-origin: center; }
         .po-wx-anim-rain { animation: poWxRainDrop 1.1s linear infinite; }
 
-        /* HEADER KANAN ATAS & TOMBOL SWITCH TEMA STITCH */
+        /* HEADER KANAN ATAS & TOMBOL SWITCH TEMA */
         .header-po {
             position: relative;
             z-index: 20;
@@ -640,7 +877,7 @@
         }
 
         /* ==========================================
-           🐾 MASKOT STITCH KEDIP + BUBBLE CHAT SEJAJAR LIVE CHAT
+           🐾 MASKOT KEDIP + BUBBLE CHAT SEJAJAR LIVE CHAT
            ========================================== */
         .po-stitch-mascot {
             display: none;
@@ -654,7 +891,8 @@
             pointer-events: none;
         }
 
-        html[data-theme="stitch"] #poStitchMascotWrap.po-stitch-mascot {
+        html[data-theme="stitch"] #poStitchMascotWrap.po-stitch-mascot,
+        html[data-theme="cat"] #poStitchMascotWrap.po-stitch-mascot {
             display: flex !important;
             align-items: center !important;
             gap: 8px !important;
@@ -678,6 +916,12 @@
             flex-shrink: 0;
         }
 
+        html[data-theme="cat"] .po-stitch-avatar-btn {
+            background: #fff7ed;
+            border-color: #f97316;
+            box-shadow: 0 8px 20px rgba(234, 88, 12, 0.28), 0 0 12px rgba(251, 146, 60, 0.25);
+        }
+
         .po-stitch-avatar-btn:hover {
             transform: scale(1.06);
         }
@@ -692,6 +936,11 @@
             -webkit-user-drag: none;
         }
 
+        html[data-theme="cat"] .po-stitch-img {
+            transform: scale(1.08);
+            transform-origin: center center;
+        }
+
         .po-eye-lid {
             position: absolute;
             top: 43.5%;
@@ -704,6 +953,10 @@
             pointer-events: none;
             z-index: 3;
             animation: poEyeBlink 4.2s infinite;
+        }
+
+        html[data-theme="cat"] .po-eye-lid {
+            background: #7c2d12;
         }
 
         .po-eye-lid.left {
@@ -741,6 +994,13 @@
             pointer-events: none;
         }
 
+        html[data-theme="cat"] .po-speech-bubble {
+            background: #fff7ed;
+            color: #431407;
+            border-color: #f97316;
+            box-shadow: 0 8px 20px rgba(234, 88, 12, 0.22);
+        }
+
         @media (min-width: 640px) {
             .po-stitch-avatar-btn {
                 width: 56px;
@@ -759,48 +1019,107 @@
         }
     </style>
 
-    <!-- Terapkan Tema Stitch / Default sejak awal sebelum halaman dirender -->
+    <!-- Terapkan Tema Stitch / Kucing / Default sejak awal sebelum halaman dirender -->
     <script>
         (function() {
             const PO_THEME_KEY = "gudang_po_theme";
 
-            function sinkronkanLabelTombolTema(isStitch) {
+            function normalisasiTema(themeName) {
+                const val = String(themeName || "dark").toLowerCase();
+                if (val === "cat" || val === "kucing") return "cat";
+                if (val === "stitch") return "stitch";
+                return "dark";
+            }
+
+            function sinkronkanLabelTombolTema(themeAktif) {
                 const btnPo = document.getElementById("btnSwitchPoTheme");
                 if (btnPo) {
-                    btnPo.innerHTML = isStitch ? `<i class="fa-solid fa-moon"></i> Gelap` : `🐾 Stitch`;
-                    btnPo.setAttribute("aria-pressed", isStitch ? "true" : "false");
+                    if (themeAktif === "stitch") {
+                        btnPo.innerHTML = `🐱 Kucing`;
+                        btnPo.setAttribute("aria-pressed", "true");
+                    } else if (themeAktif === "cat") {
+                        btnPo.innerHTML = `<i class="fa-solid fa-moon"></i> Gelap`;
+                        btnPo.setAttribute("aria-pressed", "true");
+                    } else {
+                        btnPo.innerHTML = `🐾 Stitch`;
+                        btnPo.setAttribute("aria-pressed", "false");
+                    }
+                }
+            }
+
+            function sinkronkanMaskotTema(themeAktif) {
+                const isCat = themeAktif === "cat";
+                const srcGambar = isCat ? "cat-oren.png" : "stitch.png";
+                const altGambar = isCat ? "Kucing Oren Mascot" : "Stitch Mascot";
+
+                const loginMascotImg = document.getElementById("loginMascotImg");
+                if (loginMascotImg) {
+                    loginMascotImg.src = srcGambar;
+                    loginMascotImg.alt = altGambar;
+                }
+
+                const robotBubbleEl = document.getElementById("robotBubble");
+                if (robotBubbleEl) {
+                    if (themeAktif === "cat") {
+                        robotBubbleEl.textContent = "Meow! Ayo kerja input PO! 🐾✨";
+                    } else if (themeAktif === "stitch") {
+                        robotBubbleEl.textContent = "Aloha! Ohana siap bantu login! 🌺";
+                    } else {
+                        robotBubbleEl.textContent = "Masukkan akun internal gudang";
+                    }
+                }
+
+                const roamImg = document.querySelector(".po-stitch-roam-img");
+                if (roamImg) {
+                    roamImg.src = srcGambar;
+                    roamImg.alt = altGambar;
+                }
+
+                const avatarImg = document.querySelector("#poStitchAvatar .po-stitch-img");
+                if (avatarImg) {
+                    avatarImg.src = srcGambar;
+                    avatarImg.alt = altGambar;
+                }
+
+                const bubbleEl = document.getElementById("poStitchBubble");
+                if (bubbleEl) {
+                    bubbleEl.textContent = isCat
+                        ? "Meow! Kucing oren siap bantu input PO hari ini! 🐾✨"
+                        : "Aloha! Ohana siap bantu input PO hari ini! 🌺";
                 }
             }
 
             window.terapkanTemaGlobalPo = function(themeName) {
-                const isStitch = themeName === "stitch";
-                const resolved = isStitch ? "stitch" : "dark";
+                const resolved = normalisasiTema(themeName);
+                const isStitch = resolved === "stitch";
+                const isCat = resolved === "cat";
 
                 try {
                     localStorage.setItem(PO_THEME_KEY, resolved);
                 } catch (e) {}
 
-                if (isStitch) {
-                    document.documentElement.setAttribute("data-theme", "stitch");
-                    document.documentElement.classList.add("theme-stitch");
+                document.documentElement.classList.remove("theme-stitch", "theme-cat");
+                if (isStitch || isCat) {
+                    document.documentElement.setAttribute("data-theme", resolved);
+                    document.documentElement.classList.add(isCat ? "theme-cat" : "theme-stitch");
                 } else {
                     document.documentElement.removeAttribute("data-theme");
-                    document.documentElement.classList.remove("theme-stitch");
                     const roamBubble = document.getElementById("poStitchRoamBubble");
                     if (roamBubble) roamBubble.classList.remove("show");
                 }
 
                 if (document.body) {
-                    if (isStitch) {
-                        document.body.setAttribute("data-theme", "stitch");
-                        document.body.classList.add("theme-stitch");
+                    document.body.classList.remove("theme-stitch", "theme-cat");
+                    if (isStitch || isCat) {
+                        document.body.setAttribute("data-theme", resolved);
+                        document.body.classList.add(isCat ? "theme-cat" : "theme-stitch");
                     } else {
                         document.body.removeAttribute("data-theme");
-                        document.body.classList.remove("theme-stitch");
                     }
                 }
 
-                sinkronkanLabelTombolTema(isStitch);
+                sinkronkanLabelTombolTema(resolved);
+                sinkronkanMaskotTema(resolved);
 
                 const savedUser = localStorage.getItem("po_user");
                 if (savedUser && typeof window.setDynamicGreeting === "function") {
@@ -809,14 +1128,20 @@
                 if (isStitch && typeof window.updateStitchSpeech === "function") {
                     window.updateStitchSpeech();
                 }
-                if (isStitch && typeof window.pindahPosisiStitchDiKotak === "function") {
+                if ((isStitch || isCat) && typeof window.pindahPosisiStitchDiKotak === "function") {
                     setTimeout(() => window.pindahPosisiStitchDiKotak(), 60);
                 }
             };
 
+            // Siklus: dark -> stitch -> cat -> dark
             window.toggleTemaStitchGlobal = function() {
-                const saatIniStitch = document.documentElement.getAttribute("data-theme") === "stitch";
-                window.terapkanTemaGlobalPo(saatIniStitch ? "dark" : "stitch");
+                const saatIni = normalisasiTema(document.documentElement.getAttribute("data-theme"));
+                let berikutnya = "stitch";
+                if (saatIni === "dark") berikutnya = "stitch";
+                else if (saatIni === "stitch") berikutnya = "cat";
+                else berikutnya = "dark";
+
+                window.terapkanTemaGlobalPo(berikutnya);
                 if (typeof window.playStitchSound === "function") {
                     window.playStitchSound("tap");
                 }
@@ -824,9 +1149,7 @@
 
             let temaAwal = "dark";
             try {
-                if (localStorage.getItem(PO_THEME_KEY) === "stitch") {
-                    temaAwal = "stitch";
-                }
+                temaAwal = normalisasiTema(localStorage.getItem(PO_THEME_KEY) || "dark");
             } catch (e) {}
             window.terapkanTemaGlobalPo(temaAwal);
         })();
@@ -863,18 +1186,11 @@
             <div class="po-skel-content">
                 <div class="robot-container" id="robotContainer">
                     <div class="robot-bubble" id="robotBubble">Masukkan akun internal gudang</div>
-                    <svg class="robot-svg" width="100" height="90" viewBox="0 0 100 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <line x1="50" y1="16" x2="50" y2="8" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>
-                        <circle cx="50" cy="6" r="3.5" fill="#38bdf8"/>
-                        <rect x="26" y="16" width="48" height="38" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5"/>
-                        <circle cx="41" cy="32" r="4.5" fill="#38bdf8"/>
-                        <circle cx="59" cy="32" r="4.5" fill="#38bdf8"/>
-                        <rect x="43" y="42" width="14" height="3.5" rx="1.75" fill="#38bdf8"/>
-                        <rect x="44" y="54" width="12" height="8" fill="#334155" stroke="#38bdf8" stroke-width="2"/>
-                        <rect x="32" y="62" width="36" height="22" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5"/>
-                        <g class="left-hand"><rect x="14" y="50" width="12" height="20" rx="6" fill="#38bdf8"/></g>
-                        <g class="right-hand"><rect x="74" y="50" width="12" height="20" rx="6" fill="#38bdf8"/></g>
-                    </svg>
+                    <div class="po-login-mascot-frame">
+                        <img id="loginMascotImg" src="stitch.png" alt="Karakter Login" class="po-login-mascot-img" draggable="false" />
+                        <span class="po-eye-lid left"></span>
+                        <span class="po-eye-lid right"></span>
+                    </div>
                 </div>
 
                 <div class="header-login">
@@ -1021,10 +1337,10 @@
                         </div>
                     </div>
 
-                    <!-- Murni Karakter Stitch Bergerak Pindah-Pindah di Kotak Cuaca -->
+                    <!-- Murni Karakter Maskot Bergerak Pindah-Pindah di Kotak Cuaca -->
                     <div id="poStitchRoamBox" class="po-stitch-roam-box">
                         <div id="poStitchRoamInner" class="po-stitch-roam-inner">
-                            <img src="stitch.png" alt="Stitch Bergerak" class="po-stitch-roam-img" draggable="false" onclick="klikStitchRoam(event)" />
+                            <img src="stitch.png" alt="Mascot Bergerak" class="po-stitch-roam-img" draggable="false" onclick="klikStitchRoam(event)" />
                             <span class="po-stitch-roam-lid left"></span>
                             <span class="po-stitch-roam-lid right"></span>
                         </div>
@@ -1068,10 +1384,10 @@
         </div>
     </div>
 
-    <!-- Maskot Stitch Kedip Mata + Bubble Chat -->
+    <!-- Maskot Kedip Mata + Bubble Chat -->
     <div id="poStitchMascotWrap" class="po-stitch-mascot">
-        <button type="button" id="poStitchAvatar" class="po-stitch-avatar-btn" title="Klik Stitch untuk menyapa">
-            <img src="stitch.png" alt="Stitch Mascot" class="po-stitch-img" draggable="false" />
+        <button type="button" id="poStitchAvatar" class="po-stitch-avatar-btn" title="Klik maskot untuk menyapa">
+            <img src="stitch.png" alt="Mascot" class="po-stitch-img" draggable="false" />
             <span class="po-eye-lid left"></span>
             <span class="po-eye-lid right"></span>
         </button>
@@ -1217,8 +1533,9 @@
             const PO_THEME_KEY = "gudang_po_theme";
             let temaTersimpan = "dark";
             try {
-                if (localStorage.getItem(PO_THEME_KEY) === "stitch") {
-                    temaTersimpan = "stitch";
+                const raw = (localStorage.getItem(PO_THEME_KEY) || "dark").toLowerCase();
+                if (raw === "stitch" || raw === "cat" || raw === "kucing") {
+                    temaTersimpan = raw === "kucing" ? "cat" : raw;
                 }
             } catch (e) {}
 
@@ -1229,15 +1546,16 @@
             if (typeof window.handleLogout === "function" && !window.handleLogout._stitchWrapped) {
                 const originalLogout = window.handleLogout;
                 window.handleLogout = function(...args) {
-                    let aktifStitch = false;
+                    let temaAktif = "dark";
                     try {
-                        aktifStitch = localStorage.getItem(PO_THEME_KEY) === "stitch" || document.documentElement.getAttribute("data-theme") === "stitch";
+                        const attr = (document.documentElement.getAttribute("data-theme") || localStorage.getItem(PO_THEME_KEY) || "dark").toLowerCase();
+                        temaAktif = attr === "kucing" ? "cat" : attr;
                     } catch (e) {}
 
                     const hasil = originalLogout.apply(this, args);
-                    if (aktifStitch && typeof window.terapkanTemaGlobalPo === "function") {
-                        setTimeout(() => window.terapkanTemaGlobalPo("stitch"), 0);
-                        setTimeout(() => window.terapkanTemaGlobalPo("stitch"), 120);
+                    if ((temaAktif === "stitch" || temaAktif === "cat") && typeof window.terapkanTemaGlobalPo === "function") {
+                        setTimeout(() => window.terapkanTemaGlobalPo(temaAktif), 0);
+                        setTimeout(() => window.terapkanTemaGlobalPo(temaAktif), 120);
                     }
                     return hasil;
                 };
@@ -1432,7 +1750,7 @@
         })();
     </script>
 
-    <!-- SCRIPT STITCH UTUH BERGERAK PINDAH-PINDAH DI KOTAK CUACA + BUBBLE TEKS SAAT DIKLIK -->
+    <!-- SCRIPT MASKOT UTUH BERGERAK PINDAH-PINDAH DI KOTAK CUACA + BUBBLE TEKS SAAT DIKLIK -->
     <script>
         (function() {
             let roamTimer = null;
@@ -1446,14 +1764,25 @@
                 "Cuaca aman, lanjut input PO-nya! 😄"
             ];
 
-            function isStitchAktif() {
-                return document.documentElement.getAttribute("data-theme") === "stitch";
+            const kataKucing = [
+                "Meow! Kucing oren lagi jalan-jalan nih! 🐱",
+                "Ayo kerja input PO! Jangan lupa cek stok ya! 🐾",
+                "Nyamm~ pindah tempat dulu biar makin semangat! ✨",
+                "Kucing oren siap nemenin shift gudang hari ini! 🧡",
+                "Purr~ PO lancar, gudang aman terkendali! 😄"
+            ];
+
+            function getTemaMaskotAktif() {
+                const attr = document.documentElement.getAttribute("data-theme");
+                if (attr === "cat" || attr === "kucing") return "cat";
+                if (attr === "stitch") return "stitch";
+                return null;
             }
 
             function posisikanBubbleDekatStitch() {
                 const bubble = document.getElementById("poStitchRoamBubble");
                 if (!bubble) return;
-                if (!isStitchAktif()) {
+                if (!getTemaMaskotAktif()) {
                     bubble.classList.remove("show");
                     return;
                 }
@@ -1478,8 +1807,8 @@
                 bubble.style.top = `${Math.round(topPos)}px`;
             }
 
-            function pindahPosisiStitchDiKotak() {
-                if (!isStitchAktif()) return;
+            window.pindahPosisiStitchDiKotak = function() {
+                if (!getTemaMaskotAktif()) return;
 
                 const card = document.getElementById("poWeatherWidget");
                 const box = document.getElementById("poStitchRoamBox");
@@ -1514,17 +1843,19 @@
                 if (bubble && bubble.classList.contains("show")) {
                     setTimeout(posisikanBubbleDekatStitch, 120);
                 }
-            }
+            };
 
             window.klikStitchRoam = function(event) {
                 if (event) event.stopPropagation();
-                if (!isStitchAktif()) return;
+                const temaAktif = getTemaMaskotAktif();
+                if (!temaAktif) return;
 
                 const inner = document.getElementById("poStitchRoamInner");
                 const bubble = document.getElementById("poStitchRoamBubble");
                 if (!bubble) return;
 
-                const pesan = kataStitch[Math.floor(Math.random() * kataStitch.length)];
+                const bankKata = temaAktif === "cat" ? kataKucing : kataStitch;
+                const pesan = bankKata[Math.floor(Math.random() * bankKata.length)];
                 bubble.textContent = pesan;
                 bubble.classList.add("show");
                 posisikanBubbleDekatStitch();
@@ -1546,13 +1877,13 @@
             };
 
             document.addEventListener("DOMContentLoaded", function() {
-                setTimeout(pindahPosisiStitchDiKotak, 400);
+                setTimeout(window.pindahPosisiStitchDiKotak, 400);
                 clearInterval(roamTimer);
-                roamTimer = setInterval(pindahPosisiStitchDiKotak, 2800);
+                roamTimer = setInterval(window.pindahPosisiStitchDiKotak, 2800);
             });
 
             window.addEventListener("resize", () => {
-                pindahPosisiStitchDiKotak();
+                window.pindahPosisiStitchDiKotak();
                 posisikanBubbleDekatStitch();
             });
             window.addEventListener("scroll", posisikanBubbleDekatStitch, { passive: true });
