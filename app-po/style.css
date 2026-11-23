@@ -1207,25 +1207,25 @@ html[data-theme="cat"] .po-speech-bubble {
     font-size: 12px;
 }
 
-/* Mobile compact spacing + ruang aman maskot & tombol chat */
+/* Mobile compact spacing + ukuran pas maskot & bubble kiri bawah */
 @media (max-width: 480px) {
     .container {
         padding: 12px;
     }
     .login-box, #poSection {
-        padding: 18px 15px 118px 15px;
+        padding: 18px 15px 112px 15px;
     }
     html[data-theme="stitch"] .po-stitch-avatar-btn,
     html[data-theme="cat"] .po-stitch-avatar-btn {
-        width: 46px;
-        height: 46px;
-        border-radius: 14px;
+        width: 56px !important;
+        height: 56px !important;
+        border-radius: 16px !important;
     }
     html[data-theme="stitch"] .po-speech-bubble,
     html[data-theme="cat"] .po-speech-bubble {
-        max-width: 155px;
-        font-size: 10px;
-        line-height: 1.25;
-        padding: 5px 8px;
+        max-width: 210px !important;
+        font-size: 12px !important;
+        line-height: 1.35 !important;
+        padding: 8px 12px !important;
     }
 }
