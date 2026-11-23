@@ -10,14 +10,30 @@ let stitchAudioCtx = null;
 let currentEditRowIndex = null;
 
 // ==========================================
-// 🐾 THEME SWITCHER & KARAKTER STITCH (GELAP ↔ STITCH)
+// 🐾 THEME SWITCHER & KARAKTER (DARK -> STITCH -> CAT)
 // ==========================================
+function getActivePoTheme() {
+    const t = String(document.documentElement.getAttribute('data-theme') || 'dark').toLowerCase();
+    if (t === 'cat' || t === 'kucing') return 'cat';
+    if (t === 'stitch') return 'stitch';
+    return 'dark';
+}
+
 function isStitchThemeActive() {
-    return document.documentElement.getAttribute('data-theme') === 'stitch';
+    return getActivePoTheme() === 'stitch';
+}
+
+function isCatThemeActive() {
+    return getActivePoTheme() === 'cat';
+}
+
+function isLightMascotThemeActive() {
+    const t = getActivePoTheme();
+    return t === 'stitch' || t === 'cat';
 }
 
 window.playStitchSound = function(mode = "tap") {
-    if (!isStitchThemeActive()) return;
+    if (!isLightMascotThemeActive()) return;
     try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return;
@@ -56,38 +72,56 @@ window.updateStitchSpeech = function(customText = null) {
         return;
     }
 
-    const daftarPesan = [
-        "Aloha! Ohana siap bantu input PO hari ini! 🌺",
-        "Jangan lupa cek kode & jumlah barang biar presisi ya! 🐾",
-        "Semangat kerja! Data PO aman terkendali bareng Stitch ✨",
-        "Klik aku kalau butuh semangat tambahan bro! 💙"
-    ];
+    const daftarPesan = isCatThemeActive()
+        ? [
+            "Meow! Kucing oren siap bantu input PO hari ini! 🐾✨",
+            "Jangan lupa cek kode & jumlah barang biar presisi ya! 🐱",
+            "Purr~ data PO aman terkendali bareng kucing oren! 🧡",
+            "Klik aku kalau butuh semangat tambahan bro! ✨"
+        ]
+        : [
+            "Aloha! Ohana siap bantu input PO hari ini! 🌺",
+            "Jangan lupa cek kode & jumlah barang biar presisi ya! 🐾",
+            "Semangat kerja! Data PO aman terkendali bareng Stitch ✨",
+            "Klik aku kalau butuh semangat tambahan bro! 💙"
+        ];
     bubble.textContent = daftarPesan[Math.floor(Math.random() * daftarPesan.length)];
 };
 
+function normalizeThemeValue(themeName) {
+    const val = String(themeName || 'dark').toLowerCase();
+    if (val === 'cat' || val === 'kucing') return 'cat';
+    if (val === 'stitch') return 'stitch';
+    return 'dark';
+}
+
 function applyPoTheme(themeName, playSound = false) {
-    const isStitch = themeName === 'stitch';
-    const resolved = isStitch ? 'stitch' : 'dark';
+    const resolved = normalizeThemeValue(themeName);
 
     if (typeof window.terapkanTemaGlobalPo === 'function') {
         window.terapkanTemaGlobalPo(resolved);
     } else {
-        if (isStitch) {
-            document.documentElement.setAttribute('data-theme', 'stitch');
-            document.documentElement.classList.add('theme-stitch');
-            if (document.body) {
-                document.body.setAttribute('data-theme', 'stitch');
-                document.body.classList.add('theme-stitch');
-            }
+        const isStitch = resolved === 'stitch';
+        const isCat = resolved === 'cat';
+
+        document.documentElement.classList.remove('theme-stitch', 'theme-cat');
+        if (isStitch || isCat) {
+            document.documentElement.setAttribute('data-theme', resolved);
+            document.documentElement.classList.add(isCat ? 'theme-cat' : 'theme-stitch');
         } else {
             document.documentElement.removeAttribute('data-theme');
-            document.documentElement.classList.remove('theme-stitch');
-            if (document.body) {
-                document.body.removeAttribute('data-theme');
-                document.body.classList.remove('theme-stitch');
-            }
             const roamBubble = document.getElementById('poStitchRoamBubble');
             if (roamBubble) roamBubble.classList.remove('show');
+        }
+
+        if (document.body) {
+            document.body.classList.remove('theme-stitch', 'theme-cat');
+            if (isStitch || isCat) {
+                document.body.setAttribute('data-theme', resolved);
+                document.body.classList.add(isCat ? 'theme-cat' : 'theme-stitch');
+            } else {
+                document.body.removeAttribute('data-theme');
+            }
         }
 
         try {
@@ -96,33 +130,42 @@ function applyPoTheme(themeName, playSound = false) {
 
         const switchBtn = document.getElementById('btnSwitchPoTheme');
         if (switchBtn) {
-            switchBtn.innerHTML = isStitch
-                ? `<i class="fa-solid fa-moon"></i> Gelap`
-                : `🐾 Stitch`;
-            switchBtn.setAttribute("aria-pressed", isStitch ? "true" : "false");
+            if (resolved === 'stitch') {
+                switchBtn.innerHTML = `🐱 Kucing`;
+                switchBtn.setAttribute("aria-pressed", "true");
+            } else if (resolved === 'cat') {
+                switchBtn.innerHTML = `<i class="fa-solid fa-moon"></i> Gelap`;
+                switchBtn.setAttribute("aria-pressed", "true");
+            } else {
+                switchBtn.innerHTML = `🐾 Stitch`;
+                switchBtn.setAttribute("aria-pressed", "false");
+            }
         }
     }
 
     const savedUser = localStorage.getItem('po_user');
     if (savedUser) setDynamicGreeting(savedUser);
 
-    if (isStitch) {
+    if (resolved !== 'dark') {
         window.updateStitchSpeech();
         if (playSound) window.playStitchSound("tap");
     }
 }
 
 window.toggleTemaStitchGlobal = function() {
-    const nextTheme = isStitchThemeActive() ? 'dark' : 'stitch';
-    applyPoTheme(nextTheme, true);
+    const saatIni = getActivePoTheme();
+    let berikutnya = 'stitch';
+    if (saatIni === 'dark') berikutnya = 'stitch';
+    else if (saatIni === 'stitch') berikutnya = 'cat';
+    else berikutnya = 'dark';
+
+    applyPoTheme(berikutnya, true);
 };
 
 function initPoThemeSystem() {
     let savedTheme = 'dark';
     try {
-        if (localStorage.getItem(PO_THEME_STORAGE_KEY) === 'stitch') {
-            savedTheme = 'stitch';
-        }
+        savedTheme = normalizeThemeValue(localStorage.getItem(PO_THEME_STORAGE_KEY) || 'dark');
     } catch (e) {}
     applyPoTheme(savedTheme, false);
 
@@ -135,7 +178,7 @@ function initPoThemeSystem() {
         stitchAvatar.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            if (!isStitchThemeActive()) return;
+            if (!isLightMascotThemeActive()) return;
             window.playStitchSound("tap");
             window.updateStitchSpeech();
         });
@@ -236,7 +279,12 @@ function showCustomModal({ title = "Informasi", message = "", type = "info", sho
 
         if (!modalBox || !wrapper) { resolve(true); return; }
 
-        if (isStitchThemeActive()) {
+        if (isCatThemeActive()) {
+            wrapper.style.background = "linear-gradient(145deg, #fffdf9, #ffedd5)";
+            wrapper.style.borderColor = "#fdba74";
+            if (titleEl) titleEl.style.color = "#c2410c";
+            if (msgEl) msgEl.style.color = "#431407";
+        } else if (isStitchThemeActive()) {
             wrapper.style.background = "linear-gradient(145deg, #ffffff, #e0f2fe)";
             wrapper.style.borderColor = "#7dd3fc";
             if (titleEl) titleEl.style.color = "#0369a1";
@@ -427,7 +475,12 @@ function setDynamicGreeting(username) {
     }
 
     const motivasiAcak = daftarMotivasi[Math.floor(Math.random() * daftarMotivasi.length)];
-    const subColor = isStitchThemeActive() ? '#bae6fd' : '#94a3b8';
+    const aktifTema = getActivePoTheme();
+    const subColor = aktifTema === 'stitch'
+        ? '#0369a1'
+        : aktifTema === 'cat'
+            ? '#9a3412'
+            : '#94a3b8';
     greetingEl.innerHTML = `Selamat ${waktu}, <b>${escapeHtml(username)}</b>! <br><span style="font-size: 11px; color: ${subColor};">${escapeHtml(motivasiAcak)}</span>`;
 }
 
@@ -473,7 +526,7 @@ function tampilkanLogin() {
 
     let savedTheme = 'dark';
     try {
-        if (localStorage.getItem(PO_THEME_STORAGE_KEY) === 'stitch') savedTheme = 'stitch';
+        savedTheme = normalizeThemeValue(localStorage.getItem(PO_THEME_STORAGE_KEY) || 'dark');
     } catch (e) {}
     applyPoTheme(savedTheme, false);
 }
@@ -486,7 +539,7 @@ function tampilkanFormPO(username) {
 
     let savedTheme = 'dark';
     try {
-        if (localStorage.getItem(PO_THEME_STORAGE_KEY) === 'stitch') savedTheme = 'stitch';
+        savedTheme = normalizeThemeValue(localStorage.getItem(PO_THEME_STORAGE_KEY) || 'dark');
     } catch (e) {}
     applyPoTheme(savedTheme, false);
 
@@ -680,7 +733,7 @@ function pilihBarang(kode, nama, pic) {
     stopCameraScanner();
     checkFormValidity();
 
-    if (isStitchThemeActive()) {
+    if (isLightMascotThemeActive()) {
         window.playStitchSound("tap");
         window.updateStitchSpeech(`Sip! Barang "${nama}" terpilih. Tinggal isi jumlahnya ya! 🐾`);
     }
@@ -694,7 +747,7 @@ function pilihBarang(kode, nama, pic) {
 function openRiwayatModal() {
     const modal = document.getElementById('riwayatModal');
     if (modal) modal.style.display = 'flex';
-    if (isStitchThemeActive()) window.playStitchSound("tap");
+    if (isLightMascotThemeActive()) window.playStitchSound("tap");
     loadRiwayatPOData();
 }
 
@@ -737,8 +790,8 @@ async function loadRiwayatPOData() {
 
             formattedRows.reverse();
 
-            const borderRow = isStitchThemeActive() ? '#e0f2fe' : '#1e293b';
-            const hoverBg = isStitchThemeActive() ? '#f0f9ff' : 'rgba(255,255,255,0.03)';
+            const borderRow = isStitchThemeActive() ? '#e0f2fe' : isCatThemeActive() ? '#ffedd5' : '#1e293b';
+            const hoverBg = isStitchThemeActive() ? '#f0f9ff' : isCatThemeActive() ? '#fff7ed' : 'rgba(255,255,255,0.03)';
 
             tbody.innerHTML = formattedRows.map(item => {
                 let tanggalStr = item.tanggal;
@@ -803,7 +856,7 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
         btnSubmit.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
     }
 
-    if (isStitchThemeActive()) {
+    if (isLightMascotThemeActive()) {
         window.playStitchSound("tap");
         window.updateStitchSpeech(`Mode edit aktif untuk "${nama}". Silakan ubah lalu simpan! ✏️`);
     }
@@ -860,7 +913,7 @@ async function hapusDataPO(rowIndex) {
         const result = await response.json();
 
         if (result.status === 'success') {
-            if (isStitchThemeActive()) window.playStitchSound("success");
+            if (isLightMascotThemeActive()) window.playStitchSound("success");
             if (titleEl) titleEl.textContent = "Berhasil";
             if (msgEl) msgEl.textContent = "Data PO berhasil dihapus!";
             if (iconContainer) {
@@ -922,7 +975,7 @@ function initEventListeners() {
         triggerModal.addEventListener('click', async function() {
             if (popupSearch) popupSearch.style.display = 'flex';
             if (searchInput) searchInput.value = '';
-            if (isStitchThemeActive()) window.playStitchSound("tap");
+            if (isLightMascotThemeActive()) window.playStitchSound("tap");
 
             if (!masterBarang || masterBarang.length === 0) {
                 renderList([{ kode_barang: '', nama_barang: 'Memuat data dari server...', pic: '' }]);
@@ -1079,7 +1132,7 @@ async function onScanSuccess(decodedText) {
         if (elTrigger) elTrigger.textContent = decodedText;
         stopCameraScanner();
         checkFormValidity();
-        if (isStitchThemeActive()) window.playStitchSound("tap");
+        if (isLightMascotThemeActive()) window.playStitchSound("tap");
         await showCustomModal({
             title: "Kode Ditemukan",
             message: `Kode terdeteksi: ${decodedText} (Dimasukkan manual)`,
@@ -1110,7 +1163,7 @@ async function submitPO(e) {
     }
 
     if (msg) {
-        msg.style.color = isStitchThemeActive() ? "#0284c7" : "#38bdf8";
+        msg.style.color = isCatThemeActive() ? "#c2410c" : isStitchThemeActive() ? "#0284c7" : "#38bdf8";
         msg.innerText = isEditMode ? "Memperbarui data di kedua sheet..." : "Mengirim data PO ke Google Sheets...";
     }
 
@@ -1147,7 +1200,7 @@ async function submitPO(e) {
                 }).catch(err => {});
             }
 
-            if (isStitchThemeActive()) {
+            if (isLightMascotThemeActive()) {
                 window.playStitchSound("success");
                 window.updateStitchSpeech(isEditMode ? "Yeay! Data PO berhasil diperbarui! 🎉" : "Mantap Ohana! PO baru sudah tersimpan! 🚀");
             }
@@ -1178,7 +1231,7 @@ async function submitPO(e) {
                 btn.style.background = "";
             }
         } else {
-            if (isStitchThemeActive()) {
+            if (isLightMascotThemeActive()) {
                 window.playStitchSound("warn");
                 window.updateStitchSpeech("Waduh gagal simpan, coba cek lagi datanya ya bro!");
             }
@@ -1196,7 +1249,7 @@ async function submitPO(e) {
 
         setTimeout(() => { if (msg) msg.innerText = ""; }, 3000);
     } catch (err) {
-        if (isStitchThemeActive()) {
+        if (isLightMascotThemeActive()) {
             window.playStitchSound("warn");
             window.updateStitchSpeech("Koneksi internet terputus sebentar, coba kirim ulang ya!");
         }
@@ -1233,7 +1286,11 @@ function initRobotAnimation() {
                 robotBubble.textContent = "Waduh, password rahasia! Aku tutup mata ya 🙈";
             } else {
                 robotContainer.classList.remove('password-active');
-                robotBubble.textContent = "Masukkan akun internal gudang";
+                robotBubble.textContent = isCatThemeActive()
+                    ? "Meow! Ayo kerja input PO! 🐾✨"
+                    : isStitchThemeActive()
+                        ? "Aloha! Ohana siap bantu login! 🌺"
+                        : "Masukkan akun internal gudang";
             }
         }, 50);
     }
@@ -1265,7 +1322,7 @@ function tambahJumlah(angka) {
     if (!inputJumlah) return;
     const nilaiSekarang = parseInt(inputJumlah.value, 10) || 0;
     inputJumlah.value = nilaiSekarang + Number(angka || 0);
-    if (isStitchThemeActive()) window.playStitchSound("tap");
+    if (isLightMascotThemeActive()) window.playStitchSound("tap");
     checkFormValidity();
 }
 
@@ -1358,22 +1415,29 @@ function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, st
     const existing = document.getElementById('bannerRekapHarianModal');
     if (existing) existing.remove();
 
+    const isCat = isCatThemeActive();
     const isStitch = isStitchThemeActive();
-    const cardBg = isStitch ? 'linear-gradient(145deg, #ffffff, #e0f2fe)' : 'linear-gradient(145deg, #0f172a, #1e293b)';
-    const cardBorder = isStitch ? '#7dd3fc' : 'rgba(56, 189, 248, 0.45)';
-    const titleColor = isStitch ? '#0369a1' : '#fff';
-    const textColor = isStitch ? '#334155' : '#cbd5e1';
-    const accentColor = isStitch ? '#0284c7' : '#38bdf8';
-    const listBoxBg = isStitch ? '#f0f9ff' : 'rgba(2, 6, 23, 0.65)';
-    const listBoxBorder = isStitch ? '#bae6fd' : '#334155';
-    const fontStack = isStitch
+    const isLight = isCat || isStitch;
+
+    const cardBg = isCat
+        ? 'linear-gradient(145deg, #fffdf9, #ffedd5)'
+        : isStitch
+            ? 'linear-gradient(145deg, #ffffff, #e0f2fe)'
+            : 'linear-gradient(145deg, #0f172a, #1e293b)';
+    const cardBorder = isCat ? '#fdba74' : isStitch ? '#7dd3fc' : 'rgba(56, 189, 248, 0.45)';
+    const titleColor = isCat ? '#c2410c' : isStitch ? '#0369a1' : '#fff';
+    const textColor = isCat ? '#431407' : isStitch ? '#334155' : '#cbd5e1';
+    const accentColor = isCat ? '#ea580c' : isStitch ? '#0284c7' : '#38bdf8';
+    const listBoxBg = isCat ? '#fff7ed' : isStitch ? '#f0f9ff' : 'rgba(2, 6, 23, 0.65)';
+    const listBoxBorder = isCat ? '#fed7aa' : isStitch ? '#bae6fd' : '#334155';
+    const fontStack = isLight
         ? "'Fredoka', 'Nunito', 'Comic Sans MS', cursive, sans-serif"
         : "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
 
     let listHtml = "";
     if (loginList.length > 0) {
         listHtml = loginList.map(log => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid ${isStitch ? '#e0f2fe' : 'rgba(255,255,255,0.06)'}; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid ${isCat ? '#ffedd5' : isStitch ? '#e0f2fe' : 'rgba(255,255,255,0.06)'}; font-size: 11px;">
                 <span style="color: ${textColor};">📅 ${escapeHtml(log.jam)}</span>
                 <span style="color: ${accentColor}; font-weight: 600;">${escapeHtml(log.modul)}</span>
                 <span style="color: #10b981; font-size: 10px;">🟢 Masuk</span>
@@ -1412,7 +1476,7 @@ function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, st
                 <div style="font-size: 12px; color: ${textColor};">
                     <i class="fa-solid fa-file-invoice" style="color: #10b981; margin-right: 6px;"></i> Total Input PO Kemarin
                 </div>
-                <div style="font-size: 16px; font-weight: 800; color: #10b981; font-family: ${isStitch ? fontStack : 'monospace'};">
+                <div style="font-size: 16px; font-weight: 800; color: #10b981; font-family: ${isLight ? fontStack : 'monospace'};">
                     ${totalPO} Kali
                 </div>
             </div>
@@ -1420,7 +1484,7 @@ function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, st
             <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
                 <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Sesi Login (${loginList.length}x)
             </div>
-            <div style="background: ${listBoxBg}; border: 1px solid ${listBoxBorder}; border-radius: 10px; max-height: 165px; overflow-y: auto; margin-bottom: 18px; font-family: ${isStitch ? fontStack : 'monospace'};">
+            <div style="background: ${listBoxBg}; border: 1px solid ${listBoxBorder}; border-radius: 10px; max-height: 165px; overflow-y: auto; margin-bottom: 18px; font-family: ${isLight ? fontStack : 'monospace'};">
                 ${listHtml}
             </div>
 
@@ -1434,7 +1498,7 @@ function tampilkanBannerRekapHarian({ nama, tanggalLabel, loginList, totalPO, st
 
     document.getElementById('btnConfirmRekapHarian').addEventListener('click', () => {
         localStorage.setItem(storageKey, 'true');
-        if (isStitch) window.playStitchSound("tap");
+        if (isLightMascotThemeActive()) window.playStitchSound("tap");
         modal.remove();
     });
 }
