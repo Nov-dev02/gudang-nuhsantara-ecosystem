@@ -1204,7 +1204,7 @@ html[data-theme="stitch"] .po-weather-card,
 html[data-theme="stitch"] .po-speech-bubble,
 html[data-theme="cat"] .po-weather-card,
 html[data-theme="cat"] .po-speech-bubble {
-    font-size: 12px;
+    font-size: 13.5px !important;
 }
 
 /* Mobile compact spacing + ukuran besar maskot & bubble kiri bawah */
@@ -1213,20 +1213,20 @@ html[data-theme="cat"] .po-speech-bubble {
         padding: 12px;
     }
     .login-box, #poSection {
-        padding: 18px 15px 124px 15px;
+        padding: 18px 15px 132px 15px;
     }
     html[data-theme="stitch"] .po-stitch-avatar-btn,
     html[data-theme="cat"] .po-stitch-avatar-btn {
-        width: 66px !important;
-        height: 66px !important;
-        border-radius: 18px !important;
+        width: 72px !important;
+        height: 72px !important;
+        border-radius: 20px !important;
     }
     html[data-theme="stitch"] .po-speech-bubble,
     html[data-theme="cat"] .po-speech-bubble {
-        max-width: calc(100vw - 145px) !important;
-        font-size: 13px !important;
+        max-width: calc(100vw - 165px) !important;
+        font-size: 13.5px !important;
         line-height: 1.35 !important;
-        padding: 10px 14px !important;
+        padding: 11px 15px !important;
         border-radius: 16px !important;
     }
 }
