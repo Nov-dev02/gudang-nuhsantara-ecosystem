@@ -627,22 +627,6 @@ html[data-theme="stitch"] .clock {
     color: #0369a1 !important;
 }
 
-html[data-theme="stitch"] .po-theme-switch-btn,
-html[data-theme="stitch"] #btnSwitchPoTheme {
-    background: linear-gradient(135deg, #e0f2fe, #fce7f3) !important;
-    border: 1.5px solid #38bdf8 !important;
-    color: #0369a1 !important;
-    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15) !important;
-    position: relative !important;
-    z-index: 20 !important;
-    pointer-events: auto !important;
-}
-
-html[data-theme="stitch"] .po-theme-switch-btn:hover,
-html[data-theme="stitch"] #btnSwitchPoTheme:hover {
-    background: linear-gradient(135deg, #bae6fd, #fbcfe8) !important;
-}
-
 html[data-theme="stitch"] .user-greeting {
     color: #0369a1 !important;
 }
@@ -882,7 +866,7 @@ html[data-theme="stitch"] .footer-app {
 }
 
 /* ============================================================
-   🐱 TEMA KUCING OREN GEMOY (html[data-theme="cat"])
+   🐱 TEMA MOCHI / KUCING (html[data-theme="cat"])
    ============================================================ */
 html[data-theme="cat"],
 html[data-theme="cat"] body {
@@ -918,19 +902,6 @@ html[data-theme="cat"] .clock {
     background: #ffedd5 !important;
     border: 1px solid #fdba74 !important;
     color: #c2410c !important;
-}
-
-html[data-theme="cat"] .po-theme-switch-btn,
-html[data-theme="cat"] #btnSwitchPoTheme {
-    background: linear-gradient(135deg, #ffedd5, #fed7aa) !important;
-    border: 1.5px solid #fb923c !important;
-    color: #c2410c !important;
-    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.16) !important;
-}
-
-html[data-theme="cat"] .po-theme-switch-btn:hover,
-html[data-theme="cat"] #btnSwitchPoTheme:hover {
-    background: linear-gradient(135deg, #fed7aa, #fdba74) !important;
 }
 
 html[data-theme="cat"] .user-greeting {
@@ -1136,7 +1107,7 @@ html[data-theme="cat"] .input-with-icon .input-icon {
 }
 
 /* ============================================================
-   🔤 FONT KHUSUS TEMA STITCH & KUCING OREN
+   🔤 FONT KHUSUS TEMA STITCH & MOCHI
    ============================================================ */
 html[data-theme="stitch"],
 html[data-theme="stitch"] *,
@@ -1147,7 +1118,7 @@ html[data-theme="stitch"] select,
 html[data-theme="stitch"] button,
 html[data-theme="stitch"] table,
 html[data-theme="stitch"] .po-weather-card,
-html[data-theme="stitch"] .po-theme-switch-btn,
+html[data-theme="stitch"] .po-theme-seg-btn,
 html[data-theme="stitch"] .po-speech-bubble,
 html[data-theme="stitch"] #modalUlasanPo,
 html[data-theme="stitch"] #chatWidgetBox,
@@ -1160,7 +1131,7 @@ html[data-theme="cat"] select,
 html[data-theme="cat"] button,
 html[data-theme="cat"] table,
 html[data-theme="cat"] .po-weather-card,
-html[data-theme="cat"] .po-theme-switch-btn,
+html[data-theme="cat"] .po-theme-seg-btn,
 html[data-theme="cat"] .po-speech-bubble,
 html[data-theme="cat"] #modalUlasanPo,
 html[data-theme="cat"] #chatWidgetBox {
@@ -1191,12 +1162,10 @@ html[data-theme="stitch"] h2,
 html[data-theme="stitch"] h3,
 html[data-theme="stitch"] .po-wx-time-mini,
 html[data-theme="stitch"] #poWxTempNow,
-html[data-theme="stitch"] .po-theme-switch-btn,
 html[data-theme="cat"] h2,
 html[data-theme="cat"] h3,
 html[data-theme="cat"] .po-wx-time-mini,
-html[data-theme="cat"] #poWxTempNow,
-html[data-theme="cat"] .po-theme-switch-btn {
+html[data-theme="cat"] #poWxTempNow {
     letter-spacing: 0.3px;
 }
 
@@ -1214,6 +1183,11 @@ html[data-theme="cat"] .po-speech-bubble {
     }
     .login-box, #poSection {
         padding: 18px 15px 132px 15px;
+    }
+    .po-theme-seg-btn {
+        padding: 0 6.5px !important;
+        font-size: 9.5px !important;
+        height: 23px !important;
     }
     html[data-theme="stitch"] .po-stitch-avatar-btn,
     html[data-theme="cat"] .po-stitch-avatar-btn {
