@@ -110,7 +110,7 @@ body {
     background: rgba(15, 23, 42, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    padding: 30px;
+    padding: 30px 30px 96px 30px;
     border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     width: 100%;
@@ -854,7 +854,211 @@ html[data-theme="stitch"] .footer-app {
 }
 
 /* ============================================================
-   🔤 FONT KHUSUS TEMA STITCH (html[data-theme="stitch"])
+   🐱 TEMA KUCING OREN GEMOY (html[data-theme="cat"])
+   ============================================================ */
+html[data-theme="cat"],
+html[data-theme="cat"] body {
+    background: linear-gradient(155deg, #fed7aa 0%, #ffedd5 52%, #fffaf5 100%) !important;
+    color: #431407 !important;
+}
+
+html[data-theme="cat"] .login-box,
+html[data-theme="cat"] #poSection {
+    background: rgba(255, 253, 249, 0.96) !important;
+    border: 1.5px solid #fdba74 !important;
+    box-shadow: 0 14px 32px rgba(234, 88, 12, 0.14) !important;
+}
+
+html[data-theme="cat"] .po-header-badge {
+    background: #ffedd5 !important;
+    border-color: #fdba74 !important;
+}
+
+html[data-theme="cat"] .po-header-badge span {
+    color: #c2410c !important;
+}
+
+html[data-theme="cat"] .header-po h2,
+html[data-theme="cat"] .header-login h2 {
+    background: linear-gradient(90deg, #ea580c 0%, #c2410c 50%, #f97316 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+}
+
+html[data-theme="cat"] .clock {
+    background: #ffedd5 !important;
+    border: 1px solid #fdba74 !important;
+    color: #c2410c !important;
+}
+
+html[data-theme="cat"] .po-theme-switch-btn,
+html[data-theme="cat"] #btnSwitchPoTheme {
+    background: linear-gradient(135deg, #ffedd5, #fed7aa) !important;
+    border: 1.5px solid #fb923c !important;
+    color: #c2410c !important;
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.16) !important;
+}
+
+html[data-theme="cat"] .po-theme-switch-btn:hover,
+html[data-theme="cat"] #btnSwitchPoTheme:hover {
+    background: linear-gradient(135deg, #fed7aa, #fdba74) !important;
+}
+
+html[data-theme="cat"] .user-greeting {
+    color: #c2410c !important;
+}
+
+html[data-theme="cat"] .user-greeting span {
+    color: #9a3412 !important;
+}
+
+html[data-theme="cat"] .subtitle {
+    color: #9a3412 !important;
+}
+
+html[data-theme="cat"] .form-group label {
+    color: #431407 !important;
+    font-weight: 600 !important;
+}
+
+html[data-theme="cat"] input[type="text"],
+html[data-theme="cat"] input[type="password"],
+html[data-theme="cat"] input[type="date"],
+html[data-theme="cat"] input[type="number"] {
+    background: #ffffff !important;
+    border: 1.5px solid #fed7aa !important;
+    color: #431407 !important;
+}
+
+html[data-theme="cat"] input[type="text"]:focus,
+html[data-theme="cat"] input[type="password"]:focus,
+html[data-theme="cat"] input[type="date"]:focus,
+html[data-theme="cat"] input[type="number"]:focus {
+    border-color: #ea580c !important;
+    background: #ffffff !important;
+}
+
+html[data-theme="cat"] input[readonly] {
+    background: #ffedd5 !important;
+    border-color: #fdba74 !important;
+    color: #9a3412 !important;
+    font-weight: 600 !important;
+}
+
+html[data-theme="cat"] .btn-modal-trigger {
+    background: #fff7ed !important;
+    border: 1.5px solid #fdba74 !important;
+    color: #c2410c !important;
+    font-weight: 600 !important;
+}
+
+html[data-theme="cat"] .btn-modal-trigger:hover {
+    background: #ffedd5 !important;
+    border-color: #ea580c !important;
+}
+
+html[data-theme="cat"] #poForm button[onclick^="tambahJumlah"] {
+    background: #ffedd5 !important;
+    border: 1px solid #fdba74 !important;
+    color: #c2410c !important;
+    font-weight: 700 !important;
+}
+
+html[data-theme="cat"] #poForm button[onclick^="tambahJumlah"]:hover {
+    background: #fed7aa !important;
+}
+
+html[data-theme="cat"] #btnToggleScanner {
+    background: #ecfdf5 !important;
+    border: 1.5px solid #10b981 !important;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.14) !important;
+}
+
+html[data-theme="cat"] #scannerTextTitle {
+    color: #065f46 !important;
+}
+
+html[data-theme="cat"] .btn-riwayat {
+    background: #fff7ed !important;
+    border: 1.5px solid #fdba74 !important;
+    color: #c2410c !important;
+}
+
+html[data-theme="cat"] .btn-riwayat:hover {
+    background: #ffedd5 !important;
+}
+
+html[data-theme="cat"] .po-weather-card {
+    background: linear-gradient(135deg, #fffaf5 0%, #ffedd5 100%) !important;
+    border: 1.5px solid #fdba74 !important;
+    box-shadow: 0 10px 24px rgba(234, 88, 12, 0.14) !important;
+}
+
+html[data-theme="cat"] .po-wx-dial {
+    background: #ffffff !important;
+    border: 2px solid #ea580c !important;
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.18) !important;
+}
+
+html[data-theme="cat"] .modal-content {
+    background: #fffdf9 !important;
+    border: 1.5px solid #fdba74 !important;
+    color: #431407 !important;
+}
+
+html[data-theme="cat"] .modal-content h3 {
+    color: #c2410c !important;
+}
+
+html[data-theme="cat"] .search-input-modal {
+    background: #fff7ed !important;
+    border: 1.5px solid #fdba74 !important;
+    color: #431407 !important;
+}
+
+html[data-theme="cat"] .item-list-container {
+    background: #fffaf5 !important;
+    border-color: #fed7aa !important;
+}
+
+html[data-theme="cat"] .item-pilihan {
+    border-bottom-color: #ffedd5 !important;
+}
+
+html[data-theme="cat"] .item-pilihan:hover {
+    background: #ffedd5 !important;
+}
+
+html[data-theme="cat"] .item-kode {
+    color: #ea580c !important;
+}
+
+html[data-theme="cat"] .item-nama {
+    color: #431407 !important;
+}
+
+html[data-theme="cat"] #riwayatModal table {
+    background: #ffffff !important;
+    color: #431407 !important;
+}
+
+html[data-theme="cat"] #riwayatModal thead tr {
+    background: #ffedd5 !important;
+    color: #c2410c !important;
+}
+
+html[data-theme="cat"] #riwayatModal td {
+    color: #431407 !important;
+}
+
+html[data-theme="cat"] .footer-app {
+    color: #c2410c !important;
+    font-weight: 600 !important;
+}
+
+/* ============================================================
+   🔤 FONT KHUSUS TEMA STITCH & KUCING OREN
    ============================================================ */
 html[data-theme="stitch"],
 html[data-theme="stitch"] *,
@@ -868,7 +1072,20 @@ html[data-theme="stitch"] .po-weather-card,
 html[data-theme="stitch"] .po-theme-switch-btn,
 html[data-theme="stitch"] .po-speech-bubble,
 html[data-theme="stitch"] #modalUlasanPo,
-html[data-theme="stitch"] #chatWidgetBox {
+html[data-theme="stitch"] #chatWidgetBox,
+html[data-theme="cat"],
+html[data-theme="cat"] *,
+html[data-theme="cat"] body,
+html[data-theme="cat"] input,
+html[data-theme="cat"] textarea,
+html[data-theme="cat"] select,
+html[data-theme="cat"] button,
+html[data-theme="cat"] table,
+html[data-theme="cat"] .po-weather-card,
+html[data-theme="cat"] .po-theme-switch-btn,
+html[data-theme="cat"] .po-speech-bubble,
+html[data-theme="cat"] #modalUlasanPo,
+html[data-theme="cat"] #chatWidgetBox {
     font-family: 'Fredoka', 'Nunito', 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif !important;
 }
 
@@ -880,7 +1097,15 @@ html[data-theme="stitch"] .fal,
 html[data-theme="stitch"] .fad,
 html[data-theme="stitch"] .fab,
 html[data-theme="stitch"] [class^="fa-"],
-html[data-theme="stitch"] [class*=" fa-"] {
+html[data-theme="stitch"] [class*=" fa-"],
+html[data-theme="cat"] .fa,
+html[data-theme="cat"] .fas,
+html[data-theme="cat"] .far,
+html[data-theme="cat"] .fal,
+html[data-theme="cat"] .fad,
+html[data-theme="cat"] .fab,
+html[data-theme="cat"] [class^="fa-"],
+html[data-theme="cat"] [class*=" fa-"] {
     font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
 }
 
@@ -888,12 +1113,19 @@ html[data-theme="stitch"] h2,
 html[data-theme="stitch"] h3,
 html[data-theme="stitch"] .po-wx-time-mini,
 html[data-theme="stitch"] #poWxTempNow,
-html[data-theme="stitch"] .po-theme-switch-btn {
+html[data-theme="stitch"] .po-theme-switch-btn,
+html[data-theme="cat"] h2,
+html[data-theme="cat"] h3,
+html[data-theme="cat"] .po-wx-time-mini,
+html[data-theme="cat"] #poWxTempNow,
+html[data-theme="cat"] .po-theme-switch-btn {
     letter-spacing: 0.3px;
 }
 
 html[data-theme="stitch"] .po-weather-card,
-html[data-theme="stitch"] .po-speech-bubble {
+html[data-theme="stitch"] .po-speech-bubble,
+html[data-theme="cat"] .po-weather-card,
+html[data-theme="cat"] .po-speech-bubble {
     font-size: 12px;
 }
 
