@@ -76,7 +76,7 @@ window.updateStitchSpeech = function(customText = null) {
         ? [
             "Meow! Mochi siap bantu input PO hari ini! 🐾✨",
             "Jangan lupa cek kode & jumlah barang biar presisi ya! 🐱",
-            "Purr~ data PO aman terkendali bareng mochi! 🧡",
+            "Purr~ data PO aman terkendali bareng Mochi! 🧡",
             "Klik aku kalau butuh semangat tambahan bro! ✨"
         ]
         : [
