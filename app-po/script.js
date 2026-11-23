@@ -1202,7 +1202,19 @@ async function submitPO(e) {
 
             if (isLightMascotThemeActive()) {
                 window.playStitchSound("success");
-                window.updateStitchSpeech(isEditMode ? "Yeay! Data PO berhasil diperbarui! 🎉" : "Mantap Ohana! PO baru sudah tersimpan! 🚀");
+                if (isEditMode) {
+                    window.updateStitchSpeech(
+                        isCatThemeActive()
+                            ? "Meow! Data PO berhasil diperbarui! 🎉"
+                            : "Yeay! Data PO berhasil diperbarui! 🎉"
+                    );
+                } else {
+                    window.updateStitchSpeech(
+                        isCatThemeActive()
+                            ? "Meow! PO baru Mochi simpan! 🚀"
+                            : "Mantap Ohana! PO baru sudah tersimpan! 🚀"
+                    );
+                }
             }
 
             if (btn) {
