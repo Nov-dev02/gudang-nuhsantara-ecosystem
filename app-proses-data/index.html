@@ -106,7 +106,7 @@
         <span style="color: #64748b;">•</span>
         <span style="color: var(--text-desc); white-space: nowrap;">Sinkron Terakhir: <span id="last-sync-text" style="color: var(--text-color); font-weight: 500;">Belum ada</span></span>
       </div>
-     
+
       <div class="status-group" style="display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-left: auto;">
         <span id="live-clock" style="font-family: monospace; color: var(--text-color); font-weight: 600;"></span>
         <span style="color: #64748b;">•</span>
@@ -138,11 +138,11 @@
         </div>
       </div>
     </div>
-    
+
     <div class="fade-text-container anim-3">
       <div id="rotating-text" class="fade-text-item">🚀 SISTEM MANAJEMEN GUDANG ONLINE</div>
     </div>
-    
+
     <!-- KONTEN UTAMA -->
     <div id="app-content" class="anim-4">
       <h2 style="display: flex; align-items: center; gap: 10px;">
@@ -150,7 +150,7 @@
         <span>Selamat Datang Di Web App Otomasi Gudang</span>
       </h2>
       <p class="desc">Sistem otomatis mendeteksi file admin berdasarkan tanggal hari ini, validasi data Shopee & Tiktok Shop, dan sinkronisasi ke database.</p>
-      
+
       <div class="form-group">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 10px; flex-wrap: nowrap;">
           <label for="shopeeData" style="margin: 0; white-space: nowrap;">Paste Laporan Unduhan Shopee & Tiktok Shop:</label>
@@ -163,7 +163,7 @@
         </div>
         <textarea id="shopeeData" placeholder="Paste data unduhan Shopee & Tiktok Shop di sini tanpa batas baris..."></textarea>
       </div>
-      
+
       <button id="submitBtn" class="btn-process-glow" onclick="processData()">
         <span class="btn-content">
           <div class="spinner" id="btnSpinner"></div>
@@ -211,7 +211,7 @@
 
       <script src="script.js"></script>
 
-      <!-- SCRIPT LOGIKA UI HALAMAN + SINKRONISASI BOOT DASHBOARD -->
+      <!-- SCRIPT LOGIKA UI HALAMAN + SINKRONISASI BOOT DASHBOARD (PAUSE/PLAY AMAN) -->
       <script>
         const SHIFT_ROTATION = ["DWI", "ERIKA", "IRGI"];
         const ANCHOR_MONDAY = new Date(2026, 9, 26);
@@ -223,6 +223,9 @@
 
         let isBootPaused = false;
         let lastBootSyncPushAt = 0;
+        let isBootSyncPublishing = false;
+        let pendingBootSyncPayload = null;
+        let activePausePollTimer = null;
 
         function getWeekDifference() {
           const now = new Date();
@@ -302,9 +305,6 @@
 
         function publishBootState(stateData, force = false) {
           const now = Date.now();
-          if (!force && now - lastBootSyncPushAt < 120) return;
-          lastBootSyncPushAt = now;
-
           const payload = {
             percent: Math.max(0, Math.min(100, Math.round(stateData.percent ?? 0))),
             stepText: stateData.stepText || "Menunggu inisialisasi manual...",
@@ -319,23 +319,52 @@
             } catch (e) {}
           }
 
+          if (!force && now - lastBootSyncPushAt < 250) {
+            pendingBootSyncPayload = payload;
+            return;
+          }
+
+          if (isBootSyncPublishing) {
+            pendingBootSyncPayload = payload;
+            return;
+          }
+
+          lastBootSyncPushAt = now;
+          pendingBootSyncPayload = null;
+          isBootSyncPublishing = true;
+
           fetch(BOOT_SYNC_DB_URL, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
-          }).catch(() => {});
+          })
+            .catch(() => {})
+            .finally(() => {
+              isBootSyncPublishing = false;
+              if (pendingBootSyncPayload) {
+                const nextPayload = pendingBootSyncPayload;
+                pendingBootSyncPayload = null;
+                publishBootState(nextPayload, true);
+              }
+            });
         }
 
         function applyPausedFlagFromDashboard(pausedVal) {
           const nextPaused = Boolean(pausedVal);
-          if (nextPaused !== isBootPaused) {
-            isBootPaused = nextPaused;
-            const bootTextEl = document.getElementById("boot-text");
-            if (bootTextEl && bootTextEl.dataset.baseStepText) {
-              bootTextEl.innerText = isBootPaused
-                ? `${bootTextEl.dataset.baseStepText} (PAUSED)`
-                : bootTextEl.dataset.baseStepText;
-            }
+          if (nextPaused === isBootPaused) return;
+          isBootPaused = nextPaused;
+
+          const bootTextEl = document.getElementById("boot-text");
+          const spinnerEl = document.getElementById("boot-step-spinner");
+
+          if (bootTextEl && bootTextEl.dataset.baseStepText) {
+            bootTextEl.innerText = isBootPaused
+              ? `${bootTextEl.dataset.baseStepText} (PAUSED)`
+              : bootTextEl.dataset.baseStepText;
+          }
+
+          if (spinnerEl) {
+            spinnerEl.style.animationPlayState = isBootPaused ? "paused" : "running";
           }
         }
 
@@ -368,10 +397,10 @@
             initBtn.innerText = "INITIALIZING KERNEL...";
           }
           if ('speechSynthesis' in window) {
-              window.speechSynthesis.getVoices();
-              const warmUp = new SpeechSynthesisUtterance('');
-              warmUp.volume = 0;
-              window.speechSynthesis.speak(warmUp);
+            window.speechSynthesis.getVoices();
+            const warmUp = new SpeechSynthesisUtterance('');
+            warmUp.volume = 0;
+            window.speechSynthesis.speak(warmUp);
           }
           runBootSequence();
         }
@@ -381,7 +410,12 @@
           const bootPercentEl = document.getElementById("boot-percent-text");
           const bootScreenEl = document.getElementById("boot-screen");
           const bootProgressFill = document.getElementById("boot-progress-fill");
-          if (!bootScreenEl) return;
+          if (!bootScreenEl || !bootProgressFill) return;
+
+          if (activePausePollTimer) {
+            clearInterval(activePausePollTimer);
+            activePausePollTimer = null;
+          }
 
           isBootPaused = false;
           setBootProgressBar(0);
@@ -390,6 +424,7 @@
           const initialStepText = bootSteps[0]?.text || "Menghubungkan ke server pusat...";
           if (bootTextEl) {
             bootTextEl.dataset.baseStepText = initialStepText;
+            bootTextEl.style.opacity = "1";
             bootTextEl.innerText = initialStepText;
           }
 
@@ -403,115 +438,94 @@
           const totalDuration = bootSteps.reduce((acc, step) => acc + step.duration, 0);
           let activeElapsed = 0;
           let lastFrameTime = null;
-          let currentPercentRounded = 0;
+          let lastStepIndex = -1;
           let isFinished = false;
 
-          const pausePollTimer = setInterval(pollDashboardPauseState, 300);
+          activePausePollTimer = setInterval(pollDashboardPauseState, 350);
 
-          if (bootProgressFill) {
-            function updateProgress(timestamp) {
-              if (isFinished) return;
-              if (lastFrameTime === null) lastFrameTime = timestamp;
-              const delta = timestamp - lastFrameTime;
-              lastFrameTime = timestamp;
+          function getStepIndexFromElapsed(elapsedMs) {
+            let acc = 0;
+            for (let i = 0; i < bootSteps.length; i++) {
+              acc += bootSteps[i].duration;
+              if (elapsedMs < acc) return i;
+            }
+            return bootSteps.length - 1;
+          }
 
-              if (!isBootPaused) {
-                activeElapsed += delta;
+          function setStepTextInstant(text) {
+            if (!bootTextEl) return;
+            bootTextEl.dataset.baseStepText = text;
+            bootTextEl.style.opacity = "1";
+            bootTextEl.innerText = isBootPaused ? `${text} (PAUSED)` : text;
+          }
+
+          function updateProgress(timestamp) {
+            if (isFinished) return;
+
+            if (lastFrameTime === null) lastFrameTime = timestamp;
+            const rawDelta = timestamp - lastFrameTime;
+            lastFrameTime = timestamp;
+            const delta = Math.min(Math.max(rawDelta, 0), 250);
+
+            if (!isBootPaused) {
+              activeElapsed = Math.min(activeElapsed + delta, totalDuration);
+            }
+
+            const progress = totalDuration > 0 ? Math.min((activeElapsed / totalDuration) * 100, 100) : 100;
+            const currentPercentRounded = Math.round(progress);
+            const activeStepIdx = getStepIndexFromElapsed(activeElapsed);
+            const activeStepText = bootSteps[activeStepIdx]?.text || initialStepText;
+
+            if (activeStepIdx !== lastStepIndex) {
+              lastStepIndex = activeStepIdx;
+              setStepTextInstant(activeStepText);
+            }
+
+            setBootProgressBar(progress);
+            if (bootPercentEl) bootPercentEl.innerText = currentPercentRounded + "%";
+
+            publishBootState({
+              percent: currentPercentRounded,
+              stepText: isBootPaused ? `${activeStepText} (PAUSED)` : activeStepText,
+              paused: isBootPaused,
+              active: !isBootPaused && progress < 100
+            }, false);
+
+            // Hanya masuk aplikasi utama jika progress 100% dan tidak sedang di-pause
+            if (!isBootPaused && progress >= 100) {
+              isFinished = true;
+              if (activePausePollTimer) {
+                clearInterval(activePausePollTimer);
+                activePausePollTimer = null;
               }
-
-              const progress = Math.min((activeElapsed / totalDuration) * 100, 100);
-              currentPercentRounded = Math.round(progress);
-
-              setBootProgressBar(progress);
-              if (bootPercentEl) bootPercentEl.innerText = currentPercentRounded + "%";
-
-              const baseText = (bootTextEl && bootTextEl.dataset.baseStepText)
-                ? bootTextEl.dataset.baseStepText
-                : initialStepText;
 
               publishBootState({
-                percent: currentPercentRounded,
-                stepText: isBootPaused ? `${baseText} (PAUSED)` : baseText,
-                paused: isBootPaused,
-                active: progress < 100
-              }, false);
+                percent: 100,
+                stepText: "Sistem Aktif & Terverifikasi",
+                paused: false,
+                active: false
+              }, true);
 
-              if (progress < 100) {
-                requestAnimationFrame(updateProgress);
-              } else {
-                isFinished = true;
-                clearInterval(pausePollTimer);
-
-                publishBootState({
-                  percent: 100,
-                  stepText: "Sistem Aktif & Terverifikasi",
-                  paused: false,
-                  active: false
-                }, true);
-
-                if (typeof speakSystemReady === 'function') speakSystemReady();
-                bootScreenEl.style.opacity = "0";
-                bootScreenEl.style.visibility = "hidden";
-                const mainContainer = document.querySelector('.container');
-                if (mainContainer) mainContainer.classList.add('run-animation');
-                if (typeof showNxToast === 'function') showNxToast("Sistem siap beroperasi secara maksimal!", "🟢");
-                const initBtn = document.getElementById("init-btn");
-                if (initBtn) {
-                  initBtn.style.opacity = "1";
-                  initBtn.style.pointerEvents = "auto";
-                  initBtn.innerText = "⚡ [ CLICK TO INITIALIZE SYSTEM ]";
-                }
-                if (typeof initTextFadeRotator === 'function') initTextFadeRotator();
+              if (typeof speakSystemReady === 'function') speakSystemReady();
+              bootScreenEl.style.opacity = "0";
+              bootScreenEl.style.visibility = "hidden";
+              const mainContainer = document.querySelector('.container');
+              if (mainContainer) mainContainer.classList.add('run-animation');
+              if (typeof showNxToast === 'function') showNxToast("Sistem siap beroperasi secara maksimal!", "🟢");
+              const initBtn = document.getElementById("init-btn");
+              if (initBtn) {
+                initBtn.style.opacity = "1";
+                initBtn.style.pointerEvents = "auto";
+                initBtn.innerText = "⚡ [ CLICK TO INITIALIZE SYSTEM ]";
               }
+              if (typeof initTextFadeRotator === 'function') initTextFadeRotator();
+              return;
             }
+
             requestAnimationFrame(updateProgress);
           }
 
-          let stepIndex = 0;
-          let stepActiveElapsed = 0;
-          let stepLastTick = performance.now();
-
-          function renderStepLabel(text) {
-            if (!bootTextEl) return;
-            bootTextEl.dataset.baseStepText = text;
-            bootTextEl.style.transition = "opacity 0.2s ease-in-out";
-            bootTextEl.style.opacity = "0";
-            setTimeout(() => {
-              if (!bootTextEl) return;
-              bootTextEl.innerText = isBootPaused ? `${text} (PAUSED)` : text;
-              bootTextEl.style.opacity = "1";
-            }, 200);
-          }
-
-          renderStepLabel(bootSteps[0].text);
-
-          const stepWatcherTimer = setInterval(() => {
-            if (isFinished) {
-              clearInterval(stepWatcherTimer);
-              return;
-            }
-            const nowTick = performance.now();
-            const dt = nowTick - stepLastTick;
-            stepLastTick = nowTick;
-
-            if (isBootPaused) return;
-
-            stepActiveElapsed += dt;
-            const currentStepObj = bootSteps[stepIndex];
-            if (currentStepObj && stepActiveElapsed >= currentStepObj.duration) {
-              stepActiveElapsed = 0;
-              if (stepIndex < bootSteps.length - 1) {
-                stepIndex++;
-                renderStepLabel(bootSteps[stepIndex].text);
-                publishBootState({
-                  percent: currentPercentRounded,
-                  stepText: bootSteps[stepIndex].text,
-                  paused: false,
-                  active: true
-                }, true);
-              }
-            }
-          }, 120);
+          requestAnimationFrame(updateProgress);
         }
 
         function updateClock() {
@@ -523,7 +537,7 @@
         }
         setInterval(updateClock, 1000);
 
-        window.onload = () => {
+        window.addEventListener("load", () => {
           updateClock();
           setWeeklyOperator();
           setBootProgressBar(0);
@@ -533,7 +547,7 @@
             paused: false,
             active: false
           }, true);
-        };
+        });
       </script>
 
       <!-- MODAL KONDISI PENDING / CANCEL -->
@@ -651,10 +665,10 @@
       </div>
       <h3 style="color: #38bdf8; margin: 0 0 6px 0; font-size: 16px; font-weight: 700; letter-spacing: 1px;">SYSTEM SECURITY ACCESS</h3>
       <p style="color: #94a3b8; font-size: 11.5px; margin-bottom: 18px; line-height: 1.4;">Akses ke Menu Dashboard Utama dibatasi.<br>Masukkan Kode Akses Administrator:</p>
-      
+
       <input type="password" id="inputCustomAccessCode" placeholder="••••••••••••" style="width: 100%; padding: 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 15px; border-radius: 10px; outline: none; font-family: monospace; text-align: center; letter-spacing: 2px; box-sizing: border-box; margin-bottom: 8px;" />
       <div id="customAccessError" style="color: #ef4444; font-size: 11px; margin-bottom: 14px; display: none;"><i class="fa-solid fa-circle-xmark"></i> Kode Akses Salah! Akses ditolak.</div>
-      
+
       <div style="display: flex; gap: 8px; margin-top: 6px;">
         <button onclick="tutupModalKeamanan()" style="flex: 1; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; padding: 10px; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 12px;">Batal</button>
         <button onclick="verifikasiKodeAksesCustom()" style="flex: 1; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #38bdf8; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: monospace; font-size: 12px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);">Masuk</button>
