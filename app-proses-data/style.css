@@ -789,10 +789,18 @@ textarea:focus {
 
 @keyframes bootBarShimmer {
   0% {
-    transform: translateX(-120%);
+    transform: translateX(-135%);
+    opacity: 0.2;
+  }
+  20% {
+    opacity: 0.95;
+  }
+  80% {
+    opacity: 0.95;
   }
   100% {
-    transform: translateX(260%);
+    transform: translateX(270%);
+    opacity: 0.2;
   }
 }
 
@@ -805,10 +813,14 @@ textarea:focus {
   position: relative;
   overflow: hidden;
   height: 100% !important;
-  min-width: 14px;
+  min-width: 0;
   background: linear-gradient(90deg, #0284c7 0%, #38bdf8 55%, #2dd4bf 100%) !important;
   border-radius: 999px !important;
   transition: none !important;
+}
+
+#boot-progress-fill.running {
+  min-width: 10px;
 }
 
 #boot-progress-fill::after {
@@ -816,23 +828,24 @@ textarea:focus {
   position: absolute;
   top: 0;
   left: 0;
-  width: 65%;
+  width: 75%;
   height: 100%;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(224, 242, 254, 0.55) 38%,
-    rgba(255, 255, 255, 0.98) 50%,
-    rgba(224, 242, 254, 0.55) 62%,
+    rgba(224, 242, 254, 0.22) 30%,
+    rgba(255, 255, 255, 0.72) 50%,
+    rgba(224, 242, 254, 0.22) 70%,
     transparent 100%
   );
-  transform: translateX(-120%);
-  will-change: transform;
+  transform: translateX(-135%);
+  opacity: 0;
+  will-change: transform, opacity;
   animation: none;
 }
 
 #boot-progress-fill.running::after {
-  animation: bootBarShimmer 1.15s linear infinite;
+  animation: bootBarShimmer 2.6s ease-in-out infinite;
 }
 
 #boot-step-spinner {
