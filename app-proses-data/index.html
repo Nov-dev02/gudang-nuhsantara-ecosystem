@@ -539,7 +539,6 @@
               active: !isBootPaused && progress < 100
             }, false);
 
-            // Hanya masuk aplikasi utama jika progress 100% dan tidak sedang di-pause
             if (!isBootPaused && progress >= 100) {
               isFinished = true;
               stopBootPauseListeners();
@@ -916,6 +915,120 @@
     window.addEventListener("load", () => {
       setTimeout(buatPopupUlasan, 1200);
     });
+  })();
+  </script>
+
+  <!-- PRESENCE REAL-TIME + INSTANT CLEANUP SAAT KELUAR (MODUL: PROSES DATA) -->
+  <script>
+  (function initProsesDataPresenceRealtime() {
+    const PRESENCE_BASE = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app/gudang_nuhsantara/presence";
+    const NAMA_MODUL = "Proses Data";
+    const LAST_KEY_STORAGE = "gudang_last_presence_key";
+
+    function bacaNamaOperatorAktif() {
+      const directStaff = (localStorage.getItem("gudang_staff_name") || "").trim();
+      if (directStaff) return directStaff;
+
+      const rawOp = localStorage.getItem("gudang_active_operator");
+      if (rawOp) {
+        try {
+          const parsed = JSON.parse(rawOp);
+          if (parsed && parsed.name) return String(parsed.name).trim();
+        } catch (e) {
+          if (String(rawOp).trim()) return String(rawOp).trim();
+        }
+      }
+
+      const opUiText = (document.getElementById("operatorName")?.textContent || "").trim();
+      if (opUiText && opUiText !== "LOCKED" && opUiText !== "-") return opUiText;
+
+      return "";
+    }
+
+    function getStaffKey(name) {
+      return String(name || "Staf").trim().replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
+    function getDeviceLabel() {
+      const ua = navigator.userAgent || "";
+      if (/iPhone|iPad|iPod|Android/i.test(ua) || window.innerWidth <= 768) return "Mobile";
+      return "Desktop";
+    }
+
+    function pushPresence(customName) {
+      const name = String(customName || bacaNamaOperatorAktif() || "").trim();
+      if (!name) return;
+
+      const key = getStaffKey(name);
+      localStorage.setItem(LAST_KEY_STORAGE, key);
+
+      fetch(`${PRESENCE_BASE}/${encodeURIComponent(key)}.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          modul: NAMA_MODUL,
+          device: getDeviceLabel(),
+          lastSeen: Date.now()
+        }),
+        keepalive: true
+      }).catch(() => {});
+    }
+
+    function removePresence(customName) {
+      const name = String(customName || bacaNamaOperatorAktif() || "").trim();
+      const key = name ? getStaffKey(name) : (localStorage.getItem(LAST_KEY_STORAGE) || "").trim();
+      if (!key) return;
+
+      const url = `${PRESENCE_BASE}/${encodeURIComponent(key)}.json?x-http-method-override=DELETE`;
+      if (navigator.sendBeacon) {
+        try {
+          const blob = new Blob([JSON.stringify(null)], { type: "application/json" });
+          navigator.sendBeacon(url, blob);
+        } catch (e) {}
+      }
+
+      fetch(`${PRESENCE_BASE}/${encodeURIComponent(key)}.json`, {
+        method: "DELETE",
+        keepalive: true
+      }).catch(() => {});
+    }
+
+    window.addEventListener("load", () => {
+      pushPresence();
+      setTimeout(pushPresence, 1500);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        removePresence();
+      } else {
+        pushPresence();
+      }
+    });
+
+    const btnLoginOp = document.querySelector('#loginModal button[onclick*="verifyOperatorLogin"]');
+    if (btnLoginOp) {
+      btnLoginOp.addEventListener("click", () => {
+        setTimeout(pushPresence, 400);
+        setTimeout(pushPresence, 1500);
+      });
+    }
+
+    setInterval(() => {
+      if (!document.hidden) pushPresence();
+    }, 8000);
+
+    window.addEventListener("pagehide", () => {
+      removePresence();
+    });
+
+    window.addEventListener("beforeunload", () => {
+      removePresence();
+    });
+
+    window.syncProsesDataPresence = pushPresence;
+    window.clearProsesDataPresence = removePresence;
   })();
   </script>
 
