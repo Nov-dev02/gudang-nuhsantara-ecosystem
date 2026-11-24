@@ -11,8 +11,30 @@
 
   <style>
     body { background: #070b14; color: #f8fafc; font-family: monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-    .card { background: #0f172a; border: 1px solid #334155; padding: 30px; border-radius: 16px; width: 100%; max-width: 440px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
-    h2 { color: #38bdf8; font-size: 18px; margin-top: 0; text-align: center; }
+    .card { position: relative; background: #0f172a; border: 1px solid #334155; padding: 30px; border-radius: 16px; width: 100%; max-width: 440px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
+    .card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    h2 { color: #38bdf8; font-size: 18px; margin: 0; text-align: left; }
+    .btn-close-dash {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid #475569;
+      color: #cbd5e1;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-family: monospace;
+    }
+    .btn-close-dash:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+      color: #f87171;
+    }
     label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 6px; }
     
     input, select { 
@@ -50,15 +72,18 @@
 <body>
 
   <div class="card">
-    <h2>🔐 Secure Token Generator</h2>
+    <div class="card-header">
+      <h2>🔐 Secure Token Generator</h2>
+      <button type="button" class="btn-close-dash" title="Tutup & Kembali ke Dashboard" onclick="kembaliKeDashboard()">&times;</button>
+    </div>
 
     <!-- PILIHAN DURASI CEPAT -->
     <label>Pilih Durasi Cepat:</label>
     <div class="preset-btns">
-      <button class="btn-preset" onclick="setDurationPreset(1)">+1 Bulan</button>
-      <button class="btn-preset" onclick="setDurationPreset(3)">+3 Bulan</button>
-      <button class="btn-preset" onclick="setDurationPreset(6)">+6 Bulan</button>
-      <button class="btn-preset" onclick="setDurationPreset(12)">+1 Tahun</button>
+      <button type="button" class="btn-preset" onclick="setDurationPreset(1)">+1 Bulan</button>
+      <button type="button" class="btn-preset" onclick="setDurationPreset(3)">+3 Bulan</button>
+      <button type="button" class="btn-preset" onclick="setDurationPreset(6)">+6 Bulan</button>
+      <button type="button" class="btn-preset" onclick="setDurationPreset(12)">+1 Tahun</button>
     </div>
 
     <!-- PENGATURAN TANGGAL KUSTOM -->
@@ -72,7 +97,7 @@
       <select id="selectTahun" style="flex: 1.5;"></select>
     </div>
     
-    <button class="btn-generate" onclick="generateSecureToken()">GENERATE SECURE TOKEN</button>
+    <button type="button" class="btn-generate" onclick="generateSecureToken()">GENERATE SECURE TOKEN</button>
 
     <div class="result-wrapper">
       <div class="result" id="outputToken">Token aman akan muncul di sini...</div>
@@ -87,77 +112,117 @@
 
   <script>
     const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    // Hindari huruf 'N' dan 'X' agar tidak memicu split("NX") palsu pada decoder
+    const SAFE_RANDOM_CHARS = "ABCDEFGHJKLMNPQRSTUVWYZabcdefghijkmnpqrstuvwxyz0123456789";
 
-    // Inisialisasi Dropdown Tanggal, Bulan, Tahun
+    function kembaliKeDashboard() {
+      window.location.href = "../index.html";
+    }
+
+    function populateDaysForMonthYear(year, monthIndex, preferredDay = 1) {
+      const selTgl = document.getElementById('selectTgl');
+      const maxDays = new Date(year, monthIndex + 1, 0).getDate();
+      const clampedDay = Math.min(Math.max(1, parseInt(preferredDay, 10) || 1), maxDays);
+
+      selTgl.innerHTML = '';
+      for (let i = 1; i <= maxDays; i++) {
+        const opt = document.createElement('option');
+        const val = i < 10 ? '0' + i : String(i);
+        opt.value = val;
+        opt.innerText = String(i);
+        selTgl.appendChild(opt);
+      }
+
+      selTgl.value = clampedDay < 10 ? '0' + clampedDay : String(clampedDay);
+    }
+
     window.onload = function() {
       const selTgl = document.getElementById('selectTgl');
       const selBln = document.getElementById('selectBulan');
       const selThn = document.getElementById('selectTahun');
+      const inputTgl = document.getElementById('inputTanggal');
 
-      // Populate Tanggal 1-31
-      for(let i = 1; i <= 31; i++) {
-        let opt = document.createElement('option');
-        opt.value = i < 10 ? '0' + i : i;
-        opt.innerText = i;
-        selTgl.appendChild(opt);
-      }
-
-      // Populate Bulan
       namaBulan.forEach((bln, idx) => {
-        let opt = document.createElement('option');
-        opt.value = idx;
+        const opt = document.createElement('option');
+        opt.value = String(idx);
         opt.innerText = bln;
         selBln.appendChild(opt);
       });
 
-      // Populate Tahun (Tahun Sekarang sampai 10 tahun ke depan)
       const thnSkrg = new Date().getFullYear();
-      for(let i = thnSkrg; i <= thnSkrg + 10; i++) {
-        let opt = document.createElement('option');
-        opt.value = i;
-        opt.innerText = i;
+      for (let i = thnSkrg; i <= thnSkrg + 10; i++) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.innerText = String(i);
         selThn.appendChild(opt);
       }
 
-      // Set Default ke Hari Ini + 1 Bulan
+      populateDaysForMonthYear(thnSkrg, 0, 1);
       setDurationPreset(1);
 
-      // Listener Sync antara Input Native & Dropdown
-      document.getElementById('inputTanggal').addEventListener('change', function() {
-        if (this.value) {
-          let d = new Date(this.value);
-          selTgl.value = (d.getDate() < 10 ? '0' : '') + d.getDate();
-          selBln.value = d.getMonth();
-          selThn.value = d.getFullYear();
-        }
+      inputTgl.addEventListener('change', function() {
+        if (!this.value) return;
+        const parts = this.value.split('-');
+        if (parts.length !== 3) return;
+        const y = parseInt(parts[0], 10);
+        const mIdx = parseInt(parts[1], 10) - 1;
+        const d = parseInt(parts[2], 10);
+
+        selThn.value = String(y);
+        selBln.value = String(mIdx);
+        populateDaysForMonthYear(y, mIdx, d);
       });
 
-      [selTgl, selBln, selThn].forEach(elem => {
-        elem.addEventListener('change', syncSelectToInputDate);
+      selBln.addEventListener('change', function() {
+        const y = parseInt(selThn.value, 10);
+        const mIdx = parseInt(this.value, 10);
+        populateDaysForMonthYear(y, mIdx, selTgl.value);
+        syncSelectToInputDate();
       });
+
+      selThn.addEventListener('change', function() {
+        const y = parseInt(this.value, 10);
+        const mIdx = parseInt(selBln.value, 10);
+        populateDaysForMonthYear(y, mIdx, selTgl.value);
+        syncSelectToInputDate();
+      });
+
+      selTgl.addEventListener('change', syncSelectToInputDate);
     };
 
     function syncSelectToInputDate() {
       const tgl = document.getElementById('selectTgl').value;
-      const bln = parseInt(document.getElementById('selectBulan').value) + 1;
+      const bln = parseInt(document.getElementById('selectBulan').value, 10) + 1;
       const thn = document.getElementById('selectTahun').value;
-      
-      const blnStr = bln < 10 ? '0' + bln : bln;
+
+      const blnStr = bln < 10 ? '0' + bln : String(bln);
       document.getElementById('inputTanggal').value = `${thn}-${blnStr}-${tgl}`;
     }
 
     function setDurationPreset(months) {
-      let d = new Date();
-      d.setMonth(d.getMonth() + months);
-      
-      let yyyy = d.getFullYear();
-      let mm = String(d.getMonth() + 1).padStart(2, '0');
-      let dd = String(d.getDate()).padStart(2, '0');
+      const now = new Date();
+      const targetYear = now.getFullYear();
+      const targetMonthIdx = now.getMonth() + months;
+      const maxDayInTargetMonth = new Date(targetYear, targetMonthIdx + 1, 0).getDate();
+      const safeDay = Math.min(now.getDate(), maxDayInTargetMonth);
+      const d = new Date(targetYear, targetMonthIdx, safeDay);
 
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+
+      document.getElementById('selectTahun').value = String(yyyy);
+      document.getElementById('selectBulan').value = String(d.getMonth());
+      populateDaysForMonthYear(yyyy, d.getMonth(), dd);
       document.getElementById('inputTanggal').value = `${yyyy}-${mm}-${dd}`;
-      document.getElementById('selectTgl').value = dd;
-      document.getElementById('selectBulan').value = d.getMonth();
-      document.getElementById('selectTahun').value = yyyy;
+    }
+
+    function randomSafeString(len) {
+      let str = '';
+      for (let i = 0; i < len; i++) {
+        str += SAFE_RANDOM_CHARS.charAt(Math.floor(Math.random() * SAFE_RANDOM_CHARS.length));
+      }
+      return str.replace(/NX/g, 'N_');
     }
 
     function generateSecureToken() {
@@ -167,23 +232,32 @@
         return;
       }
 
-      let targetDate = new Date(tglVal + 'T23:59:59');
-      let timeHex = targetDate.getTime().toString(16);
-      
-      let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let randomPrefix = '';
-      for (let i = 0; i < 18; i++) randomPrefix += chars.charAt(Math.floor(Math.random() * chars.length));
-      
-      let randomSuffix = '';
-      for (let i = 0; i < 18; i++) randomSuffix += chars.charAt(Math.floor(Math.random() * chars.length));
+      const parts = tglVal.split('-');
+      if (parts.length !== 3) {
+        alert('Format tanggal tidak valid!');
+        return;
+      }
 
-      let finalToken = randomPrefix + "NX" + timeHex + randomSuffix;
-      
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      const day = parseInt(parts[2], 10);
+      const targetDate = new Date(year, month - 1, day, 23, 59, 59, 999);
+
+      if (Number.isNaN(targetDate.getTime())) {
+        alert('Tanggal tidak valid!');
+        return;
+      }
+
+      const timeHex = targetDate.getTime().toString(16);
+      const randomPrefix = randomSafeString(18);
+      const randomSuffix = randomSafeString(18);
+
+      const finalToken = `${randomPrefix}NX${timeHex}${randomSuffix}`;
       document.getElementById('outputToken').innerText = finalToken;
     }
 
     function copyTokenText() {
-      const tokenText = document.getElementById('outputToken').innerText;
+      const tokenText = document.getElementById('outputToken').innerText.trim();
       const copyBtnSvg = document.getElementById('copyIconSvg');
       
       if (!tokenText || tokenText.includes('Token aman akan muncul')) {
