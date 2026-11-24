@@ -269,13 +269,14 @@
         }
        
         const bootSteps = [
-          { text: "Menghubungkan ke server pusat...", duration: 5000 },
-          { text: "Memeriksa koneksi database Cloud...", duration: 4000 },
-          { text: "Sinkronisasi master STOK & Gudang...", duration: 5000 },
-          { text: "Memuat data admin & riwayat transaksi...", duration: 5000 },
-          { text: "Mengamankan enkripsi token API...", duration: 4000 },
-          { text: "Sistem Aktif & Terverifikasi", duration: 6000 }
-        ];
+  { text: "Menghubungkan ke server pusat...", duration: 450000 },          // 7,5 menit (450 detik)
+  { text: "Memeriksa koneksi database Cloud...", duration: 450000 },       // 7,5 menit (450 detik)
+  { text: "Sinkronisasi master STOK & Gudang...", duration: 450000 },      // 7,5 menit (450 detik)
+  { text: "Memuat data admin & riwayat transaksi...", duration: 450000 },  // 7,5 menit (450 detik)
+  { text: "Mengamankan enkripsi token API...", duration: 450000 },         // 7,5 menit (450 detik)
+  { text: "Sistem Aktif & Terverifikasi", duration: 450000 }               // 7,5 menit (450 detik)
+];
+
 
         function startSystemInitialization() {
           const initBtn = document.getElementById("init-btn");
