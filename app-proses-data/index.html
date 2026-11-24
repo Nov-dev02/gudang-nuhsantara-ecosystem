@@ -211,16 +211,24 @@
 
       <script src="script.js"></script>
 
-      <!-- SCRIPT LOGIKA UI HALAMAN -->
+      <!-- SCRIPT LOGIKA UI HALAMAN + SINKRONISASI BOOT DASHBOARD -->
       <script>
         const SHIFT_ROTATION = ["DWI", "ERIKA", "IRGI"];
-        const ANCHOR_MONDAY = new Date(2026, 9, 26); 
+        const ANCHOR_MONDAY = new Date(2026, 9, 26);
+
+        const BOOT_SYNC_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app/gudang_nuhsantara/boot_sync.json";
+        const bootBroadcastChannel = (typeof BroadcastChannel !== "undefined")
+          ? new BroadcastChannel("gudang_nuhsantara_boot_sync")
+          : null;
+
+        let isBootPaused = false;
+        let lastBootSyncPushAt = 0;
 
         function getWeekDifference() {
           const now = new Date();
           const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          const dayOfWeek = currentDate.getDay(); 
-          const distanceToMonday = (dayOfWeek + 6) % 7; 
+          const dayOfWeek = currentDate.getDay();
+          const distanceToMonday = (dayOfWeek + 6) % 7;
           const currentMonday = new Date(currentDate);
           currentMonday.setDate(currentDate.getDate() - distanceToMonday);
 
@@ -262,14 +270,14 @@
             }
           }
         }
-        
+
         function speakSystemReady() {
           const currentOperator = typeof getActiveOperator === 'function' ? getActiveOperator() : 'IRGI';
           const welcomeAudio = new Audio(`https://raw.githubusercontent.com/Nov-dev02/Gudang-Web-App/main/audio/${currentOperator.toUpperCase()}.mp3?v=${new Date().getTime()}`);
           welcomeAudio.volume = 0.9;
           welcomeAudio.play().catch(err => console.log("Audio play blocked/error:", err));
         }
-       
+
         const bootSteps = [
           { text: "Menghubungkan ke server pusat...", duration: 50000 },
           { text: "Memeriksa koneksi database Cloud...", duration: 50000 },
@@ -290,6 +298,66 @@
           } else {
             bootProgressFill.classList.remove("running");
           }
+        }
+
+        function publishBootState(stateData, force = false) {
+          const now = Date.now();
+          if (!force && now - lastBootSyncPushAt < 120) return;
+          lastBootSyncPushAt = now;
+
+          const payload = {
+            percent: Math.max(0, Math.min(100, Math.round(stateData.percent ?? 0))),
+            stepText: stateData.stepText || "Menunggu inisialisasi manual...",
+            paused: Boolean(stateData.paused),
+            active: Boolean(stateData.active),
+            updatedAt: now
+          };
+
+          if (bootBroadcastChannel) {
+            try {
+              bootBroadcastChannel.postMessage({ type: "BOOT_STATE", payload });
+            } catch (e) {}
+          }
+
+          fetch(BOOT_SYNC_DB_URL, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }).catch(() => {});
+        }
+
+        function applyPausedFlagFromDashboard(pausedVal) {
+          const nextPaused = Boolean(pausedVal);
+          if (nextPaused !== isBootPaused) {
+            isBootPaused = nextPaused;
+            const bootTextEl = document.getElementById("boot-text");
+            if (bootTextEl && bootTextEl.dataset.baseStepText) {
+              bootTextEl.innerText = isBootPaused
+                ? `${bootTextEl.dataset.baseStepText} (PAUSED)`
+                : bootTextEl.dataset.baseStepText;
+            }
+          }
+        }
+
+        if (bootBroadcastChannel) {
+          bootBroadcastChannel.onmessage = (event) => {
+            const msg = event.data;
+            if (!msg || typeof msg !== "object") return;
+            if (msg.type === "SET_BOOT_PAUSED" && typeof msg.paused === "boolean") {
+              applyPausedFlagFromDashboard(msg.paused);
+            }
+          };
+        }
+
+        async function pollDashboardPauseState() {
+          try {
+            const res = await fetch(`${BOOT_SYNC_DB_URL}?t=${Date.now()}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data && typeof data.paused === "boolean") {
+              applyPausedFlagFromDashboard(data.paused);
+            }
+          } catch (e) {}
         }
 
         function startSystemInitialization() {
@@ -315,58 +383,135 @@
           const bootProgressFill = document.getElementById("boot-progress-fill");
           if (!bootScreenEl) return;
 
+          isBootPaused = false;
           setBootProgressBar(0);
+          if (bootPercentEl) bootPercentEl.innerText = "0%";
+
+          const initialStepText = bootSteps[0]?.text || "Menghubungkan ke server pusat...";
+          if (bootTextEl) {
+            bootTextEl.dataset.baseStepText = initialStepText;
+            bootTextEl.innerText = initialStepText;
+          }
+
+          publishBootState({
+            percent: 0,
+            stepText: initialStepText,
+            paused: false,
+            active: true
+          }, true);
 
           const totalDuration = bootSteps.reduce((acc, step) => acc + step.duration, 0);
+          let activeElapsed = 0;
+          let lastFrameTime = null;
+          let currentPercentRounded = 0;
+          let isFinished = false;
+
+          const pausePollTimer = setInterval(pollDashboardPauseState, 300);
+
           if (bootProgressFill) {
-            let startTime = null;
             function updateProgress(timestamp) {
-              if (!startTime) startTime = timestamp;
-              let elapsed = timestamp - startTime;
-              let progress = Math.min((elapsed / totalDuration) * 100, 100);
+              if (isFinished) return;
+              if (lastFrameTime === null) lastFrameTime = timestamp;
+              const delta = timestamp - lastFrameTime;
+              lastFrameTime = timestamp;
+
+              if (!isBootPaused) {
+                activeElapsed += delta;
+              }
+
+              const progress = Math.min((activeElapsed / totalDuration) * 100, 100);
+              currentPercentRounded = Math.round(progress);
+
               setBootProgressBar(progress);
-              if (bootPercentEl) bootPercentEl.innerText = Math.round(progress) + "%";
-              if (progress < 100) requestAnimationFrame(updateProgress);
+              if (bootPercentEl) bootPercentEl.innerText = currentPercentRounded + "%";
+
+              const baseText = (bootTextEl && bootTextEl.dataset.baseStepText)
+                ? bootTextEl.dataset.baseStepText
+                : initialStepText;
+
+              publishBootState({
+                percent: currentPercentRounded,
+                stepText: isBootPaused ? `${baseText} (PAUSED)` : baseText,
+                paused: isBootPaused,
+                active: progress < 100
+              }, false);
+
+              if (progress < 100) {
+                requestAnimationFrame(updateProgress);
+              } else {
+                isFinished = true;
+                clearInterval(pausePollTimer);
+
+                publishBootState({
+                  percent: 100,
+                  stepText: "Sistem Aktif & Terverifikasi",
+                  paused: false,
+                  active: false
+                }, true);
+
+                if (typeof speakSystemReady === 'function') speakSystemReady();
+                bootScreenEl.style.opacity = "0";
+                bootScreenEl.style.visibility = "hidden";
+                const mainContainer = document.querySelector('.container');
+                if (mainContainer) mainContainer.classList.add('run-animation');
+                if (typeof showNxToast === 'function') showNxToast("Sistem siap beroperasi secara maksimal!", "🟢");
+                const initBtn = document.getElementById("init-btn");
+                if (initBtn) {
+                  initBtn.style.opacity = "1";
+                  initBtn.style.pointerEvents = "auto";
+                  initBtn.innerText = "⚡ [ CLICK TO INITIALIZE SYSTEM ]";
+                }
+                if (typeof initTextFadeRotator === 'function') initTextFadeRotator();
+              }
             }
             requestAnimationFrame(updateProgress);
           }
 
-          let currentStep = 0;
-          function executeStep() {
-            if (currentStep < bootSteps.length) {
-              const step = bootSteps[currentStep];
-              if (bootTextEl) {
-                bootTextEl.style.transition = "opacity 0.2s ease-in-out";
-                bootTextEl.style.opacity = "0";
-                setTimeout(() => {
-                  bootTextEl.innerText = step.text;
-                  bootTextEl.style.opacity = "1";
-                }, 200);
-              }
-              let stepDuration = step.duration;
-              currentStep++;
-              if (currentStep < bootSteps.length) {
-                setTimeout(executeStep, stepDuration);
-              } else {
-                setTimeout(() => {
-                  if (typeof speakSystemReady === 'function') speakSystemReady(); 
-                  bootScreenEl.style.opacity = "0";
-                  bootScreenEl.style.visibility = "hidden";
-                  const mainContainer = document.querySelector('.container');
-                  if (mainContainer) mainContainer.classList.add('run-animation');
-                  if (typeof showNxToast === 'function') showNxToast("Sistem siap beroperasi secara maksimal!", "🟢");
-                  const initBtn = document.getElementById("init-btn");
-                  if (initBtn) {
-                    initBtn.style.opacity = "1";
-                    initBtn.style.pointerEvents = "auto";
-                    initBtn.innerText = "⚡ [ CLICK TO INITIALIZE SYSTEM ]";
-                  }
-                  if (typeof initTextFadeRotator === 'function') initTextFadeRotator(); 
-                }, stepDuration);
+          let stepIndex = 0;
+          let stepActiveElapsed = 0;
+          let stepLastTick = performance.now();
+
+          function renderStepLabel(text) {
+            if (!bootTextEl) return;
+            bootTextEl.dataset.baseStepText = text;
+            bootTextEl.style.transition = "opacity 0.2s ease-in-out";
+            bootTextEl.style.opacity = "0";
+            setTimeout(() => {
+              if (!bootTextEl) return;
+              bootTextEl.innerText = isBootPaused ? `${text} (PAUSED)` : text;
+              bootTextEl.style.opacity = "1";
+            }, 200);
+          }
+
+          renderStepLabel(bootSteps[0].text);
+
+          const stepWatcherTimer = setInterval(() => {
+            if (isFinished) {
+              clearInterval(stepWatcherTimer);
+              return;
+            }
+            const nowTick = performance.now();
+            const dt = nowTick - stepLastTick;
+            stepLastTick = nowTick;
+
+            if (isBootPaused) return;
+
+            stepActiveElapsed += dt;
+            const currentStepObj = bootSteps[stepIndex];
+            if (currentStepObj && stepActiveElapsed >= currentStepObj.duration) {
+              stepActiveElapsed = 0;
+              if (stepIndex < bootSteps.length - 1) {
+                stepIndex++;
+                renderStepLabel(bootSteps[stepIndex].text);
+                publishBootState({
+                  percent: currentPercentRounded,
+                  stepText: bootSteps[stepIndex].text,
+                  paused: false,
+                  active: true
+                }, true);
               }
             }
-          }
-          executeStep();
+          }, 120);
         }
 
         function updateClock() {
@@ -382,6 +527,12 @@
           updateClock();
           setWeeklyOperator();
           setBootProgressBar(0);
+          publishBootState({
+            percent: 0,
+            stepText: "Menunggu inisialisasi manual...",
+            paused: false,
+            active: false
+          }, true);
         };
       </script>
 
