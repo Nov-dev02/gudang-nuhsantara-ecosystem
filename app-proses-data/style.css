@@ -792,15 +792,6 @@ textarea:focus {
   100% { background-position: 150% 0; }
 }
 
-@keyframes bootBarGlowPulse {
-  0%, 100% {
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.7), 0 0 22px rgba(45, 212, 191, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 18px rgba(56, 189, 248, 1), 0 0 32px rgba(125, 211, 252, 0.75);
-  }
-}
-
 @keyframes bootProgressSpin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -821,11 +812,11 @@ textarea:focus {
   ) !important;
   background-size: 220% 100% !important;
   border-radius: 999px !important;
-  animation: bootBarShimmer 1.35s linear infinite, bootBarGlowPulse 1.8s ease-in-out infinite !important;
+  animation: bootBarShimmer 1.35s linear infinite !important;
 }
 
 #boot-progress-fill.running {
-  animation: bootBarShimmer 1.35s linear infinite, bootBarGlowPulse 1.8s ease-in-out infinite !important;
+  animation: bootBarShimmer 1.35s linear infinite !important;
 }
 
 #boot-step-spinner {
