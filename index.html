@@ -1175,7 +1175,7 @@
       <div id="tab-admin" class="tab-pane">
         <div class="section-box" style="border-color: var(--accent-ring);">
           <div class="section-title"><i class="fa-solid fa-user-gear"></i> SYSTEM / SUPER ADMIN CONTROLS</div>
-          <p style="font-size: 11.5px; color: var(--text-desc); margin: 0 0 16px 0; line-height: 1.4;">Kelola token lisensi NX pusat, ubah PIN akses admin terenkripsi SHA-256, buat token baru, atau paksa pembaruan aplikasi di seluruh perangkat staf.</p>
+          <p style="font-size: 11.5px; color: var(--text-desc); margin: 0 0 16px 0; line-height: 1.4;">Kelola token lisensi NX pusat, ubah PIN akses admin terenkripsi SHA-256, buka halaman web generator, atau paksa pembaruan aplikasi di seluruh perangkat staf.</p>
           <div class="admin-controls">
             <button class="btn-admin" onclick="bukaModalAdmin('lisensi')"><i class="fa-solid fa-key"></i> Panel Lisensi</button>
             <button class="btn-admin" onclick="bukaModalAdmin('change_pin')"><i class="fa-solid fa-shield-halved"></i> Ganti PIN Admin</button>
@@ -1291,6 +1291,9 @@
     const CUSTOM_TEMPLATES_STORAGE_KEY = "gudang_custom_broadcast_templates";
     const AUTOLOCK_MINUTES_STORAGE_KEY = "gudang_autolock_minutes";
     const STAFF_IDLE_THRESHOLD_MS = 3 * 60 * 1000;
+
+    // URL halaman web generator (buka di tab yang sama)
+    const NX_GENERATOR_URL = "./nx-generator/index.html";
 
     const dashBootChannel = (typeof BroadcastChannel !== "undefined")
       ? new BroadcastChannel("gudang_nuhsantara_boot_sync")
@@ -2818,11 +2821,11 @@
           return;
         }
         const data = await res.json();
-        if (data && data.status === "LOCKED_TEMP") {
-          if (statusTextEl) { statusTextEl.innerText = "Kunci Sementara"; statusTextEl.style.color = "#f59e0b"; }
-          syncDroneHealthVisor(true);
-        } else if (data && data.status === "LOCKED_PERM") {
+        if (data && (data.permanent === true || data.status === "LOCKED_PERM")) {
           if (statusTextEl) { statusTextEl.innerText = "Kunci Permanen"; statusTextEl.style.color = "#ef4444"; }
+          syncDroneHealthVisor(true);
+        } else if (data && (data.locked === true || data.status === "LOCKED_TEMP")) {
+          if (statusTextEl) { statusTextEl.innerText = "Kunci Sementara"; statusTextEl.style.color = "#f59e0b"; }
           syncDroneHealthVisor(true);
         } else {
           if (statusTextEl) { statusTextEl.innerText = "Normal"; statusTextEl.style.color = "var(--accent-green)"; }
@@ -3098,7 +3101,7 @@
       pinInput.value = ''; pinError.style.display = 'none';
       if (aksi === 'lisensi') subtitle.innerText = "Akses Panel Lisensi NX";
       else if (aksi === 'change_pin') subtitle.innerText = "Autentikasi untuk Mengubah PIN Admin";
-      else if (aksi === 'generator') subtitle.innerText = "Akses Generator Token NX";
+      else if (aksi === 'generator') subtitle.innerText = "Akses Halaman Web Generator Token NX";
       else if (aksi === 'broadcast') subtitle.innerText = "Konfirmasi Kirim Broadcast";
       else if (aksi === 'simpan_token') subtitle.innerText = "Konfirmasi Simpan Token Baru";
       else if (aksi === 'force_update') subtitle.innerText = "Konfirmasi Paksa Update Aplikasi";
@@ -3173,7 +3176,17 @@
 
     async function prosesSimpanTokenKeCloud() {
       try {
-        await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: pendingTokenToSave, status: "ACTIVE", updated_at: Date.now() }) });
+        await fetch(CLOUD_LICENSE_ENDPOINT, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: pendingTokenToSave,
+            status: "ACTIVE",
+            locked: false,
+            permanent: false,
+            updated_at: Date.now()
+          })
+        });
         document.getElementById('inputPanelNxToken').value = "";
         const decoded = decodeNxTokenDate(pendingTokenToSave);
         if (decoded) { globalExpiryDate = decoded; updateRealtimeCountdown(); }
@@ -3183,13 +3196,10 @@
       } catch (e) { showDashboardToast("Gagal menyimpan token ke Cloud!", false); }
     }
 
+    // Mengarah langsung ke web generator di tab yang sama
     function bukaGeneratorToken() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let prefix = ''; for (let i = 0; i < 18; i++) prefix += chars.charAt(Math.floor(Math.random() * chars.length));
-      let suffix = ''; for (let i = 0; i < 18; i++) suffix += chars.charAt(Math.floor(Math.random() * chars.length));
-      const targetDate = new Date(); targetDate.setDate(targetDate.getDate() + 7); targetDate.setHours(23, 59, 59, 999);
-      const tokenBaru = prefix + "NX" + targetDate.getTime().toString(16) + suffix;
-      navigator.clipboard.writeText(tokenBaru).then(() => showDashboardToast("Token NX (7 Hari) dibuat & disalin ke clipboard!", true)).catch(() => showDashboardToast("Token dibuat: " + tokenBaru.substring(0, 12) + "...", true));
+      resetIdleTimer();
+      window.location.href = NX_GENERATOR_URL;
     }
 
     async function paksaUpdateAplikasiStaf() {
@@ -3202,10 +3212,19 @@
     }
 
     async function kunciSistemSementara() {
-      const yakin = await tampilkanDashboardConfirm({ title: "KUNCI SEMENTARA", message: "Kunci akses aplikasi sementara?", confirmText: "Kunci", cancelText: "Batal", danger: true });
+      const yakin = await tampilkanDashboardConfirm({ title: "KUNCI SEMENTARA", message: "Kunci akses aplikasi sementara untuk App PO & Proses Data?", confirmText: "Kunci", cancelText: "Batal", danger: true });
       if (!yakin) return;
       try {
-        await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: "LOCKED_TEMP", locked_at: Date.now() }) });
+        await fetch(CLOUD_LICENSE_ENDPOINT, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            locked: true,
+            permanent: false,
+            status: "LOCKED_TEMP",
+            locked_at: Date.now()
+          })
+        });
         await catatLogAktivitas("Mengaktifkan Kunci Sementara sistem");
         showDashboardToast("Sistem berhasil dikunci sementara!", true);
         tutupPanelNx(); initCommandCenterHUD(); muatAuditLogs();
@@ -3213,10 +3232,19 @@
     }
 
     async function kunciSistemPermanen() {
-      const yakin = await tampilkanDashboardConfirm({ title: "KUNCI PERMANEN", message: "PERINGATAN: Kunci akses sistem secara permanen?", confirmText: "Kunci Permanen", cancelText: "Batal", danger: true });
+      const yakin = await tampilkanDashboardConfirm({ title: "KUNCI PERMANEN", message: "PERINGATAN: Kunci akses sistem secara permanen untuk App PO & Proses Data?", confirmText: "Kunci Permanen", cancelText: "Batal", danger: true });
       if (!yakin) return;
       try {
-        await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: "LOCKED_PERM", locked_at: Date.now() }) });
+        await fetch(CLOUD_LICENSE_ENDPOINT, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            locked: true,
+            permanent: true,
+            status: "LOCKED_PERM",
+            locked_at: Date.now()
+          })
+        });
         await catatLogAktivitas("Mengaktifkan Kunci Permanen sistem");
         showDashboardToast("Sistem telah dikunci permanen!", true);
         tutupPanelNx(); initCommandCenterHUD(); muatAuditLogs();
