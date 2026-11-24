@@ -1291,6 +1291,7 @@
     const CUSTOM_TEMPLATES_STORAGE_KEY = "gudang_custom_broadcast_templates";
     const AUTOLOCK_MINUTES_STORAGE_KEY = "gudang_autolock_minutes";
     const STAFF_IDLE_THRESHOLD_MS = 3 * 60 * 1000;
+    const STALE_PRESENCE_MS = 25000;
 
     // URL halaman web generator (buka di tab yang sama)
     const NX_GENERATOR_URL = "./nx-generator/index.html";
@@ -2858,17 +2859,39 @@
       hudEl.style.color = d < 3 ? "#f59e0b" : "var(--accent-blue)";
     }
 
-    // --- PRESENCE (LANGSUNG TERBACA TANPA TUNGGU 3 MENIT) ---
+    // --- PRESENCE (AUTO-BERSIHKAN SESI BASI + INSTANT UPDATE) ---
     async function muatStaffPresence() {
       try {
         const res = await fetch(CLOUD_PRESENCE_ENDPOINT + "?t=" + Date.now());
         const data = await res.json();
-        cachedPresenceMap = (data && typeof data === "object") ? data : {};
+        const rawMap = (data && typeof data === "object") ? data : {};
+        const now = Date.now();
+        const cleanMap = {};
+        const staleKeys = [];
+
+        Object.entries(rawMap).forEach(([key, staff]) => {
+          if (!staff || typeof staff !== "object") return;
+          const lastSeenTs = Number(staff.lastSeen ?? staff.last_seen ?? staff.timestamp ?? 0);
+          if (lastSeenTs > 0 && (now - lastSeenTs) > STALE_PRESENCE_MS) {
+            staleKeys.push(key);
+          } else {
+            cleanMap[key] = staff;
+          }
+        });
+
+        staleKeys.forEach((staleKey) => {
+          fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${encodeURIComponent(staleKey)}.json`, {
+            method: "DELETE",
+            keepalive: true
+          }).catch(() => {});
+        });
+
+        cachedPresenceMap = cleanMap;
         renderRiwayatLoginFiltered();
 
         const container = document.getElementById('containerStaffPresence');
         const countEl = document.getElementById('txtOnlineCountOverview');
-        const entries = Object.entries(cachedPresenceMap).filter(([, v]) => v && typeof v === "object");
+        const entries = Object.entries(cachedPresenceMap);
 
         if (entries.length === 0) {
           if (container) container.innerHTML = `<span style="color: #64748b;">Tidak ada staf online saat ini.</span>`;
@@ -2877,7 +2900,6 @@
         }
 
         let html = "";
-        const now = Date.now();
 
         entries.forEach(([key, staff]) => {
           const lastSeenTs = Number(staff.lastSeen ?? staff.last_seen ?? staff.timestamp ?? now);
