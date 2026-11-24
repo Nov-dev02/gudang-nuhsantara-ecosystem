@@ -263,13 +263,19 @@ async function cekStatusCloud() {
     const data = await response.json();
     if (!data) return;
 
-    const now = new Date();
-    const expiryDate = data.expiry ? new Date(data.expiry) : null;
-    const isExpired = expiryDate ? (now > expiryDate) : false;
+    const now = Date.now();
+    const decodedFromToken = data.token ? decodeTokenToDate(data.token) : null;
+    const expiryMs = decodedFromToken
+      ? decodedFromToken.getTime()
+      : (data.expiry ? new Date(data.expiry).getTime() : null);
+    const isExpired = typeof expiryMs === "number" && !Number.isNaN(expiryMs) && now > expiryMs;
 
-    if (data.permanent === true) {
+    const isPermanent = data.permanent === true || data.status === "LOCKED_PERM";
+    const isTempLocked = data.locked === true || data.status === "LOCKED_TEMP";
+
+    if (isPermanent) {
       tampilkanLayarKunciPermanen();
-    } else if (data.locked === true || isExpired) {
+    } else if (isTempLocked || isExpired) {
       tampilkanLayarKunciMandiri();
     } else {
       const lockScreen = document.getElementById('nx-global-lock-screen');
