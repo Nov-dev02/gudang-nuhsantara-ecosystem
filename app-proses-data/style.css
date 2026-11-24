@@ -787,12 +787,25 @@ textarea:focus {
   100% { width: 100% !important; }
 }
 
+@keyframes bootShimmerSlide {
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
 #boot-progress-fill {
   height: 100% !important;
   width: 0%;
-  background: linear-gradient(90deg, #38bdf8, #22c55e, #38bdf8) !important;
-  background-size: 200% 100%;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.8), 0 0 6px rgba(34, 197, 94, 0.8);
+  background: linear-gradient(
+    90deg,
+    #16a34a 0%,
+    #22c55e 35%,
+    #ffffff 50%,
+    #22c55e 65%,
+    #16a34a 100%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: bootShimmerSlide 1.4s linear infinite !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.7), 0 0 8px rgba(34, 197, 94, 0.8) !important;
   border-radius: 4px;
 }
 
