@@ -18,6 +18,10 @@
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
       }
+      @keyframes bootShimmerSlide {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+      }
   </style>
 </head>
 <body>
@@ -69,7 +73,7 @@
       <h3 style="color: #38bdf8; margin: 0 0 6px 0; font-size: 17px; font-weight: 700; letter-spacing: 1px;">GUDANG NUHSANTARA</h3>
       <p style="color: #94a3b8; font-size: 12px; margin-bottom: 24px; font-family: monospace;">SECURE CLOUD KERNEL INITIALIZATION</p>
       <div style="width: 100%; background: rgba(255, 255, 255, 0.08); height: 6px; border-radius: 4px; overflow: hidden; margin-bottom: 18px; border: 1px solid rgba(255, 255, 255, 0.1);">
-        <div id="boot-progress-fill" style="height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #22c55e, #38bdf8); border-radius: 4px;"></div>
+        <div id="boot-progress-fill" style="height: 100%; width: 0%; background: linear-gradient(90deg, #22c55e 0%, #86efac 45%, #38bdf8 50%, #86efac 55%, #22c55e 100%); background-size: 250% 100%; animation: bootShimmerSlide 2.2s linear infinite; border-radius: 4px;"></div>
       </div>
       <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
         <div style="display: inline-flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 8px 16px; border-radius: 20px; font-size: 12.5px; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; box-sizing: border-box; justify-content: center;">
@@ -269,14 +273,15 @@
         }
        
         const bootSteps = [
-  { text: "Menghubungkan ke server pusat...", duration: 50000 },          // 50 detik
-  { text: "Memeriksa koneksi database Cloud...", duration: 50000 },       // 50 detik
-  { text: "Sinkronisasi master STOK & Gudang...", duration: 50000 },      // 50 detik
-  { text: "Memuat data admin & riwayat transaksi...", duration: 50000 },  // 50 detik
-  { text: "Mengamankan enkripsi token API...", duration: 50000 },         // 50 detik
-  { text: "Sistem Aktif & Terverifikasi", duration: 50000 },
-  { text: "Memuat Sistem. . .", duration: 50000 }               // 50 detik
-];
+          { text: "Menghubungkan ke server pusat...", duration: 50000 },
+          { text: "Memeriksa koneksi database Cloud...", duration: 50000 },
+          { text: "Sinkronisasi master STOK & Gudang...", duration: 50000 },
+          { text: "Memuat data admin & riwayat transaksi...", duration: 50000 },
+          { text: "Mengamankan enkripsi token API...", duration: 50000 },
+          { text: "Sistem Aktif & Terverifikasi", duration: 50000 },
+          { text: "Memuat System. . .", duration: 50000 }
+
+        ];
 
         function startSystemInitialization() {
           const initBtn = document.getElementById("init-btn");
