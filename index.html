@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <link rel="icon" type="image/png" href="gudang-eco-512.png">
+  <link rel="icon" type="image/png" href="logo-gudang-512.png">
   <link rel="apple-touch-icon" href="gudang-eco-512.png">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2030,7 +2030,7 @@
       }, 2000);
       setInterval(() => {
         if (isPageVisible) muatStaffPresence();
-      }, 6000);
+      }, 2000);
       setInterval(() => {
         if (isPageVisible) muatRiwayatLoginHarian();
       }, 10000);
@@ -2425,7 +2425,7 @@
 
       const headerTitle = document.getElementById('headerTitleText');
       if (tabId === 'overview') headerTitle.innerText = "Enterprise Command Center";
-      else if (tabId === 'presence') headerTitle.innerText = "Live Staff Monitor (Real-Time)";
+      else if (tabId === 'presence') { headerTitle.innerText = "Live Staff Monitor (Real-Time)"; muatStaffPresence(); }
       else if (tabId === 'history') { headerTitle.innerText = "Riwayat Login Staf Harian"; muatRiwayatLoginHarian(); }
       else if (tabId === 'logs') { headerTitle.innerText = "Audit Logs & Broadcast Center"; muatAuditLogs(); }
       else if (tabId === 'reviews') { headerTitle.innerText = "Ulasan Aplikasi dari Staf Gudang"; muatUlasanStaf(); }
@@ -2858,44 +2858,50 @@
       hudEl.style.color = d < 3 ? "#f59e0b" : "var(--accent-blue)";
     }
 
-    // --- PRESENCE ---
+    // --- PRESENCE (LANGSUNG TERBACA TANPA TUNGGU 3 MENIT) ---
     async function muatStaffPresence() {
       try {
         const res = await fetch(CLOUD_PRESENCE_ENDPOINT + "?t=" + Date.now());
         const data = await res.json();
         cachedPresenceMap = (data && typeof data === "object") ? data : {};
         renderRiwayatLoginFiltered();
+
         const container = document.getElementById('containerStaffPresence');
         const countEl = document.getElementById('txtOnlineCountOverview');
-        if (!data || Object.keys(data).length === 0) {
-          container.innerHTML = `<span style="color: #64748b;">Tidak ada staf online saat ini.</span>`;
+        const entries = Object.entries(cachedPresenceMap).filter(([, v]) => v && typeof v === "object");
+
+        if (entries.length === 0) {
+          if (container) container.innerHTML = `<span style="color: #64748b;">Tidak ada staf online saat ini.</span>`;
           if (countEl) countEl.innerText = "0 Aktif";
           return;
         }
-        let html = ""; let activeCount = 0; const now = Date.now();
-        Object.keys(data).forEach(key => {
-          const staff = data[key];
-          if (staff && (now - staff.lastSeen) < 60000) {
-            activeCount++;
-            const isIdle = (now - staff.lastSeen) >= STAFF_IDLE_THRESHOLD_MS;
-            const statusText = isIdle ? "IDLE" : "ONLINE";
-            const statusColor = isIdle ? "#fbbf24" : "#34d399";
-            const borderColor = isIdle ? "rgba(245, 158, 11, 0.35)" : "rgba(52, 211, 153, 0.35)";
-            const bgColor = isIdle ? "rgba(245, 158, 11, 0.1)" : "rgba(52, 211, 153, 0.1)";
-            const deviceLabel = escapeHtml(staff.device || deteksiTipePerangkatStaf());
-            const deviceIcon = deviceLabel.toLowerCase().includes("mobile") ? "📱" : "💻";
-            const safeKey = escapeHtml(key);
-            html += `
-              <div style="background: ${bgColor}; border: 1px solid ${borderColor}; color: ${statusColor}; padding: 8px 12px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; font-size: 11px;">
-                <span style="width: 7px; height: 7px; background: ${statusColor}; border-radius: 50%;"></span>
-                <span>${escapeHtml(staff.name)} (${escapeHtml(staff.modul || 'App')}) • ${deviceIcon} ${deviceLabel} • ${statusText}</span>
-                <button onclick="kickStaff('${safeKey}')" title="Putus Koneksi" style="background: none; border: none; color: #f87171; cursor: pointer; font-size: 12px; padding: 0 2px;"><i class="fa-solid fa-circle-xmark"></i></button>
-              </div>
-            `;
-          }
+
+        let html = "";
+        const now = Date.now();
+
+        entries.forEach(([key, staff]) => {
+          const lastSeenTs = Number(staff.lastSeen ?? staff.last_seen ?? staff.timestamp ?? now);
+          const isIdle = (now - lastSeenTs) >= STAFF_IDLE_THRESHOLD_MS;
+          const statusText = isIdle ? "IDLE" : "ONLINE";
+          const statusColor = isIdle ? "#fbbf24" : "#34d399";
+          const borderColor = isIdle ? "rgba(245, 158, 11, 0.35)" : "rgba(52, 211, 153, 0.35)";
+          const bgColor = isIdle ? "rgba(245, 158, 11, 0.1)" : "rgba(52, 211, 153, 0.1)";
+          const staffLabel = staff.name || staff.staffName || key;
+          const deviceLabel = escapeHtml(staff.device || deteksiTipePerangkatStaf());
+          const deviceIcon = deviceLabel.toLowerCase().includes("mobile") ? "📱" : "💻";
+          const safeKey = escapeHtml(key);
+
+          html += `
+            <div style="background: ${bgColor}; border: 1px solid ${borderColor}; color: ${statusColor}; padding: 8px 12px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; font-size: 11px;">
+              <span style="width: 7px; height: 7px; background: ${statusColor}; border-radius: 50%;"></span>
+              <span>${escapeHtml(staffLabel)} (${escapeHtml(staff.modul || 'App')}) • ${deviceIcon} ${deviceLabel} • ${statusText}</span>
+              <button onclick="kickStaff('${safeKey}')" title="Putus Koneksi" style="background: none; border: none; color: #f87171; cursor: pointer; font-size: 12px; padding: 0 2px;"><i class="fa-solid fa-circle-xmark"></i></button>
+            </div>
+          `;
         });
-        container.innerHTML = html || `<span style="color: #64748b;">Tidak ada staf aktif dalam 1 menit terakhir.</span>`;
-        if (countEl) countEl.innerText = `${activeCount} Aktif`;
+
+        if (container) container.innerHTML = html;
+        if (countEl) countEl.innerText = `${entries.length} Aktif`;
       } catch (e) {}
     }
 
