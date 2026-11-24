@@ -18,9 +18,9 @@
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
       }
-      @keyframes bootShimmerSlide {
-          0% { background-position: -100% 0; }
-          100% { background-position: 100% 0; }
+      @keyframes subclipMiniSpin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
       }
   </style>
 </head>
@@ -65,24 +65,26 @@
 
   <div id="toast-container"></div>
 
-  <!-- LAYAR BOOTING -->
-  <div id="boot-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #070b14; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;">
-    <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(56, 189, 248, 0.3); padding: 40px; border-radius: 24px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(56, 189, 248, 0.15); max-width: 420px; width: 85%; backdrop-filter: blur(12px); position: relative; overflow: hidden;">
-      <div style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #38bdf8, transparent); animation: scanline 3s linear infinite; opacity: 0.6;"></div>
-      <div style="font-size: 52px; margin-bottom: 14px; animation: floatServer 3s ease-in-out infinite;">💻</div>
-      <h3 style="color: #38bdf8; margin: 0 0 6px 0; font-size: 17px; font-weight: 700; letter-spacing: 1px;">GUDANG NUHSANTARA</h3>
-      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 24px; font-family: monospace;">SECURE CLOUD KERNEL INITIALIZATION</p>
-      <div style="width: 100%; background: rgba(255, 255, 255, 0.08); height: 6px; border-radius: 4px; overflow: hidden; margin-bottom: 18px; border: 1px solid rgba(255, 255, 255, 0.1);">
-        <div id="boot-progress-fill" style="height: 100%; width: 0%; background: linear-gradient(90deg, #16a34a 0%, #22c55e 35%, #ffffff 50%, #22c55e 65%, #16a34a 100%); background-size: 200% 100%; animation: bootShimmerSlide 1.5s linear infinite; border-radius: 4px; box-shadow: 0 0 10px rgba(34, 197, 94, 0.45);"></div>
+  <!-- LAYAR BOOTING (GAYA PROGRESS CARD) -->
+  <div id="boot-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #070b14; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;">
+    <div style="background: #0d1320; border: 1px solid rgba(148, 163, 184, 0.16); padding: 22px 24px; border-radius: 14px; max-width: 430px; width: 100%; box-shadow: 0 24px 60px rgba(0,0,0,0.85); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px;">
+        <span style="color: #f8fafc; font-size: 14.5px; font-weight: 600; letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Initializing Gudang Nuhsantara</span>
+        <span id="boot-percent-text" style="color: #38bdf8; font-size: 14px; font-weight: 700; font-family: monospace; flex-shrink: 0;">0%</span>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
-        <div style="display: inline-flex; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 8px 16px; border-radius: 20px; font-size: 12.5px; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; box-sizing: border-box; justify-content: center;">
-          <span id="boot-text" style="font-family: monospace; font-weight: 500;">Menunggu inisialisasi manual...</span>
-        </div>
-        <button id="init-btn" onclick="startSystemInitialization()" style="pointer-events: auto; position: relative; z-index: 9999; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border: 1px solid #38bdf8; padding: 12px 20px; font-size: 13.5px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4); font-family: monospace; letter-spacing: 0.5px; transition: all 0.2s;">
-          ⚡ [ CLICK TO INITIALIZE SYSTEM ]
-        </button>
+
+      <div style="width: 100%; background: rgba(148, 163, 184, 0.14); height: 5px; border-radius: 999px; overflow: hidden; margin-bottom: 12px; position: relative;">
+        <div id="boot-progress-fill" style="height: 100% !important; width: 0%; background: linear-gradient(90deg, #0284c7 0%, #38bdf8 70%, #2dd4bf 100%) !important; box-shadow: 0 0 12px rgba(56, 189, 248, 0.75) !important; border-radius: 999px; transition: none;"></div>
       </div>
+
+      <div style="display: flex; align-items: center; gap: 8px; min-height: 20px; margin-bottom: 18px;">
+        <span id="boot-step-spinner" style="width: 12px; height: 12px; border: 1.8px solid rgba(148, 163, 184, 0.25); border-top-color: #94a3b8; border-radius: 50%; display: inline-block; flex-shrink: 0; animation: subclipMiniSpin 0.85s linear infinite;"></span>
+        <span id="boot-text" style="color: #94a3b8; font-size: 12.5px; font-weight: 400; text-align: left; line-height: 1.35;">Menunggu inisialisasi manual...</span>
+      </div>
+
+      <button id="init-btn" onclick="startSystemInitialization()" style="pointer-events: auto; position: relative; z-index: 9999; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border: 1px solid #38bdf8; padding: 11px 18px; font-size: 13px; font-weight: 600; border-radius: 10px; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35); font-family: monospace; letter-spacing: 0.4px; transition: all 0.2s;">
+        ⚡ [ CLICK TO INITIALIZE SYSTEM ]
+      </button>
     </div>
   </div>
 
@@ -300,6 +302,7 @@
 
         function runBootSequence() {
           const bootTextEl = document.getElementById("boot-text");
+          const bootPercentEl = document.getElementById("boot-percent-text");
           const bootScreenEl = document.getElementById("boot-screen");
           const bootProgressFill = document.getElementById("boot-progress-fill");
           if (!bootScreenEl) return;
@@ -312,6 +315,7 @@
               let elapsed = timestamp - startTime;
               let progress = Math.min((elapsed / totalDuration) * 100, 100);
               bootProgressFill.style.width = progress + "%";
+              if (bootPercentEl) bootPercentEl.innerText = Math.round(progress) + "%";
               if (progress < 100) requestAnimationFrame(updateProgress);
             }
             requestAnimationFrame(updateProgress);
