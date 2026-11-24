@@ -22,10 +22,6 @@
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
       }
-      @keyframes bootBarShimmer {
-          0% { background-position: -150% 0; }
-          100% { background-position: 150% 0; }
-      }
   </style>
 </head>
 <body>
@@ -74,7 +70,7 @@
       </div>
 
       <div style="width: 100%; background: rgba(148, 163, 184, 0.14); height: 6px; border-radius: 999px; overflow: hidden; margin-bottom: 12px; position: relative;">
-        <div id="boot-progress-fill" style="height: 100% !important; width: 0%; background: linear-gradient(90deg, #0284c7 0%, #38bdf8 30%, #e0f2fe 48%, #ffffff 50%, #e0f2fe 52%, #2dd4bf 72%, #0284c7 100%) !important; background-size: 220% 100% !important; animation: bootBarShimmer 1.35s linear infinite !important; border-radius: 999px !important; transition: none;"></div>
+        <div id="boot-progress-fill" class="running" style="width: 0%;"></div>
       </div>
 
       <div style="display: flex; align-items: center; gap: 8px; min-height: 20px; margin-bottom: 18px;">
@@ -284,6 +280,14 @@
           { text: "Memuat System. . .", duration: 50000 }
         ];
 
+        function setBootProgressBar(percent) {
+          const bootProgressFill = document.getElementById("boot-progress-fill");
+          if (!bootProgressFill) return;
+          const clamped = Math.max(0, Math.min(100, percent));
+          bootProgressFill.style.width = clamped + "%";
+          bootProgressFill.classList.add("running");
+        }
+
         function startSystemInitialization() {
           const initBtn = document.getElementById("init-btn");
           if (initBtn) {
@@ -307,6 +311,8 @@
           const bootProgressFill = document.getElementById("boot-progress-fill");
           if (!bootScreenEl) return;
 
+          setBootProgressBar(0);
+
           const totalDuration = bootSteps.reduce((acc, step) => acc + step.duration, 0);
           if (bootProgressFill) {
             let startTime = null;
@@ -314,7 +320,7 @@
               if (!startTime) startTime = timestamp;
               let elapsed = timestamp - startTime;
               let progress = Math.min((elapsed / totalDuration) * 100, 100);
-              bootProgressFill.style.width = progress + "%";
+              setBootProgressBar(progress);
               if (bootPercentEl) bootPercentEl.innerText = Math.round(progress) + "%";
               if (progress < 100) requestAnimationFrame(updateProgress);
             }
@@ -371,6 +377,7 @@
         window.onload = () => {
           updateClock();
           setWeeklyOperator();
+          setBootProgressBar(0);
         };
       </script>
 
