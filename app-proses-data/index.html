@@ -358,9 +358,7 @@
           const spinnerEl = document.getElementById("boot-step-spinner");
 
           if (bootTextEl && bootTextEl.dataset.baseStepText) {
-            bootTextEl.innerText = isBootPaused
-              ? `${bootTextEl.dataset.baseStepText} (PAUSED)`
-              : bootTextEl.dataset.baseStepText;
+            bootTextEl.innerText = bootTextEl.dataset.baseStepText;
           }
 
           if (spinnerEl) {
@@ -456,7 +454,7 @@
             if (!bootTextEl) return;
             bootTextEl.dataset.baseStepText = text;
             bootTextEl.style.opacity = "1";
-            bootTextEl.innerText = isBootPaused ? `${text} (PAUSED)` : text;
+            bootTextEl.innerText = text;
           }
 
           function updateProgress(timestamp) {
@@ -486,7 +484,7 @@
 
             publishBootState({
               percent: currentPercentRounded,
-              stepText: isBootPaused ? `${activeStepText} (PAUSED)` : activeStepText,
+              stepText: activeStepText,
               paused: isBootPaused,
               active: !isBootPaused && progress < 100
             }, false);
