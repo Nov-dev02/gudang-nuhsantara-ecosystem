@@ -70,7 +70,7 @@
       </div>
 
       <div style="width: 100%; background: rgba(148, 163, 184, 0.14); height: 6px; border-radius: 999px; overflow: hidden; margin-bottom: 12px; position: relative;">
-        <div id="boot-progress-fill" class="running" style="width: 0%;"></div>
+        <div id="boot-progress-fill" style="width: 0%;"></div>
       </div>
 
       <div style="display: flex; align-items: center; gap: 8px; min-height: 20px; margin-bottom: 18px;">
@@ -285,7 +285,11 @@
           if (!bootProgressFill) return;
           const clamped = Math.max(0, Math.min(100, percent));
           bootProgressFill.style.width = clamped + "%";
-          bootProgressFill.classList.add("running");
+          if (clamped > 0) {
+            bootProgressFill.classList.add("running");
+          } else {
+            bootProgressFill.classList.remove("running");
+          }
         }
 
         function startSystemInitialization() {
