@@ -2714,62 +2714,73 @@
 
     async function muatIsiPesanChat(staffId, messages, tokenReq) {
       const container = document.getElementById('chatMessagesContainer');
-      const typingEl = document.getElementById('typingIndicatorOwner');
-      try {
-        const typingRes = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(staffId)}/typingStaff.json`);
-        typingEl.style.display = (await typingRes.json()) ? 'inline' : 'none';
-      } catch (e) {}
-
+      const currentScroll = container.scrollTop;
+      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 60;
       let html = "";
-      Object.keys(messages).forEach(k => {
-        const m = messages[k] || {};
-        const rawText = String(m.text || "");
-        let bubbleClass = "staff";
-        let deleteBtn = "";
-        let copyBtnHtml = "";
-        const isTokenMessage = rawText && (rawText.includes("NX") || rawText.length > 20);
+
+      if (tokenReq && tokenReq.status === 'pending') {
+        const waktuMinta = new Date(tokenReq.requested_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        html += `
+          <div style="background: rgba(245, 158, 11, 0.12); border: 1px dashed #f59e0b; padding: 12px; border-radius: 10px; margin-bottom: 8px; text-align: center;">
+            <div style="color: #fbbf24; font-weight: bold; font-size: 11px; margin-bottom: 4px;"><i class="fa-solid fa-key"></i> PERMINTAAN PERPANJANGAN MASA AKTIF (AUTO-PILOT)</div>
+            <div style="color: #cbd5e1; font-size: 10px; margin-bottom: 8px;">Diajukan pukul ${escapeHtml(waktuMinta)} WIB. Diproses otomatis batas maksimal 1 minggu.</div>
+            <button type="button" onclick="setujuiPermintaanToken()" class="btn-accent-primary" style="padding: 6px 12px; border-radius: 6px; font-size: 10.5px;">⚡ Proses Otomatis (1 Minggu)</button>
+          </div>
+        `;
+      }
+
+      if (!messages || Object.keys(messages).length === 0) {
+        container.innerHTML = html || `<div style="color: var(--text-desc); text-align: center; margin: auto;">Belum ada pesan di ruang ini.</div>`;
+        return;
+      }
+
+      Object.keys(messages).forEach(msgKey => {
+        const m = messages[msgKey] || {};
+        const waktu = m.time ? new Date(m.time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : "";
+        const rawText = String(m.text ?? "");
+        const copyId = registerCopyPayload(rawText);
+        const safeMsgKey = escapeHtml(msgKey);
+        const formattedText = escapeHtml(rawText).replace(/\n/g, "<br>");
 
         if (m.sender === 'owner') {
-          bubbleClass = "owner";
-          if (rawText !== "🚫 Pesan ini telah ditarik") {
-            deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanOwner('${escapeHtml(k)}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
-          }
-        } else if (m.sender === 'bot') { bubbleClass = "bot"; }
-
-        if (isTokenMessage && (m.sender === 'owner' || m.sender === 'bot')) {
-          const payloadId = registerCopyPayload(rawText);
-          copyBtnHtml = `
-            <div style="margin-top: 4px; text-align: right;">
-              <button type="button" onclick="salinPayloadById('${escapeHtml(payloadId)}')" style="background: var(--accent-soft); border: 1px solid var(--accent-blue); color: var(--accent-blue); width: 24px; height: 24px; border-radius: 6px; font-size: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;" title="Salin Token">
-                <i class="fa-solid fa-copy"></i>
-              </button>
+          html += `
+            <div class="chat-bubble owner" style="position: relative; padding-right: 32px;">
+              <div>${formattedText}</div>
+              <button type="button" onclick="tarikPesanOwner('${safeMsgKey}')" title="Tarik Pesan" style="position: absolute; top: 8px; right: 8px; background: none; border: none; color: #fca5a5; cursor: pointer; font-size: 11px;"><i class="fa-solid fa-trash"></i></button>
+              <div style="font-size: 9px; opacity: 0.8; margin-top: 4px; text-align: right;">System • ${escapeHtml(waktu)}</div>
+            </div>
+          `;
+        } else if (m.sender === 'bot') {
+          html += `
+            <div class="chat-bubble bot" style="position: relative; padding-right: 32px;">
+              <div>${formattedText}</div>
+              <button type="button" onclick="salinPayloadById('${copyId}')" title="Salin Token / Pesan" style="position: absolute; top: 8px; right: 8px; background: var(--accent-soft); border: 1px solid var(--accent-ring); color: var(--accent-blue); border-radius: 5px; padding: 2px 5px; cursor: pointer; font-size: 10px;"><i class="fa-solid fa-copy"></i></button>
+              <div style="font-size: 9px; opacity: 0.7; margin-top: 4px;">Auto-Pilot Bot • ${escapeHtml(waktu)}</div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="chat-bubble staff" style="position: relative; padding-right: 32px;">
+              <div>${formattedText}</div>
+              <button type="button" onclick="salinPayloadById('${copyId}')" title="Salin Pesan" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid #334155; color: #94a3b8; border-radius: 5px; padding: 2px 5px; cursor: pointer; font-size: 10px;"><i class="fa-solid fa-copy"></i></button>
+              <div style="font-size: 9px; color: var(--text-desc); margin-top: 4px;">${escapeHtml(m.senderName || activeStaffName)} • ${escapeHtml(waktu)}</div>
             </div>
           `;
         }
-
-        const timeStr = m.time ? escapeHtml(new Date(m.time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })) : '';
-        html += `<div class="chat-bubble ${bubbleClass}">${escapeHtml(rawText).replace(/\n/g, '<br>')}<div style="font-size: 9px; opacity: 0.7; margin-top: 4px; text-align: right;">${timeStr} ${deleteBtn}</div>${copyBtnHtml}</div>`;
       });
 
-      container.innerHTML = html || `<div style="color: var(--text-desc); text-align: center; margin: auto;">Belum ada pesan.</div>`;
-      container.scrollTop = container.scrollHeight;
+      container.innerHTML = html;
+      if (isAtBottom) container.scrollTop = container.scrollHeight;
+      else container.scrollTop = currentScroll;
     }
 
     async function handleOwnerTyping() {
       if (!activeStaffRoom) return;
-      try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/typingOwner.json`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(true)
-        });
-      } catch (e) {}
       clearTimeout(typingTimeout);
+      await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/typing_owner.json`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'true' });
       typingTimeout = setTimeout(async () => {
-        try {
-          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/typingOwner.json`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(false)
-          });
-        } catch (e) {}
-      }, 1500);
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/typing_owner.json`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'false' });
+      }, 2000);
     }
 
     async function kirimBalasanOwner() {
@@ -2777,258 +2788,55 @@
       const input = document.getElementById('inputOwnerChat');
       const text = input.value.trim();
       if (!text) return;
-      input.value = '';
+      input.value = "";
       try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/typingOwner.json`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(false)
-        });
         await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/messages.json`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sender: 'owner', text, time: Date.now(), read: false })
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sender: 'owner', text, time: Date.now(), read: false })
         });
         muatDaftarChatStaf();
-      } catch (e) { showDashboardToast("Gagal mengirim balasan!", false); }
+      } catch (e) { showDashboardToast("Gagal mengirim pesan!", false); }
     }
 
-    // --- LIVE PRESENCE STAF ---
-    async function muatStaffPresence() {
-      try {
-        const res = await fetch(CLOUD_PRESENCE_ENDPOINT + "?t=" + Date.now());
-        const data = await res.json();
-        const container = document.getElementById('containerStaffPresence');
-        const overviewEl = document.getElementById('txtOnlineCountOverview');
-        cachedPresenceMap = (data && typeof data === 'object') ? data : {};
-        const now = Date.now();
-        let activeCount = 0;
-
-        if (!data || Object.keys(data).length === 0) {
-          if (overviewEl) overviewEl.innerText = "0 Aktif";
-          container.innerHTML = `<span>Tidak ada staf yang aktif saat ini.</span>`;
-          return;
-        }
-
-        let html = "";
-        for (const key in data) {
-          const item = data[key];
-          if (!item || !item.lastSeen) continue;
-          const diffMs = now - item.lastSeen;
-          if (diffMs < 60000) {
-            activeCount++;
-            const isIdle = diffMs >= STAFF_IDLE_THRESHOLD_MS;
-            const statusText = isIdle ? `Idle (${Math.floor(diffMs / 60000)}m)` : "Online";
-            const badgeBg = isIdle ? "rgba(245, 158, 11, 0.14)" : "rgba(34, 197, 94, 0.14)";
-            const badgeBorder = isIdle ? "rgba(245, 158, 11, 0.45)" : "rgba(34, 197, 94, 0.4)";
-            const textColor = isIdle ? "#fbbf24" : "#34d399";
-            const dotColor = isIdle ? "#f59e0b" : "#34d399";
-            const deviceLabel = (item.device && String(item.device).trim()) ? String(item.device).trim() : deteksiTipePerangkatStaf();
-
-            html += `<div style="background: ${badgeBg}; border: 1px solid ${badgeBorder}; padding: 8px 12px; border-radius: 10px; display: inline-flex; align-items: center; gap: 7px;"><span style="width: 7px; height: 7px; background: ${dotColor}; border-radius: 50%; flex-shrink: 0;"></span><span style="color: #fff; font-weight: bold;">${escapeHtml(item.name || 'Staf')}</span><span style="color: ${textColor}; font-size: 10px;">• ${escapeHtml(statusText)}</span><span style="color: var(--accent-blue); font-size: 10px;">• ${escapeHtml(item.modul || 'Modul')}</span><span style="color: #cbd5e1; font-size: 10px;">• ${escapeHtml(deviceLabel)}</span></div>`;
-          }
-        }
-        if (overviewEl) overviewEl.innerText = `${activeCount} Aktif`;
-        container.innerHTML = html || `<span>Tidak ada staf yang aktif dalam 1 menit terakhir.</span>`;
-      } catch (e) { console.error(e); }
+    async function setujuiPermintaanToken() {
+      if (!activeStaffRoom) return;
+      await eksekusiAutoApproveStaf(activeStaffRoom, activeStaffName);
     }
 
-    async function bersihkanDataPresence() {
-      const yakin = await tampilkanDashboardConfirm({ title: "RESET DATA PRESENCE", message: "Bersihkan semua status presence online staf saat ini?", confirmText: "Reset", cancelText: "Batal", danger: true });
-      if (!yakin) return;
-      try {
-        await fetch(CLOUD_PRESENCE_ENDPOINT, { method: 'DELETE' });
-        cachedPresenceMap = {};
-        showDashboardToast("Data presence berhasil direset!", true);
-        muatStaffPresence();
-      } catch (e) {}
-    }
-
-    // --- TEMPLATE BROADCAST & KUSTOM ---
-    function getAllBroadcastTemplates() {
-      let custom = [];
-      try {
-        const raw = localStorage.getItem(CUSTOM_TEMPLATES_STORAGE_KEY);
-        if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) custom = parsed; }
-      } catch (e) {}
-      return [...DEFAULT_BROADCAST_TEMPLATES, ...custom];
-    }
-
-    function updateTemplateCounterBadge() {
-      const total = getAllBroadcastTemplates().length;
-      const lbl = document.getElementById("templateCountLabel");
-      const modalLbl = document.getElementById("modalTemplateTotalCount");
-      if (lbl) lbl.innerText = String(total);
-      if (modalLbl) modalLbl.innerText = String(total);
-    }
-
-    window.tambahTemplateKustom = function() {
-      const titleInput = document.getElementById("customTemplateTitle");
-      const textInput = document.getElementById("customTemplateText");
-      const titleVal = (titleInput?.value || "").trim();
-      const textVal = (textInput?.value || "").trim();
-      if (!textVal) { showDashboardToast("Isi pesan template tidak boleh kosong!", false); return; }
-      let custom = [];
-      try { const raw = localStorage.getItem(CUSTOM_TEMPLATES_STORAGE_KEY); if (raw) custom = JSON.parse(raw) || []; } catch (e) {}
-      custom.unshift({ title: titleVal || `Template Kustom #${custom.length + 1}`, text: textVal, isCustom: true });
-      localStorage.setItem(CUSTOM_TEMPLATES_STORAGE_KEY, JSON.stringify(custom));
-      if (titleInput) titleInput.value = "";
-      if (textInput) textInput.value = "";
-      updateTemplateCounterBadge();
-      renderTemplateList();
-      showDashboardToast("Template kustom berhasil disimpan!", true);
-    };
-
-    window.hapusTemplateKustom = function(customIdx) {
-      let custom = [];
-      try { const raw = localStorage.getItem(CUSTOM_TEMPLATES_STORAGE_KEY); if (raw) custom = JSON.parse(raw) || []; } catch (e) {}
-      if (customIdx < 0 || customIdx >= custom.length) return;
-      custom.splice(customIdx, 1);
-      localStorage.setItem(CUSTOM_TEMPLATES_STORAGE_KEY, JSON.stringify(custom));
-      updateTemplateCounterBadge();
-      renderTemplateList();
-      showDashboardToast("Template kustom dihapus.", true);
-    };
-
-    function renderTemplateList() {
-      const container = document.getElementById("templateListContainer");
-      if (!container) return;
-      let custom = [];
-      try { const raw = localStorage.getItem(CUSTOM_TEMPLATES_STORAGE_KEY); if (raw) custom = JSON.parse(raw) || []; } catch (e) {}
-      const templates = getAllBroadcastTemplates();
-
-      container.innerHTML = templates.map((tpl, idx) => {
-        const isCustom = idx >= DEFAULT_BROADCAST_TEMPLATES.length;
-        const customIdx = idx - DEFAULT_BROADCAST_TEMPLATES.length;
-        return `
-          <div style="background: rgba(2, 6, 23, 0.72); border: 1px solid ${isCustom ? "var(--accent-blue)" : "#334155"}; border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-            <div style="flex: 1; min-width: 0;">
-              <div style="color: var(--accent-blue); font-size: 11px; font-weight: bold; margin-bottom: 3px;">${escapeHtml(tpl.title)} ${isCustom ? '<span style="color:#34d399; font-size:9px;">[KUSTOM]</span>' : ''}</div>
-              <div style="color: #cbd5e1; font-size: 10.5px; line-height: 1.35;">${escapeHtml(tpl.text)}</div>
-            </div>
-            <div style="display: flex; gap: 5px; flex-shrink: 0;">
-              <button type="button" onclick="gunakanTemplateBroadcast(${idx})" class="btn-accent-primary" style="padding: 6px 10px; border-radius: 7px; font-size: 10px;">Pakai</button>
-              ${isCustom ? `<button type="button" onclick="hapusTemplateKustom(${customIdx})" style="background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(239, 68, 68, 0.45); color: #f87171; padding: 6px 8px; border-radius: 7px; cursor: pointer; font-size: 10px;" title="Hapus"><i class="fa-solid fa-trash"></i></button>` : ''}
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    function bukaModalTemplate() {
-      updateTemplateCounterBadge();
-      renderTemplateList();
-      document.getElementById("templateModal").style.display = "flex";
-    }
-    function tutupModalTemplate() { document.getElementById("templateModal").style.display = "none"; }
-    function gunakanTemplateBroadcast(index) {
-      const templates = getAllBroadcastTemplates();
-      const chosen = templates[index];
-      if (!chosen) return;
-      document.getElementById("inputBroadcastMsg").value = chosen.text;
-      tutupModalTemplate();
-      showDashboardToast(`Template "${chosen.title}" dimuat.`, true);
-    }
-
-    // --- AUDIT LOGS & BROADCAST ---
-    async function catatLogAktivitas(aksiText) {
-      try {
-        await fetch(CLOUD_LOGS_ENDPOINT, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ aksi: aksiText, timestamp: Date.now(), dibaca: false })
-        });
-      } catch (e) {}
-    }
-
-    async function muatAuditLogs() {
-      const container = document.getElementById('containerAuditLog');
-      if (!container) return;
-      try {
-        const res = await fetch(CLOUD_LOGS_ENDPOINT + "?t=" + Date.now());
-        const raw = await res.json();
-        if (!raw) { cachedAuditLogs = []; renderAuditLogsFiltered(); return; }
-        let list = Object.keys(raw).map(key => ({ id: key, ...raw[key] }))
-          .filter(item => item && item.aksi && !String(item.aksi).toLowerCase().includes("ulasan"));
-        list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        cachedAuditLogs = list;
-        renderAuditLogsFiltered();
-      } catch (e) { container.innerHTML = `<div style="color: #ef4444;">Gagal memuat log aktivitas.</div>`; }
-    }
-
-    window.renderAuditLogsFiltered = function() {
-      const container = document.getElementById('containerAuditLog');
-      if (!container) return;
-      const q = (document.getElementById('filterAuditSearch')?.value || "").trim().toLowerCase();
-      const filtered = cachedAuditLogs.filter(item => !q || String(item.aksi || "").toLowerCase().includes(q));
-      if (filtered.length === 0) {
-        container.innerHTML = `<div style="color: #64748b; text-align: center; padding: 12px;">Belum ada aktivitas tercatat.</div>`;
-        return;
-      }
-      container.innerHTML = filtered.slice(0, 50).map(item => {
-        const tStr = item.timestamp ? escapeHtml(new Date(Number(item.timestamp)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })) : '';
-        return `<div style="background: rgba(2, 6, 23, 0.5); border-left: 2px solid ${item.dibaca ? '#334155' : 'var(--accent-blue)'}; padding: 6px 10px; border-radius: 4px; display: flex; justify-content: space-between;"><span style="color: ${item.dibaca ? '#94a3b8' : '#e2e8f0'};">${escapeHtml(item.aksi)}</span><span style="color: #64748b; font-size: 9.5px;">${tStr}</span></div>`;
-      }).join("");
-    };
-
-    async function tandaiSemuaDibaca() {
-      try {
-        const res = await fetch(CLOUD_LOGS_ENDPOINT);
-        const data = await res.json();
-        if (!data) return;
-        let updates = {};
-        Object.keys(data).forEach(k => { if (data[k]) updates[`${k}/dibaca`] = true; });
-        if (Object.keys(updates).length > 0) {
-          await fetch(CLOUD_LOGS_ENDPOINT, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
-          muatAuditLogs();
-        }
-      } catch (e) {}
-    }
-
-    async function bersihkanSemuaLog() {
-      const yakin = await tampilkanDashboardConfirm({ title: "BERSIHKAN AUDIT LOG", message: "Hapus semua catatan log aktivitas di Audit Trail?", confirmText: "Bersihkan", cancelText: "Batal", danger: true });
-      if (!yakin) return;
-      try {
-        await fetch(CLOUD_LOGS_ENDPOINT, { method: 'DELETE' });
-        showDashboardToast("Semua log aktivitas berhasil dibersihkan!", true);
-        muatAuditLogs();
-      } catch (e) {}
-    }
-
-    // --- COMMAND CENTER HUD & LICENSE ---
+    // --- COMMAND CENTER HUD & STATUS KESEHATAN SISTEM ---
     async function initCommandCenterHUD() {
-      const pingStart = performance.now();
+      const statusTextEl = document.getElementById('hudSystemStatusText');
+      const pingTextEl = document.getElementById('hudPingText');
+      const startTime = performance.now();
       try {
         const res = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
-        const pingMs = Math.round(performance.now() - pingStart);
-        const data = await res.json();
+        const elapsed = Math.round(performance.now() - startTime);
         updateCloudConnectionStatus(true);
-
-        const pingEl = document.getElementById('hudPingText');
-        const sysEl = document.getElementById('hudSystemStatusText');
-        if (pingEl) pingEl.innerText = `Gateway: ${pingMs} ms`;
-
-        if (data && data.status === "LOCKED_PERMANENT") {
-          if (sysEl) { sysEl.innerText = "Locked Perm"; sysEl.style.color = "#ef4444"; }
+        if (pingTextEl) pingTextEl.innerText = `Gateway: ${elapsed} ms`;
+        if (!res.ok) {
+          if (statusTextEl) { statusTextEl.innerText = "Gangguan Server"; statusTextEl.style.color = "#ef4444"; }
           syncDroneHealthVisor(true);
-        } else if (data && data.status === "LOCKED_TEMP") {
-          if (sysEl) { sysEl.innerText = "Locked Temp"; sysEl.style.color = "#f59e0b"; }
+          return;
+        }
+        const data = await res.json();
+        if (data && data.status === "LOCKED_TEMP") {
+          if (statusTextEl) { statusTextEl.innerText = "Kunci Sementara"; statusTextEl.style.color = "#f59e0b"; }
+          syncDroneHealthVisor(true);
+        } else if (data && data.status === "LOCKED_PERM") {
+          if (statusTextEl) { statusTextEl.innerText = "Kunci Permanen"; statusTextEl.style.color = "#ef4444"; }
           syncDroneHealthVisor(true);
         } else {
-          if (sysEl) { sysEl.innerText = "Normal"; sysEl.style.color = "var(--accent-green)"; }
+          if (statusTextEl) { statusTextEl.innerText = "Normal"; statusTextEl.style.color = "var(--accent-green)"; }
           syncDroneHealthVisor(false);
         }
-
         if (data && data.token) {
-          const dt = decodeNxTokenDate(data.token);
-          if (dt) {
-            globalExpiryDate = dt;
-            document.getElementById('nxExpiryText').innerText = dt.toLocaleString('id-ID');
-            updateRealtimeCountdown();
-          }
+          const decoded = decodeNxTokenDate(data.token);
+          if (decoded) { globalExpiryDate = decoded; updateRealtimeCountdown(); }
         }
       } catch (e) {
+        const elapsed = Math.round(performance.now() - startTime);
         updateCloudConnectionStatus(false);
-        const pingEl = document.getElementById('hudPingText');
-        const sysEl = document.getElementById('hudSystemStatusText');
-        if (pingEl) pingEl.innerText = `Gateway: -- ms`;
-        if (sysEl) { sysEl.innerText = "Offline"; sysEl.style.color = "#ef4444"; }
+        if (pingTextEl) pingTextEl.innerText = `Gateway: ${elapsed} ms (Timeout)`;
+        if (statusTextEl) { statusTextEl.innerText = "Gangguan Koneksi"; statusTextEl.style.color = "#ef4444"; }
         syncDroneHealthVisor(true);
       }
     }
@@ -3036,47 +2844,293 @@
     function updateRealtimeCountdown() {
       const hudEl = document.getElementById('hudExpiryCountdown');
       if (!hudEl) return;
-      if (!globalExpiryDate) { hudEl.innerText = "Tidak ada"; return; }
-      const diffMs = globalExpiryDate.getTime() - Date.now();
-      if (diffMs <= 0) { hudEl.innerText = "Kadaluwarsa"; hudEl.style.color = "#ef4444"; return; }
-      const d = Math.floor(diffMs / 86400000);
-      const h = Math.floor((diffMs % 86400000) / 3600000);
-      const m = Math.floor((diffMs % 3600000) / 60000);
-      const s = Math.floor((diffMs % 60000) / 1000);
+      if (!globalExpiryDate) { hudEl.innerText = "Belum disetel"; return; }
+      const diff = globalExpiryDate.getTime() - new Date().getTime();
+      if (diff <= 0) { hudEl.innerText = "KEDALUWARSA"; hudEl.style.color = "#ef4444"; return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
       hudEl.innerText = `${d}h ${h}j ${m}m ${s}d`;
       hudEl.style.color = d < 3 ? "#f59e0b" : "var(--accent-blue)";
     }
 
+    // --- PRESENCE ---
+    async function muatStaffPresence() {
+      try {
+        const res = await fetch(CLOUD_PRESENCE_ENDPOINT + "?t=" + Date.now());
+        const data = await res.json();
+        cachedPresenceMap = (data && typeof data === "object") ? data : {};
+        renderRiwayatLoginFiltered();
+        const container = document.getElementById('containerStaffPresence');
+        const countEl = document.getElementById('txtOnlineCountOverview');
+        if (!data || Object.keys(data).length === 0) {
+          container.innerHTML = `<span style="color: #64748b;">Tidak ada staf online saat ini.</span>`;
+          if (countEl) countEl.innerText = "0 Aktif";
+          return;
+        }
+        let html = ""; let activeCount = 0; const now = Date.now();
+        Object.keys(data).forEach(key => {
+          const staff = data[key];
+          if (staff && (now - staff.lastSeen) < 60000) {
+            activeCount++;
+            const isIdle = (now - staff.lastSeen) >= STAFF_IDLE_THRESHOLD_MS;
+            const statusText = isIdle ? "IDLE" : "ONLINE";
+            const statusColor = isIdle ? "#fbbf24" : "#34d399";
+            const borderColor = isIdle ? "rgba(245, 158, 11, 0.35)" : "rgba(52, 211, 153, 0.35)";
+            const bgColor = isIdle ? "rgba(245, 158, 11, 0.1)" : "rgba(52, 211, 153, 0.1)";
+            const deviceLabel = escapeHtml(staff.device || deteksiTipePerangkatStaf());
+            const deviceIcon = deviceLabel.toLowerCase().includes("mobile") ? "📱" : "💻";
+            const safeKey = escapeHtml(key);
+            html += `
+              <div style="background: ${bgColor}; border: 1px solid ${borderColor}; color: ${statusColor}; padding: 8px 12px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; font-size: 11px;">
+                <span style="width: 7px; height: 7px; background: ${statusColor}; border-radius: 50%;"></span>
+                <span>${escapeHtml(staff.name)} (${escapeHtml(staff.modul || 'App')}) • ${deviceIcon} ${deviceLabel} • ${statusText}</span>
+                <button onclick="kickStaff('${safeKey}')" title="Putus Koneksi" style="background: none; border: none; color: #f87171; cursor: pointer; font-size: 12px; padding: 0 2px;"><i class="fa-solid fa-circle-xmark"></i></button>
+              </div>
+            `;
+          }
+        });
+        container.innerHTML = html || `<span style="color: #64748b;">Tidak ada staf aktif dalam 1 menit terakhir.</span>`;
+        if (countEl) countEl.innerText = `${activeCount} Aktif`;
+      } catch (e) {}
+    }
+
+    async function kickStaff(staffKey) {
+      const yakin = await tampilkanDashboardConfirm({ title: "PUTUS KONEKSI STAF", message: "Putuskan koneksi sesi staf ini?", confirmText: "Putuskan", cancelText: "Batal", danger: true });
+      if (!yakin) return;
+      try {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${encodeURIComponent(staffKey)}.json`, { method: 'DELETE' });
+        showDashboardToast("Sesi staf berhasil diputus!", true);
+        muatStaffPresence();
+      } catch (e) { showDashboardToast("Gagal memutuskan koneksi staf!", false); }
+    }
+
+    async function bersihkanDataPresence() {
+      const yakin = await tampilkanDashboardConfirm({ title: "RESET DATA PRESENCE", message: "Bersihkan seluruh data kehadiran staf online?", confirmText: "Reset", cancelText: "Batal", danger: true });
+      if (!yakin) return;
+      try {
+        await fetch(CLOUD_PRESENCE_ENDPOINT, { method: 'DELETE' });
+        showDashboardToast("Data kehadiran staf berhasil direset!", true);
+        muatStaffPresence();
+      } catch (e) {}
+    }
+
+    // --- TEMPLATE PESAN BROADCAST ---
+    function ambilDaftarTemplateBroadcast() {
+      let custom = [];
+      try {
+        const raw = localStorage.getItem(CUSTOM_TEMPLATES_STORAGE_KEY);
+        if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) custom = parsed; }
+      } catch (e) {}
+      const customWithFlag = custom.map((t, idx) => ({ title: t.title || "Template Kustom", text: t.text || "", isCustom: true, customIndex: idx }));
+      const defaultsWithFlag = DEFAULT_BROADCAST_TEMPLATES.map(t => ({ ...t, isCustom: false }));
+      return [...customWithFlag, ...defaultsWithFlag];
+    }
+
+    function updateTemplateCounterBadge() {
+      const total = ambilDaftarTemplateBroadcast().length;
+      const lbl = document.getElementById("templateCountLabel");
+      const mLbl = document.getElementById("modalTemplateTotalCount");
+      if (lbl) lbl.innerText = total;
+      if (mLbl) mLbl.innerText = total;
+    }
+
+    window.bukaModalTemplate = function() {
+      renderDaftarTemplateModal();
+      const m = document.getElementById("templateModal");
+      m.style.display = "flex";
+    };
+
+    window.tutupModalTemplate = function() {
+      document.getElementById("templateModal").style.display = "none";
+    };
+
+    function renderDaftarTemplateModal() {
+      const list = ambilDaftarTemplateBroadcast();
+      updateTemplateCounterBadge();
+      const container = document.getElementById("templateListContainer");
+      if (!container) return;
+
+      container.innerHTML = list.map((tpl, i) => {
+        const idxSafe = Number(i);
+        return `
+          <div style="background: rgba(2, 6, 23, 0.72); border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 12px; padding: 11px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <div style="min-width: 0; flex: 1;">
+              <div style="font-size: 11px; font-weight: bold; color: var(--accent-blue); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span>${escapeHtml(tpl.title)}</span>
+                ${tpl.isCustom ? `<span style="background: rgba(34, 197, 94, 0.16); border: 1px solid rgba(34, 197, 94, 0.4); color: #4ade80; font-size: 9px; padding: 1px 6px; border-radius: 999px;">KUSTOM</span>` : ""}
+              </div>
+              <div style="font-size: 10.5px; color: #cbd5e1; line-height: 1.4;">${escapeHtml(tpl.text)}</div>
+            </div>
+            <div style="display: flex; gap: 6px; flex-shrink: 0;">
+              <button type="button" onclick="pilihTemplateBroadcastByIndex(${idxSafe})" class="btn-accent-primary" style="padding: 6px 10px; border-radius: 7px; font-size: 10px;">Pakai</button>
+              ${tpl.isCustom ? `<button type="button" onclick="hapusTemplateKustom(${Number(tpl.customIndex)})" title="Hapus Template Kustom" style="background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 6px 8px; border-radius: 7px; cursor: pointer; font-size: 10px;"><i class="fa-solid fa-trash"></i></button>` : ""}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.pilihTemplateBroadcastByIndex = function(index) {
+      const list = ambilDaftarTemplateBroadcast();
+      const tpl = list[index];
+      if (!tpl) return;
+      const inputEl = document.getElementById("inputBroadcastMsg");
+      if (inputEl) { inputEl.value = tpl.text; inputEl.focus(); }
+      tutupModalTemplate();
+      showDashboardToast(`Template "${tpl.title}" diisikan ke kolom broadcast.`, true);
+    };
+
+    window.tambahTemplateKustom = function() {
+      const titleInput = document.getElementById("customTemplateTitle");
+      const textInput = document.getElementById("customTemplateText");
+      const titleVal = (titleInput?.value || "").trim();
+      const textVal = (textInput?.value || "").trim();
+      if (!textVal) { showDashboardToast("Isi pesan template broadcast tidak boleh kosong!", false); return; }
+      let custom = [];
+      try { const raw = localStorage.getItem(CUSTOM_TEMPLATES_STORAGE_KEY); if (raw) custom = JSON.parse(raw) || []; } catch (e) {}
+      custom.unshift({ title: titleVal || "Template Kustom", text: textVal });
+      localStorage.setItem(CUSTOM_TEMPLATES_STORAGE_KEY, JSON.stringify(custom));
+      if (titleInput) titleInput.value = "";
+      if (textInput) textInput.value = "";
+      renderDaftarTemplateModal();
+      showDashboardToast("Template kustom berhasil disimpan!", true);
+    };
+
+    window.hapusTemplateKustom = async function(customIndex) {
+      const yakin = await tampilkanDashboardConfirm({ title: "HAPUS TEMPLATE KUSTOM", message: "Hapus template broadcast kustom ini?", confirmText: "Hapus", cancelText: "Batal", danger: true });
+      if (!yakin) return;
+      let custom = [];
+      try { const raw = localStorage.getItem(CUSTOM_TEMPLATES_STORAGE_KEY); if (raw) custom = JSON.parse(raw) || []; } catch (e) {}
+      if (customIndex >= 0 && customIndex < custom.length) {
+        custom.splice(customIndex, 1);
+        localStorage.setItem(CUSTOM_TEMPLATES_STORAGE_KEY, JSON.stringify(custom));
+        renderDaftarTemplateModal();
+        showDashboardToast("Template kustom dihapus.", true);
+      }
+    };
+
+    // --- AUDIT LOGS & BROADCAST ---
+    async function catatLogAktivitas(aksi) {
+      try {
+        await fetch(CLOUD_LOGS_ENDPOINT, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aksi, waktu: Date.now(), actor: "System", read: false })
+        });
+      } catch (e) {}
+    }
+
+    async function muatAuditLogs() {
+      try {
+        const res = await fetch(CLOUD_LOGS_ENDPOINT + "?t=" + Date.now());
+        const data = await res.json();
+        const container = document.getElementById('containerAuditLog');
+        if (!data) {
+          cachedAuditLogs = [];
+          container.innerHTML = `<div style="color: #64748b;">Belum ada log aktivitas.</div>`;
+          return;
+        }
+        const logs = Object.values(data).filter(l => l && l.waktu).sort((a, b) => (b.waktu || 0) - (a.waktu || 0));
+        cachedAuditLogs = logs;
+        renderAuditLogsFiltered();
+      } catch (e) {}
+    }
+
+    window.renderAuditLogsFiltered = function() {
+      const container = document.getElementById('containerAuditLog');
+      if (!container) return;
+      const query = (document.getElementById('filterAuditSearch')?.value || "").trim().toLowerCase();
+      const filtered = cachedAuditLogs.filter(l => !query || String(l.aksi || "").toLowerCase().includes(query) || String(l.actor || "").toLowerCase().includes(query));
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="color: #64748b;">Tidak ada log aktivitas yang cocok dengan pencarian.</div>`;
+        return;
+      }
+      container.innerHTML = filtered.map(l => {
+        const jam = new Date(Number(l.waktu)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return `<div style="padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); color: ${l.read ? '#64748b' : '#cbd5e1'};"><span style="color: var(--accent-blue);">[${escapeHtml(jam)}]</span> ${escapeHtml(l.aksi)}</div>`;
+      }).join("");
+    };
+
+    async function tandaiSemuaDibaca() {
+      try {
+        const res = await fetch(CLOUD_LOGS_ENDPOINT + "?t=" + Date.now());
+        const data = await res.json();
+        if (!data) return;
+        let updates = {};
+        Object.keys(data).forEach(k => { updates[`${k}/read`] = true; });
+        await fetch(CLOUD_LOGS_ENDPOINT, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
+        showDashboardToast("Semua log ditandai telah dibaca!", true);
+        muatAuditLogs();
+      } catch (e) {}
+    }
+
+    async function bersihkanSemuaLog() {
+      const yakin = await tampilkanDashboardConfirm({ title: "BERSIHKAN AUDIT LOG", message: "Hapus seluruh riwayat log aktivitas sistem secara permanen?", confirmText: "Bersihkan", cancelText: "Batal", danger: true });
+      if (!yakin) return;
+      try {
+        await fetch(CLOUD_LOGS_ENDPOINT, { method: 'DELETE' });
+        showDashboardToast("Seluruh audit log berhasil dibersihkan!", true);
+        muatAuditLogs();
+      } catch (e) { showDashboardToast("Gagal membersihkan log!", false); }
+    }
+
+    async function kirimBroadcastKeStaf() {
+      const msg = document.getElementById('inputBroadcastMsg').value.trim();
+      if (!msg) { showDashboardToast("Ketik pesan pengumuman terlebih dahulu!", false); return; }
+      try {
+        await fetch(CLOUD_BROADCAST_ENDPOINT, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg, timestamp: Date.now(), sender: "System" })
+        });
+        document.getElementById('inputBroadcastMsg').value = "";
+        await catatLogAktivitas(`Mengirim broadcast: "${msg.substring(0, 35)}..."`);
+        showDashboardToast("Broadcast berhasil dikirim ke seluruh staf!", true);
+        muatAuditLogs();
+      } catch (e) { showDashboardToast("Gagal mengirim broadcast!", false); }
+    }
+
+    // --- ADMIN MODAL & ACTIONS ---
     function bukaModalAdmin(aksi) {
-      resetIdleTimer();
       targetAksiAdmin = aksi;
       const modal = document.getElementById('adminModal');
-      const input = document.getElementById('adminPinInput');
+      const pinInput = document.getElementById('adminPinInput');
+      const pinError = document.getElementById('pinError');
       const subtitle = document.getElementById('adminModalSubtitle');
-      if (aksi === 'broadcast') subtitle.innerText = "Konfirmasi kirim broadcast pengumuman";
-      else if (aksi === 'change_pin') subtitle.innerText = "Verifikasi PIN lama untuk mengganti PIN Admin";
-      else subtitle.innerText = "Autentikasi Diperlukan";
-      input.value = '';
-      document.getElementById('pinError').style.display = 'none';
+      pinInput.value = ''; pinError.style.display = 'none';
+      if (aksi === 'lisensi') subtitle.innerText = "Akses Panel Lisensi NX";
+      else if (aksi === 'change_pin') subtitle.innerText = "Autentikasi untuk Mengubah PIN Admin";
+      else if (aksi === 'generator') subtitle.innerText = "Akses Generator Token NX";
+      else if (aksi === 'broadcast') subtitle.innerText = "Konfirmasi Kirim Broadcast";
+      else if (aksi === 'simpan_token') subtitle.innerText = "Konfirmasi Simpan Token Baru";
+      else if (aksi === 'force_update') subtitle.innerText = "Konfirmasi Paksa Update Aplikasi";
+      else if (aksi === 'lock_temp') subtitle.innerText = "Konfirmasi Kunci Sementara";
+      else if (aksi === 'lock_perm') subtitle.innerText = "Konfirmasi Kunci Permanen";
       modal.style.display = 'flex';
-      setTimeout(() => input.focus(), 100);
-      if (Date.now() < pinLockUntil) updateUiPinCooldown();
+      setTimeout(() => { pinInput.focus(); updateUiPinCooldown(); }, 100);
     }
+
     function tutupModalAdmin() { document.getElementById('adminModal').style.display = 'none'; }
 
     async function verifikasiPinAdmin() {
       if (Date.now() < pinLockUntil) { updateUiPinCooldown(); return; }
       const pin = document.getElementById('adminPinInput').value.trim();
       if (!pin) return;
-      if (await validasiPinTerproteksi(pin)) {
-        pinFailedAttempts = 0;
-        tutupModalAdmin();
-        await eksekusiAksiAdmin(targetAksiAdmin);
-      } else {
-        document.getElementById('adminPinInput').value = '';
-        catatKegagalanPin('pinError', 'PIN Salah!');
-      }
+      if (await validasiPinTerproteksi(pin)) { pinFailedAttempts = 0; tutupModalAdmin(); eksekusiAksiAdmin(); }
+      else { document.getElementById('adminPinInput').value = ''; catatKegagalanPin('pinError', 'PIN Salah!'); }
     }
+
+    function eksekusiAksiAdmin() {
+      if (targetAksiAdmin === 'lisensi') bukaPanelNx();
+      else if (targetAksiAdmin === 'change_pin') prosesUbahPinAdminBaru();
+      else if (targetAksiAdmin === 'generator') bukaGeneratorToken();
+      else if (targetAksiAdmin === 'broadcast') kirimBroadcastKeStaf();
+      else if (targetAksiAdmin === 'simpan_token') prosesSimpanTokenKeCloud();
+      else if (targetAksiAdmin === 'force_update') paksaUpdateAplikasiStaf();
+      else if (targetAksiAdmin === 'lock_temp') kunciSistemSementara();
+      else if (targetAksiAdmin === 'lock_perm') kunciSistemPermanen();
+    }
+
+    function bufferToHex(buffer) { return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join(''); }
+    function hexToBuffer(hex) { const bytes = new Uint8Array(hex.length / 2); for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.substr(i, 2), 16); return bytes.buffer; }
 
     async function loginDenganBiometrikAsli() {
       if (!window.PublicKeyCredential) { showDashboardToast("Biometrik tidak didukung browser!", false); return; }
@@ -3095,228 +3149,179 @@
         const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
         await navigator.credentials.get({ publicKey: { challenge, allowCredentials: [{ id: hexToBuffer(storedCredIdHex), type: "public-key", transports: ["internal"] }], userVerification: "required" } });
         pinFailedAttempts = 0;
-        tutupModalAdmin();
-        await eksekusiAksiAdmin(targetAksiAdmin);
+        tutupModalAdmin(); eksekusiAksiAdmin();
       } catch (err) { showDashboardToast("Verifikasi biometrik dibatalkan.", false); }
     }
 
-    async function eksekusiAksiAdmin(aksi) {
-      if (aksi === 'lisensi') { document.getElementById('nxPanelModal').style.display = 'flex'; }
-      else if (aksi === 'change_pin') { await prosesUbahPinAdminBaru(); }
-      else if (aksi === 'save_token') {
-        if (!pendingTokenToSave) return;
-        const dt = decodeNxTokenDate(pendingTokenToSave);
-        if (!dt) { showDashboardToast("Token tidak valid! Format token NX tidak terbaca.", false); return; }
-        try {
-          await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: "ACTIVE", token: pendingTokenToSave, expires_at: dt.getTime(), updated_at: Date.now() }) });
-          await catatLogAktivitas(`Memperbarui Token Lisensi (Exp: ${dt.toLocaleDateString('id-ID')})`);
-          showDashboardToast("Token lisensi berhasil diperbarui & aktif!", true);
-          document.getElementById('inputPanelNxToken').value = '';
-          pendingTokenToSave = '';
-          initCommandCenterHUD(); muatAuditLogs();
-        } catch (e) { showDashboardToast("Gagal memperbarui token!", false); }
-      }
-      else if (aksi === 'lock_temp') {
-        const yakin = await tampilkanDashboardConfirm({ title: "KUNCI SEMENTARA", message: "Kunci akses aplikasi sementara (LOCKED_TEMP)?", confirmText: "Kunci Sementara", cancelText: "Batal", danger: true });
-        if (!yakin) return;
-        await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: "LOCKED_TEMP", locked_at: Date.now() }) });
-        await catatLogAktivitas("Mengunci sistem sementara (LOCKED_TEMP)");
-        showDashboardToast("Sistem dikunci sementara!", true);
-        initCommandCenterHUD(); muatAuditLogs();
-      }
-      else if (aksi === 'lock_perm') {
-        const yakin = await tampilkanDashboardConfirm({ title: "KUNCI PERMANEN", message: "Kunci akses aplikasi secara permanen (LOCKED_PERMANENT)?", confirmText: "Kunci Permanen", cancelText: "Batal", danger: true });
-        if (!yakin) return;
-        await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: "LOCKED_PERMANENT", locked_at: Date.now() }) });
-        await catatLogAktivitas("Mengunci sistem permanen (LOCKED_PERMANENT)");
-        showDashboardToast("Sistem dikunci permanen!", true);
-        initCommandCenterHUD(); muatAuditLogs();
-      }
-      else if (aksi === 'generator') {
-        const t = generateAutomaticOneWeekToken();
-        navigator.clipboard.writeText(t).catch(() => {});
-        showDashboardToast("Token otomatis 1 minggu dibuat & disalin: " + t, true);
-      }
-      else if (aksi === 'force_update') {
-        const yakin = await tampilkanDashboardConfirm({ title: "PAKSA UPDATE APLIKASI", message: "Kirim sinyal paksa pembaruan aplikasi ke semua perangkat staf?", confirmText: "Kirim Sinyal", cancelText: "Batal", danger: true });
-        if (!yakin) return;
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/force_update.json`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ trigger_at: Date.now() }) });
-        await catatLogAktivitas("Memicu sinyal Paksa Update aplikasi untuk seluruh staf");
-        showDashboardToast("Sinyal Paksa Update berhasil dikirim!", true);
-        muatAuditLogs();
-      }
-      else if (aksi === 'broadcast') {
-        const input = document.getElementById('inputBroadcastMsg');
-        const msg = input.value.trim();
-        if (!msg) return;
-        await fetch(CLOUD_BROADCAST_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg, timestamp: Date.now() }) });
-        localStorage.setItem('gudang_last_broadcast_ts', String(Date.now()));
-        await catatLogAktivitas(`Mengirim Broadcast: "${msg}"`);
-        input.value = '';
-        showDashboardToast("Broadcast berhasil dikirim & dibaca oleh System!", true);
-        muatAuditLogs();
-      }
+    // --- PANEL LISENSI ---
+    async function bukaPanelNx() {
+      document.getElementById('nxPanelModal').style.display = 'flex';
+      document.getElementById('nxExpiryText').innerText = "Memeriksa...";
+      try {
+        const res = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
+        const data = await res.json();
+        if (data && data.token) {
+          const decodedDate = decodeNxTokenDate(data.token);
+          if (decodedDate) { globalExpiryDate = decodedDate; document.getElementById('nxExpiryText').innerText = decodedDate.toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) + " WIB"; }
+          else document.getElementById('nxExpiryText').innerText = "Token aktif";
+        } else document.getElementById('nxExpiryText').innerText = "Belum disetel";
+      } catch (e) { document.getElementById('nxExpiryText').innerText = "Gagal memuat"; }
     }
 
     function tutupPanelNx() { document.getElementById('nxPanelModal').style.display = 'none'; }
-    function triggerSimpanToken() {
-      const val = document.getElementById('inputPanelNxToken').value.trim();
-      if (!val) { showDashboardToast("Tempel token baru terlebih dahulu!", false); return; }
-      pendingTokenToSave = val;
-      bukaModalAdmin('save_token');
+    function triggerSimpanToken() { const t = document.getElementById('inputPanelNxToken').value.trim(); if (!t) { showDashboardToast("Tempelkan token terlebih dahulu!", false); return; } pendingTokenToSave = t; bukaModalAdmin('simpan_token'); }
+
+    async function prosesSimpanTokenKeCloud() {
+      try {
+        await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: pendingTokenToSave, status: "ACTIVE", updated_at: Date.now() }) });
+        document.getElementById('inputPanelNxToken').value = "";
+        const decoded = decodeNxTokenDate(pendingTokenToSave);
+        if (decoded) { globalExpiryDate = decoded; updateRealtimeCountdown(); }
+        await catatLogAktivitas("Memperbarui token lisensi NX pusat");
+        showDashboardToast("Token NX berhasil disimpan ke Cloud!", true);
+        bukaPanelNx(); muatAuditLogs();
+      } catch (e) { showDashboardToast("Gagal menyimpan token ke Cloud!", false); }
     }
 
-    // --- IDENTITAS STAF & BUKA MODUL ---
-    async function bukaModulDenganIdentitas(e, targetUrl, modulName) {
-      e.preventDefault();
+    function bukaGeneratorToken() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let prefix = ''; for (let i = 0; i < 18; i++) prefix += chars.charAt(Math.floor(Math.random() * chars.length));
+      let suffix = ''; for (let i = 0; i < 18; i++) suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+      const targetDate = new Date(); targetDate.setDate(targetDate.getDate() + 7); targetDate.setHours(23, 59, 59, 999);
+      const tokenBaru = prefix + "NX" + targetDate.getTime().toString(16) + suffix;
+      navigator.clipboard.writeText(tokenBaru).then(() => showDashboardToast("Token NX (7 Hari) dibuat & disalin ke clipboard!", true)).catch(() => showDashboardToast("Token dibuat: " + tokenBaru.substring(0, 12) + "...", true));
+    }
+
+    async function paksaUpdateAplikasiStaf() {
+      try {
+        await fetch(CLOUD_BROADCAST_ENDPOINT, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: "PEMBARUAN SISTEM: Aplikasi sedang diperbarui oleh System. Mohon muat ulang halaman.", timestamp: Date.now(), sender: "System" }) });
+        await catatLogAktivitas("Memaksa pembaruan aplikasi ke seluruh staf");
+        showDashboardToast("Perintah paksa update telah dikirim ke seluruh staf!", true);
+        muatAuditLogs();
+      } catch (e) { showDashboardToast("Gagal mengirim perintah update!", false); }
+    }
+
+    async function kunciSistemSementara() {
+      const yakin = await tampilkanDashboardConfirm({ title: "KUNCI SEMENTARA", message: "Kunci akses aplikasi sementara?", confirmText: "Kunci", cancelText: "Batal", danger: true });
+      if (!yakin) return;
+      try {
+        await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: "LOCKED_TEMP", locked_at: Date.now() }) });
+        await catatLogAktivitas("Mengaktifkan Kunci Sementara sistem");
+        showDashboardToast("Sistem berhasil dikunci sementara!", true);
+        tutupPanelNx(); initCommandCenterHUD(); muatAuditLogs();
+      } catch (e) { showDashboardToast("Gagal mengunci sistem!", false); }
+    }
+
+    async function kunciSistemPermanen() {
+      const yakin = await tampilkanDashboardConfirm({ title: "KUNCI PERMANEN", message: "PERINGATAN: Kunci akses sistem secara permanen?", confirmText: "Kunci Permanen", cancelText: "Batal", danger: true });
+      if (!yakin) return;
+      try {
+        await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: "LOCKED_PERM", locked_at: Date.now() }) });
+        await catatLogAktivitas("Mengaktifkan Kunci Permanen sistem");
+        showDashboardToast("Sistem telah dikunci permanen!", true);
+        tutupPanelNx(); initCommandCenterHUD(); muatAuditLogs();
+      } catch (e) { showDashboardToast("Gagal mengunci sistem!", false); }
+    }
+
+    // --- HELPER IDENTITAS STAF & NAVIGASI MODUL ---
+    async function bukaModulDenganIdentitas(event, targetUrl, namaModul) {
+      event.preventDefault();
       resetIdleTimer();
       let staffName = localStorage.getItem('gudang_staff_name');
-      if (!staffName || staffName.trim() === '') {
-        staffName = await tampilkanDashboardPrompt({
-          title: `IDENTIFIKASI STAF — ${modulName.toUpperCase()}`,
-          message: "Masukkan nama lengkap Anda sebelum membuka modul:",
-          placeholder: "Contoh: Siti - Admin",
-          confirmText: "Lanjutkan"
-        });
+      if (!staffName) {
+        staffName = await tampilkanDashboardPrompt({ title: "IDENTIFIKASI STAF", message: "Masukkan nama lengkap Anda sebelum membuka modul:", placeholder: "Contoh: Siti - Admin", confirmText: "Lanjutkan" });
         if (!staffName) return;
         localStorage.setItem('gudang_staff_name', staffName);
       }
-
       const deviceType = deteksiTipePerangkatStaf();
-      const loginTimestamp = Date.now();
-      const safeStaffKey = encodeURIComponent(staffName.replace(/[^a-zA-Z0-9_-]/g, '_'));
+      const safeKey = staffName.trim().replace(/[^a-zA-Z0-9_-]/g, '_');
       try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeStaffKey}.json`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: staffName, modul: modulName, device: deviceType, lastSeen: loginTimestamp })
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${encodeURIComponent(safeKey)}.json`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: staffName, modul: namaModul, device: deviceType, lastSeen: Date.now() })
         });
         await fetch(CLOUD_LOGIN_HISTORY_ENDPOINT, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: staffName, modul: modulName, device: deviceType, timestamp: loginTimestamp })
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: staffName, modul: namaModul, device: deviceType, timestamp: Date.now() })
         });
-      } catch (err) {}
-
+      } catch (e) {}
       window.location.href = targetUrl;
     }
 
     async function gantiNamaStafLokal() {
-      resetIdleTimer();
-      const current = localStorage.getItem('gudang_staff_name') || '';
-      const baru = await tampilkanDashboardPrompt({
-        title: "GANTI NAMA STAF LOKAL",
-        message: "Masukkan nama staf baru yang akan digunakan saat membuka modul:",
-        placeholder: "Masukkan nama staf...",
-        defaultValue: current,
-        confirmText: "Simpan Nama"
-      });
+      const namaSaatIni = localStorage.getItem('gudang_staff_name') || "";
+      const baru = await tampilkanDashboardPrompt({ title: "GANTI NAMA STAF", message: "Masukkan nama staf baru:", placeholder: "Nama staf...", defaultValue: namaSaatIni, confirmText: "Simpan" });
       if (baru) {
         localStorage.setItem('gudang_staff_name', baru);
-        showDashboardToast("Nama staf diperbarui: " + baru, true);
+        showDashboardToast(`Nama staf berhasil diubah menjadi "${baru}"`, true);
       }
     }
 
-    function salinLinkModul(url) {
+    window.salinLinkModul = function(url) {
       const fullUrl = new URL(url, window.location.href).href;
       navigator.clipboard.writeText(fullUrl)
-        .then(() => showDashboardToast("Tautan modul berhasil disalin!", true))
-        .catch(() => showDashboardToast("Gagal menyalin tautan.", false));
-    }
-
-    // --- TEMA WARNA AKSEN (TEMBUS SAMPAI KE AKAR :root) ---
-    const DASHBOARD_THEMES = {
-      blue: {
-        bgMain: "#050913", bgTint: "#09152b",
-        sidebarBg: "rgba(8, 14, 28, 0.96)", cardBg: "rgba(13, 22, 41, 0.78)", cardElevated: "rgba(18, 30, 56, 0.88)",
-        cardBorder: "rgba(56, 189, 248, 0.26)",
-        accentBlue: "#38bdf8", accentDark: "#0284c7", accentDarker: "#0369a1",
-        accentSoft: "rgba(56, 189, 248, 0.15)", accentSoftStrong: "rgba(56, 189, 248, 0.28)",
-        accentRing: "rgba(56, 189, 248, 0.48)", accentGlow: "rgba(56, 189, 248, 0.34)",
-        themeColor: "#070d19"
-      },
-      purple: {
-        bgMain: "#070512", bgTint: "#160a2e",
-        sidebarBg: "rgba(14, 8, 28, 0.96)", cardBg: "rgba(24, 13, 45, 0.78)", cardElevated: "rgba(34, 18, 62, 0.88)",
-        cardBorder: "rgba(192, 132, 252, 0.28)",
-        accentBlue: "#c084fc", accentDark: "#9333ea", accentDarker: "#7e22ce",
-        accentSoft: "rgba(192, 132, 252, 0.16)", accentSoftStrong: "rgba(192, 132, 252, 0.3)",
-        accentRing: "rgba(192, 132, 252, 0.5)", accentGlow: "rgba(192, 132, 252, 0.36)",
-        themeColor: "#0e081c"
-      },
-      green: {
-        bgMain: "#040c09", bgTint: "#072217",
-        sidebarBg: "rgba(6, 20, 14, 0.96)", cardBg: "rgba(10, 31, 22, 0.78)", cardElevated: "rgba(15, 42, 30, 0.88)",
-        cardBorder: "rgba(34, 197, 94, 0.28)",
-        accentBlue: "#22c55e", accentDark: "#16a34a", accentDarker: "#15803d",
-        accentSoft: "rgba(34, 197, 94, 0.16)", accentSoftStrong: "rgba(34, 197, 94, 0.28)",
-        accentRing: "rgba(34, 197, 94, 0.48)", accentGlow: "rgba(34, 197, 94, 0.34)",
-        themeColor: "#06140e"
-      },
-      gold: {
-        bgMain: "#0c0904", bgTint: "#241907",
-        sidebarBg: "rgba(20, 14, 6, 0.96)", cardBg: "rgba(31, 22, 9, 0.78)", cardElevated: "rgba(42, 30, 12, 0.88)",
-        cardBorder: "rgba(251, 191, 36, 0.28)",
-        accentBlue: "#fbbf24", accentDark: "#d97706", accentDarker: "#b45309",
-        accentSoft: "rgba(251, 191, 36, 0.16)", accentSoftStrong: "rgba(251, 191, 36, 0.3)",
-        accentRing: "rgba(251, 191, 36, 0.5)", accentGlow: "rgba(251, 191, 36, 0.35)",
-        themeColor: "#140e06"
-      }
+        .then(() => showDashboardToast("Tautan modul disalin ke clipboard!", true))
+        .catch(() => showDashboardToast("Gagal menyalin tautan modul.", false));
     };
 
-    function applyThemeVariables(themeKey) {
-      const t = DASHBOARD_THEMES[themeKey] || DASHBOARD_THEMES.blue;
+    // --- TEMA AKSEN DASHBOARD (FULL ROOT) ---
+    const DASHBOARD_THEMES = {
+      blue: { '--bg-main': '#050913', '--bg-tint': '#09152b', '--sidebar-bg': 'rgba(8, 14, 28, 0.96)', '--card-bg': 'rgba(13, 22, 41, 0.78)', '--card-elevated': 'rgba(18, 30, 56, 0.88)', '--card-border': 'rgba(56, 189, 248, 0.26)', '--accent-blue': '#38bdf8', '--accent-dark': '#0284c7', '--accent-darker': '#0369a1', '--accent-soft': 'rgba(56, 189, 248, 0.15)', '--accent-soft-strong': 'rgba(56, 189, 248, 0.28)', '--accent-ring': 'rgba(56, 189, 248, 0.48)', '--accent-glow': 'rgba(56, 189, 248, 0.34)', 'themeColor': '#070d19' },
+      purple: { '--bg-main': '#090514', '--bg-tint': '#15082b', '--sidebar-bg': 'rgba(15, 7, 29, 0.96)', '--card-bg': 'rgba(24, 12, 44, 0.8)', '--card-elevated': 'rgba(34, 17, 61, 0.9)', '--card-border': 'rgba(192, 132, 252, 0.3)', '--accent-blue': '#c084fc', '--accent-dark': '#9333ea', '--accent-darker': '#7e22ce', '--accent-soft': 'rgba(192, 132, 252, 0.16)', '--accent-soft-strong': 'rgba(192, 132, 252, 0.3)', '--accent-ring': 'rgba(192, 132, 252, 0.52)', '--accent-glow': 'rgba(192, 132, 252, 0.36)', 'themeColor': '#110622' },
+      green: { '--bg-main': '#04100a', '--bg-tint': '#072214', '--sidebar-bg': 'rgba(6, 20, 13, 0.96)', '--card-bg': 'rgba(10, 31, 20, 0.8)', '--card-elevated': 'rgba(14, 43, 28, 0.9)', '--card-border': 'rgba(34, 197, 94, 0.28)', '--accent-blue': '#22c55e', '--accent-dark': '#16a34a', '--accent-darker': '#15803d', '--accent-soft': 'rgba(34, 197, 94, 0.16)', '--accent-soft-strong': 'rgba(34, 197, 94, 0.28)', '--accent-ring': 'rgba(34, 197, 94, 0.5)', '--accent-glow': 'rgba(34, 197, 94, 0.34)', 'themeColor': '#05190f' },
+      gold: { '--bg-main': '#110c04', '--bg-tint': '#241806', '--sidebar-bg': 'rgba(22, 15, 5, 0.96)', '--card-bg': 'rgba(34, 23, 8, 0.8)', '--card-elevated': 'rgba(46, 32, 11, 0.9)', '--card-border': 'rgba(251, 191, 36, 0.3)', '--accent-blue': '#fbbf24', '--accent-dark': '#d97706', '--accent-darker': '#b45309', '--accent-soft': 'rgba(251, 191, 36, 0.16)', '--accent-soft-strong': 'rgba(251, 191, 36, 0.3)', '--accent-ring': 'rgba(251, 191, 36, 0.52)', '--accent-glow': 'rgba(251, 191, 36, 0.36)', 'themeColor': '#1c1305' }
+    };
+
+    function ubahTemaDashboard(themeKey) {
+      const palette = DASHBOARD_THEMES[themeKey] || DASHBOARD_THEMES.blue;
       const root = document.documentElement;
-      root.style.setProperty('--bg-main', t.bgMain);
-      root.style.setProperty('--bg-tint', t.bgTint);
-      root.style.setProperty('--sidebar-bg', t.sidebarBg);
-      root.style.setProperty('--card-bg', t.cardBg);
-      root.style.setProperty('--card-elevated', t.cardElevated);
-      root.style.setProperty('--card-border', t.cardBorder);
-      root.style.setProperty('--accent-blue', t.accentBlue);
-      root.style.setProperty('--accent-dark', t.accentDark);
-      root.style.setProperty('--accent-darker', t.accentDarker);
-      root.style.setProperty('--accent-soft', t.accentSoft);
-      root.style.setProperty('--accent-soft-strong', t.accentSoftStrong);
-      root.style.setProperty('--accent-ring', t.accentRing);
-      root.style.setProperty('--accent-glow', t.accentGlow);
-
+      Object.keys(palette).forEach(prop => {
+        if (prop === 'themeColor') return;
+        root.style.setProperty(prop, palette[prop]);
+      });
       const metaTheme = document.querySelector('meta[name="theme-color"]');
-      if (metaTheme) metaTheme.setAttribute('content', t.themeColor);
-    }
-
-    function ubahTemaDashboard(theme) {
-      const validTheme = DASHBOARD_THEMES[theme] ? theme : 'blue';
-      localStorage.setItem('gudang_dashboard_theme', validTheme);
-      applyThemeVariables(validTheme);
-      showDashboardToast(`Tema ${validTheme.toUpperCase()} diterapkan penuh ke seluruh komponen!`, true);
+      if (metaTheme && palette.themeColor) metaTheme.setAttribute('content', palette.themeColor);
+      localStorage.setItem('gudang_dashboard_theme', themeKey);
+      const wxIconBox = document.getElementById("wxAnimatedIconBox");
+      if (wxIconBox && wxIconBox.innerHTML.trim()) fetchLiveWeatherWidget();
+      showDashboardToast(`Tema dashboard diubah ke ${themeKey.toUpperCase()}!`, true);
     }
 
     function muatTemaDashboard() {
       const saved = localStorage.getItem('gudang_dashboard_theme') || 'blue';
-      applyThemeVariables(saved);
+      const palette = DASHBOARD_THEMES[saved] || DASHBOARD_THEMES.blue;
+      const root = document.documentElement;
+      Object.keys(palette).forEach(prop => {
+        if (prop === 'themeColor') return;
+        root.style.setProperty(prop, palette[prop]);
+      });
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme && palette.themeColor) metaTheme.setAttribute('content', palette.themeColor);
     }
 
-    function showDashboardToast(msg, isSuccess) {
-      const existing = document.getElementById('dashboard-toast');
+    // --- TOAST ---
+    function showDashboardToast(message, isSuccess) {
+      const existing = document.getElementById('dashboard-toast-msg');
       if (existing) existing.remove();
       const toast = document.createElement('div');
-      toast.id = 'dashboard-toast';
+      toast.id = 'dashboard-toast-msg';
       toast.style.cssText = `
-        position: fixed; bottom: 25px; right: 25px; z-index: 2147483647;
-        background: ${isSuccess ? '#0f172a' : '#2a0808'};
-        border: 1.5px solid ${isSuccess ? 'var(--accent-blue)' : '#ef4444'};
-        color: #fff; padding: 12px 18px; border-radius: 12px; font-family: monospace; font-size: 11.5px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.8); max-width: 340px; word-break: break-word;
+        position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
+        background: ${isSuccess ? 'rgba(15, 23, 42, 0.96)' : 'rgba(127, 29, 29, 0.96)'};
+        border: 1.5px solid ${isSuccess ? 'var(--accent-blue)' : '#f87171'};
+        color: #fff; padding: 12px 20px; border-radius: 12px; font-family: monospace; font-size: 11.5px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.8); z-index: 2147483647;
       `;
-      toast.innerHTML = `<i class="fa-solid ${isSuccess ? 'fa-circle-check' : 'fa-triangle-exclamation'}" style="color: ${isSuccess ? 'var(--accent-blue)' : '#ef4444'}; margin-right: 6px;"></i> ${escapeHtml(msg)}`;
+      toast.innerHTML = `<i class="fa-solid ${isSuccess ? 'fa-circle-check' : 'fa-circle-exclamation'}" style="color: ${isSuccess ? 'var(--accent-blue)' : '#f87171'}; margin-right: 6px;"></i> ${escapeHtml(message)}`;
       document.body.appendChild(toast);
-      setTimeout(() => { if (toast) toast.remove(); }, 3500);
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 2500);
     }
 
-    function bufferToHex(buf) { return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''); }
-    function hexToBuffer(hex) { return new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer; }
-
-    document.getElementById('splashPinInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') verifikasiSplashPin(); });
-    document.getElementById('adminPinInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') verifikasiPinAdmin(); });
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById('splashPinInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') verifikasiSplashPin(); });
+      document.getElementById('adminPinInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') verifikasiPinAdmin(); });
+      document.getElementById('inputBroadcastMsg')?.addEventListener('keypress', e => { if (e.key === 'Enter') bukaModalAdmin('broadcast'); });
+      document.getElementById('customTemplateText')?.addEventListener('keypress', e => { if (e.key === 'Enter') tambahTemplateKustom(); });
+    });
   </script>
+
 </body>
 </html>
