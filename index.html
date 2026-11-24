@@ -11,8 +11,11 @@
   <link rel="manifest" href="manifest.json">
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(() => console.log('Dashboard Service Worker Registered'));
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(() => console.log('Dashboard Service Worker Registered'))
+          .catch(() => {});
+      });
     }
   </script>
   <style>
@@ -1261,9 +1264,35 @@
     let pinLockUntil = 0;
     let pinCooldownTimer = null;
     let lastUserInteractionAt = Date.now();
+    let isPageVisible = !document.hidden;
+    let isAutoPilotRunning = false;
+    const processingTokenRooms = new Set();
+    const copyPayloadRegistry = new Map();
+    let copyPayloadCounter = 0;
 
     const notifiedStaffMsgKeys = new Set();
     let isFirstChatLoad = true;
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function registerCopyPayload(text) {
+      const id = `copy_${++copyPayloadCounter}`;
+      copyPayloadRegistry.set(id, String(text ?? ""));
+      return id;
+    }
+
+    window.salinPayloadById = function(id) {
+      const rawText = copyPayloadRegistry.get(id);
+      if (typeof rawText !== "string") return;
+      salinTokenChat(rawText);
+    };
 
     const DEFAULT_BROADCAST_TEMPLATES = [
       { title: "Pengingat Cuaca Panas & Fisik", text: "Hai rekan-rekan tim gudang, cuaca hari ini cukup terik. Jangan lupa perbanyak minum air putih dan tetap jaga kesehatan fisik ya!" },
@@ -1287,6 +1316,7 @@
     let globalExpiryDate = null;
     let pendingTokenToSave = "";
     let activeStaffRoom = null;
+    let activeStaffName = "";
     let typingTimeout = null;
     let cachedLoginHistory = [];
     let cachedPresenceMap = {};
@@ -1379,6 +1409,7 @@
       });
 
       setInterval(() => {
+        if (!isPageVisible) return;
         const mins = getAutoLockMinutes();
         if (mins <= 0) return;
         const splash = document.getElementById("splashScreen");
@@ -1516,6 +1547,7 @@
     }
 
     function playSoftNotificationChime(type = "chat") {
+      if (!isPageVisible) return;
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = audioCtx.createOscillator();
@@ -1570,11 +1602,11 @@
             <div style="width: 44px; height: 44px; border-radius: 50%; background: ${danger ? "rgba(239, 68, 68, 0.14)" : "var(--accent-soft)"}; border: 1px solid ${accentColor}; color: ${accentColor}; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; font-size: 18px;">
               <i class="fa-solid ${danger ? "fa-trash-can" : "fa-circle-question"}"></i>
             </div>
-            <div style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; margin-bottom: 8px;">${title}</div>
-            <div style="font-size: 11.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 18px;">${message}</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; margin-bottom: 8px;">${escapeHtml(title)}</div>
+            <div style="font-size: 11.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 18px;">${escapeHtml(message)}</div>
             <div style="display: flex; gap: 10px;">
-              <button type="button" id="dashConfirmCancel" style="flex: 1; padding: 9px 12px; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">${cancelText}</button>
-              <button type="button" id="dashConfirmOk" style="flex: 1; padding: 9px 12px; background: ${confirmBg}; border: 1px solid ${accentColor}; color: #fff; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">${confirmText}</button>
+              <button type="button" id="dashConfirmCancel" style="flex: 1; padding: 9px 12px; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">${escapeHtml(cancelText)}</button>
+              <button type="button" id="dashConfirmOk" style="flex: 1; padding: 9px 12px; background: ${confirmBg}; border: 1px solid ${accentColor}; color: #fff; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">${escapeHtml(confirmText)}</button>
             </div>
           </div>
         `;
@@ -1622,12 +1654,12 @@
             <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--accent-soft); border: 1px solid var(--accent-blue); color: var(--accent-blue); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; font-size: 18px;">
               <i class="fa-solid fa-user-check"></i>
             </div>
-            <div style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; margin-bottom: 6px;">${title}</div>
-            <div style="font-size: 11.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">${message}</div>
-            <input type="text" id="dashPromptInput" placeholder="${placeholder}" style="width: 100%; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: var(--accent-blue); font-size: 12.5px; border-radius: 9px; outline: none; text-align: center; margin-bottom: 14px; box-sizing: border-box; font-family: monospace;" />
+            <div style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; margin-bottom: 6px;">${escapeHtml(title)}</div>
+            <div style="font-size: 11.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">${escapeHtml(message)}</div>
+            <input type="text" id="dashPromptInput" placeholder="${escapeHtml(placeholder)}" style="width: 100%; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: var(--accent-blue); font-size: 12.5px; border-radius: 9px; outline: none; text-align: center; margin-bottom: 14px; box-sizing: border-box; font-family: monospace;" />
             <div style="display: flex; gap: 10px;">
-              <button type="button" id="dashPromptCancel" style="flex: 1; padding: 9px 12px; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">${cancelText}</button>
-              <button type="button" id="dashPromptOk" class="btn-accent-primary" style="flex: 1; padding: 9px 12px; border-radius: 8px; font-size: 11.5px;">${confirmText}</button>
+              <button type="button" id="dashPromptCancel" style="flex: 1; padding: 9px 12px; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">${escapeHtml(cancelText)}</button>
+              <button type="button" id="dashPromptOk" class="btn-accent-primary" style="flex: 1; padding: 9px 12px; border-radius: 8px; font-size: 11.5px;">${escapeHtml(confirmText)}</button>
             </div>
           </div>
         `;
@@ -1751,7 +1783,7 @@
 
         document.getElementById("wxTempNow").textContent = `${tempNow}°`;
         document.getElementById("wxConditionLabel").textContent = mapWeatherDesc(codeNow);
-        document.getElementById("wxLocationText").innerHTML = `<i class="fa-solid fa-location-dot"></i> ${wxCurrentCoords.label}`;
+        document.getElementById("wxLocationText").innerHTML = `<i class="fa-solid fa-location-dot"></i> ${escapeHtml(wxCurrentCoords.label)}`;
         document.getElementById("wxHumidityWind").textContent = `Kelembapan ${hum}% • Angin ${wind} km/j`;
         document.getElementById("wxAnimatedIconBox").innerHTML = renderWeatherAnimatedSvg(codeNow, 56);
 
@@ -1772,7 +1804,7 @@
             const dayName = dObj.toLocaleDateString("id-ID", { weekday: "short", day: "numeric" });
             return `
               <div class="wx-day-pill">
-                <div style="font-size: 10px; color: #94a3b8;">${dayName}</div>
+                <div style="font-size: 10px; color: #94a3b8;">${escapeHtml(dayName)}</div>
                 <div style="display: flex; justify-content: center; margin: 2px 0;">${renderWeatherAnimatedSvg(codesArr[idx], 26)}</div>
                 <div style="font-size: 11px; font-weight: bold; color: #f8fafc;">${Math.round(minArr[idx])}° / ${Math.round(maxArr[idx])}°</div>
               </div>
@@ -1809,6 +1841,23 @@
       );
     };
 
+    function refreshAllLiveData() {
+      if (!isPageVisible) return;
+      initCommandCenterHUD();
+      muatStaffPresence();
+      muatRiwayatLoginHarian();
+      muatUlasanStaf();
+      muatDaftarChatStaf();
+    }
+
+    document.addEventListener("visibilitychange", function() {
+      isPageVisible = !document.hidden;
+      if (isPageVisible) {
+        updateWeatherClockUI();
+        refreshAllLiveData();
+      }
+    });
+
     document.addEventListener("DOMContentLoaded", function() {
       initSplashScreenFlow();
       ambilHashPinAktif();
@@ -1819,23 +1868,35 @@
       updateWeatherClockUI();
       fetchLiveWeatherWidget();
       updateTemplateCounterBadge();
-      initCommandCenterHUD();
+      refreshAllLiveData();
       muatAuditLogs();
-      muatStaffPresence();
-      muatRiwayatLoginHarian();
-      muatUlasanStaf();
-      muatDaftarChatStaf();
       mulaiPantauBroadcastRealtime();
       mulaiAutoPilotTokenListener();
 
-      setInterval(updateWeatherClockUI, 1000);
-      setInterval(fetchLiveWeatherWidget, 15 * 60 * 1000);
-      setInterval(initCommandCenterHUD, 10000);
-      setInterval(muatStaffPresence, 3000);
-      setInterval(muatRiwayatLoginHarian, 5000);
-      setInterval(muatUlasanStaf, 6000);
-      setInterval(updateRealtimeCountdown, 1000);
-      setInterval(muatDaftarChatStaf, 4000);
+      setInterval(() => {
+        if (isPageVisible) updateWeatherClockUI();
+      }, 1000);
+      setInterval(() => {
+        if (isPageVisible) fetchLiveWeatherWidget();
+      }, 15 * 60 * 1000);
+      setInterval(() => {
+        if (isPageVisible) initCommandCenterHUD();
+      }, 15000);
+      setInterval(() => {
+        if (isPageVisible) muatStaffPresence();
+      }, 6000);
+      setInterval(() => {
+        if (isPageVisible) muatRiwayatLoginHarian();
+      }, 10000);
+      setInterval(() => {
+        if (isPageVisible) muatUlasanStaf();
+      }, 12000);
+      setInterval(() => {
+        if (isPageVisible) updateRealtimeCountdown();
+      }, 1000);
+      setInterval(() => {
+        if (isPageVisible) muatDaftarChatStaf();
+      }, 6000);
     });
 
     // --- ULASAN STAF ---
@@ -1918,20 +1979,20 @@
           <div class="review-card">
             <div class="review-card-top">
               <div>
-                <div style="color: #fff; font-weight: bold; font-size: 12px;">👤 ${item.staffName || "Staf Gudang"}</div>
-                <span class="review-tag-modul" style="display: inline-block; margin-top: 4px;">${item.modul || "Modul"}</span>
+                <div style="color: #fff; font-weight: bold; font-size: 12px;">👤 ${escapeHtml(item.staffName || "Staf Gudang")}</div>
+                <span class="review-tag-modul" style="display: inline-block; margin-top: 4px;">${escapeHtml(item.modul || "Modul")}</span>
               </div>
               <div style="text-align: right;">
                 <div class="review-stars">${starVisual}</div>
                 <div style="font-size: 10px; color: #fbbf24;">${starCount}/5</div>
               </div>
             </div>
-            <div class="review-field"><span style="color: #34d399; font-weight: bold;">+ Kelebihan:</span> ${item.kelebihan || "-"}</div>
-            <div class="review-field"><span style="color: #f87171; font-weight: bold;">- Kekurangan:</span> ${item.kekurangan || "-"}</div>
-            <div class="review-field"><span style="color: var(--accent-blue); font-weight: bold;">💬 Komentar:</span> ${item.komentar || "-"}</div>
+            <div class="review-field"><span style="color: #34d399; font-weight: bold;">+ Kelebihan:</span> ${escapeHtml(item.kelebihan || "-")}</div>
+            <div class="review-field"><span style="color: #f87171; font-weight: bold;">- Kekurangan:</span> ${escapeHtml(item.kekurangan || "-")}</div>
+            <div class="review-field"><span style="color: var(--accent-blue); font-weight: bold;">💬 Komentar:</span> ${escapeHtml(item.komentar || "-")}</div>
             <div class="review-meta">
-              <span>🕒 ${waktuStr}</span>
-              <button type="button" onclick="hapusSatuUlasan('${item.id}')" style="background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; padding: 3px 8px; border-radius: 6px; cursor: pointer; font-family: monospace; font-size: 10px;">
+              <span>🕒 ${escapeHtml(waktuStr)}</span>
+              <button type="button" onclick="hapusSatuUlasan('${escapeHtml(item.id)}')" style="background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; padding: 3px 8px; border-radius: 6px; cursor: pointer; font-family: monospace; font-size: 10px;">
                 <i class="fa-solid fa-trash"></i> Hapus
               </button>
             </div>
@@ -1945,7 +2006,7 @@
       const yakin = await tampilkanDashboardConfirm({ title: "HAPUS ULASAN", message: "Hapus ulasan staf ini secara permanen?", confirmText: "Hapus", cancelText: "Batal", danger: true });
       if (!yakin) return;
       try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/reviews/${reviewId}.json`, { method: "DELETE" });
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/reviews/${encodeURIComponent(reviewId)}.json`, { method: "DELETE" });
         await catatLogAktivitas("Menghapus 1 data ulasan staf");
         showDashboardToast("Ulasan berhasil dihapus!", true);
         muatUlasanStaf(); muatAuditLogs();
@@ -2027,29 +2088,35 @@
 
     function mulaiAutoPilotTokenListener() {
       setInterval(async () => {
+        if (!isPageVisible || isAutoPilotRunning) return;
+        isAutoPilotRunning = true;
         try {
           const res = await fetch(CLOUD_CHATS_ENDPOINT + "?t=" + Date.now());
           const data = await res.json() || {};
           for (const staffId of Object.keys(data)) {
+            if (processingTokenRooms.has(staffId)) continue;
             const room = data[staffId];
-            const tokenReq = room.token_request;
+            const tokenReq = room?.token_request;
             if (tokenReq && tokenReq.status === 'pending') {
+              processingTokenRooms.add(staffId);
               await eksekusiAutoApproveStaf(staffId, room.staffName || staffId);
+              processingTokenRooms.delete(staffId);
             }
           }
         } catch (e) {}
-      }, 3000);
+        finally { isAutoPilotRunning = false; }
+      }, 5000);
     }
 
     async function eksekusiAutoApproveStaf(staffKey, staffLabel) {
       try {
         const tokenOtomatis = generateAutomaticOneWeekToken();
         const pesanBalasan = `🤖 [AUTO-SYSTEM]\nPermintaan perpanjangan masa aktif Anda telah diproses otomatis oleh System (Batas maksimal & pembaruan otomatis: **1 Minggu**).\n\nToken Akses Resmi Anda:\n\`${tokenOtomatis}\`\n\n*(Silakan salin token di atas untuk memperpanjang masa aktif aplikasi)*`;
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/messages.json`, {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(staffKey)}/messages.json`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sender: 'bot', text: pesanBalasan, time: Date.now(), read: false })
         });
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffKey}/token_request.json`, {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(staffKey)}/token_request.json`, {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'approved', approved_at: Date.now() })
         });
@@ -2061,6 +2128,7 @@
     }
 
     function playAlertSoundAndVibrate() {
+      if (!isPageVisible) return;
       if ("vibrate" in navigator) {
         try { navigator.vibrate([300, 150, 300, 150, 500]); } catch (e) {}
       }
@@ -2094,7 +2162,8 @@
         font-family: monospace; color: #f8fafc; opacity: 0;
         transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       `;
-      const waktuPesan = new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const safeTs = escapeHtml(String(data.timestamp));
+      const waktuPesan = escapeHtml(new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
       banner.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(239, 68, 68, 0.3); padding-bottom: 8px;">
           <span style="font-size: 11.5px; color: #ef4444; font-weight: bold; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
@@ -2103,11 +2172,11 @@
           <span style="font-size: 10px; color: #94a3b8;">${waktuPesan} WIB</span>
         </div>
         <div style="font-size: 13.5px; line-height: 1.6; color: #fff; word-wrap: break-word; margin-bottom: 18px; background: rgba(239, 68, 68, 0.08); padding: 12px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2);">
-          ${data.message}
+          ${escapeHtml(data.message)}
         </div>
         <div style="display: flex; gap: 10px;">
-          <button type="button" onclick="tandaiBroadcastDibaca('${data.timestamp}')" style="flex: 1; background: #334155; border: 1px solid #475569; color: #cbd5e1; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11.5px; font-family: monospace;">✔ Tandai Dibaca</button>
-          <button type="button" onclick="bukaChatDariBroadcast('${data.timestamp}')" class="btn-accent-primary" style="flex: 1; padding: 10px; border-radius: 8px; font-size: 11.5px;">💬 Buka / Balas Chat</button>
+          <button type="button" onclick="tandaiBroadcastDibaca('${safeTs}')" style="flex: 1; background: #334155; border: 1px solid #475569; color: #cbd5e1; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11.5px; font-family: monospace;">✔ Tandai Dibaca</button>
+          <button type="button" onclick="bukaChatDariBroadcast('${safeTs}')" class="btn-accent-primary" style="flex: 1; padding: 10px; border-radius: 8px; font-size: 11.5px;">💬 Buka / Balas Chat</button>
         </div>
       `;
       document.body.appendChild(banner);
@@ -2130,6 +2199,7 @@
 
     function mulaiPantauBroadcastRealtime() {
       async function cekInstantBroadcast() {
+        if (!isPageVisible) return;
         try {
           const res = await fetch(CLOUD_BROADCAST_ENDPOINT + "?t=" + Date.now());
           const data = await res.json();
@@ -2141,7 +2211,7 @@
         } catch (e) {}
       }
       cekInstantBroadcast();
-      setInterval(cekInstantBroadcast, 1000);
+      setInterval(cekInstantBroadcast, 3500);
       window.addEventListener('focus', cekInstantBroadcast);
     }
 
@@ -2323,10 +2393,10 @@
 
         html += `
           <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <td style="padding: 8px; color: #cbd5e1; font-family: monospace;">📅 ${waktuLengkap}</td>
-            <td style="padding: 8px; color: #fff; font-weight: bold;">👤 ${item.name || 'Staf'}</td>
-            <td style="padding: 8px; color: var(--accent-blue);">${item.modul || 'Modul'}</td>
-            <td style="padding: 8px; color: #cbd5e1;">${deviceIcon} ${deviceLabel}</td>
+            <td style="padding: 8px; color: #cbd5e1; font-family: monospace;">📅 ${escapeHtml(waktuLengkap)}</td>
+            <td style="padding: 8px; color: #fff; font-weight: bold;">👤 ${escapeHtml(item.name || 'Staf')}</td>
+            <td style="padding: 8px; color: var(--accent-blue);">${escapeHtml(item.modul || 'Modul')}</td>
+            <td style="padding: 8px; color: #cbd5e1;">${deviceIcon} ${escapeHtml(deviceLabel)}</td>
             <td style="padding: 8px; color: #34d399; font-weight: bold;">🟢 Aktif Masuk</td>
           </tr>
         `;
@@ -2370,39 +2440,43 @@
         }
 
         staffKeys.forEach(staffId => {
-          const room = data[staffId];
+          const room = data[staffId] || {};
+          const displayLabel = room.staffName || staffId;
           const messages = room.messages || {};
           let unreadCount = 0;
           let lastMsg = "Memulai percakapan...";
 
           Object.keys(messages).forEach(msgKey => {
-            const m = messages[msgKey];
+            const m = messages[msgKey] || {};
             const compositeKey = `${staffId}:${msgKey}`;
             if (m.sender === 'staff' && !m.read) {
               unreadCount++;
               if (!notifiedStaffMsgKeys.has(compositeKey)) {
                 notifiedStaffMsgKeys.add(compositeKey);
                 if (!isFirstChatLoad && activeStaffRoom !== staffId) {
-                  latestNewStaffToast = { name: room.staffName || staffId, text: String(m.text || "").slice(0, 42) };
+                  latestNewStaffToast = { name: displayLabel, text: String(m.text || "").slice(0, 42) };
                 }
               }
             }
-            lastMsg = m.text;
+            if (m.text) lastMsg = String(m.text);
           });
 
           if (activeStaffRoom === staffId) unreadCount = 0;
           totalUnread += unreadCount;
           if (activeStaffRoom === staffId) muatIsiPesanChat(staffId, messages, room.token_request);
 
+          const safeId = escapeHtml(staffId);
+          const safeName = escapeHtml(displayLabel);
+
           html += `
             <div class="chat-room-item ${activeStaffRoom === staffId ? 'active' : ''}" style="display: flex; justify-content: space-between; align-items: center;">
-              <div onclick="pilihRuangChat('${staffId}', '${room.staffName || staffId}')" style="flex: 1; min-width: 0; cursor: pointer;">
-                <b style="color: #fff; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${room.staffName || staffId}</b>
-                <span style="font-size: 10px; color: var(--text-desc); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${lastMsg.substring(0, 18)}...</span>
+              <div onclick="pilihRuangChatById('${safeId}')" style="flex: 1; min-width: 0; cursor: pointer;">
+                <b style="color: #fff; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${safeName}</b>
+                <span style="font-size: 10px; color: var(--text-desc); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(lastMsg.substring(0, 18))}...</span>
               </div>
               <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
                 ${unreadCount > 0 ? `<span style="background: #ef4444; color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 10px;">${unreadCount}</span>` : ''}
-                <button onclick="event.stopPropagation(); hapusRoomChatStaf('${staffId}', '${room.staffName || staffId}')" title="Hapus Room Chat" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 12px; padding: 4px;"><i class="fa-solid fa-trash-can"></i></button>
+                <button onclick="event.stopPropagation(); hapusRoomChatStafById('${safeId}')" title="Hapus Room Chat" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 12px; padding: 4px;"><i class="fa-solid fa-trash-can"></i></button>
               </div>
             </div>
           `;
@@ -2426,16 +2500,25 @@
       } catch (e) { console.error(e); }
     }
 
+    window.pilihRuangChatById = function(staffId) {
+      pilihRuangChat(staffId, staffId);
+    };
+
+    window.hapusRoomChatStafById = function(staffId) {
+      hapusRoomChatStaf(staffId, staffId);
+    };
+
     async function pilihRuangChat(staffId, staffName) {
       activeStaffRoom = staffId;
-      document.getElementById('activeChatTitle').innerText = `Chat dengan: ${staffName}`;
+      activeStaffName = staffName || staffId;
+      document.getElementById('activeChatTitle').innerText = `Chat dengan: ${activeStaffName}`;
       try {
-        const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffId}/messages.json`);
+        const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(staffId)}/messages.json`);
         const messages = await res.json() || {};
         let updates = {};
-        Object.keys(messages).forEach(k => { if (messages[k].sender === 'staff' && !messages[k].read) updates[`${k}/read`] = true; });
+        Object.keys(messages).forEach(k => { if (messages[k] && messages[k].sender === 'staff' && !messages[k].read) updates[`${k}/read`] = true; });
         if (Object.keys(updates).length > 0) {
-          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffId}/messages.json`, {
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(staffId)}/messages.json`, {
             method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates)
           });
         }
@@ -2447,9 +2530,10 @@
       const yakin = await tampilkanDashboardConfirm({ title: "HAPUS ROOM CHAT", message: `Hapus seluruh ruang chat dan riwayat untuk "${staffName}" secara permanen?`, confirmText: "Hapus Room", cancelText: "Batal", danger: true });
       if (!yakin) return;
       try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffId}.json`, { method: 'DELETE' });
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(staffId)}.json`, { method: 'DELETE' });
         if (activeStaffRoom === staffId) {
           activeStaffRoom = null;
+          activeStaffName = "";
           document.getElementById('activeChatTitle').innerText = "Pilih ruang chat staf di sebelah kiri";
           document.getElementById('chatMessagesContainer').innerHTML = `<div style="color: var(--text-desc); text-align: center; margin: auto;">Belum ada ruang chat yang dipilih.</div>`;
         }
@@ -2464,7 +2548,7 @@
       const yakin = await tampilkanDashboardConfirm({ title: "TARIK PESAN", message: "Tarik atau hapus pesan ini dari percakapan?", confirmText: "Tarik Pesan", cancelText: "Batal", danger: true });
       if (!yakin) return;
       try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages/${messageKey}.json`, {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/messages/${encodeURIComponent(messageKey)}.json`, {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: "🚫 Pesan ini telah ditarik" })
         });
         muatDaftarChatStaf();
@@ -2476,8 +2560,8 @@
       const yakin = await tampilkanDashboardConfirm({ title: "HAPUS RIWAYAT CHAT", message: "Hapus seluruh riwayat percakapan dengan staf ini?", confirmText: "Hapus Semua", cancelText: "Batal", danger: true });
       if (!yakin) return;
       try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages.json`, { method: 'DELETE' });
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages.json`, {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/messages.json`, { method: 'DELETE' });
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/messages.json`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sender: 'bot', text: `Riwayat percakapan telah dibersihkan oleh System.`, time: Date.now(), read: true })
         });
         muatDaftarChatStaf();
@@ -2489,30 +2573,31 @@
       const container = document.getElementById('chatMessagesContainer');
       const typingEl = document.getElementById('typingIndicatorOwner');
       try {
-        const typingRes = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${staffId}/typingStaff.json`);
+        const typingRes = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(staffId)}/typingStaff.json`);
         typingEl.style.display = (await typingRes.json()) ? 'inline' : 'none';
       } catch (e) {}
 
       let html = "";
       Object.keys(messages).forEach(k => {
-        const m = messages[k];
+        const m = messages[k] || {};
+        const rawText = String(m.text || "");
         let bubbleClass = "staff";
         let deleteBtn = "";
         let copyBtnHtml = "";
-        const isTokenMessage = m.text && (m.text.includes("NX") || m.text.length > 20);
+        const isTokenMessage = rawText && (rawText.includes("NX") || rawText.length > 20);
 
         if (m.sender === 'owner') {
           bubbleClass = "owner";
-          if (m.text !== "🚫 Pesan ini telah ditarik") {
-            deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanOwner('${k}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
+          if (rawText !== "🚫 Pesan ini telah ditarik") {
+            deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanOwner('${escapeHtml(k)}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
           }
         } else if (m.sender === 'bot') { bubbleClass = "bot"; }
 
         if (isTokenMessage && (m.sender === 'owner' || m.sender === 'bot')) {
-          const escapedText = m.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          const payloadId = registerCopyPayload(rawText);
           copyBtnHtml = `
             <div style="margin-top: 4px; text-align: right;">
-              <button type="button" onclick="salinTokenChat('${escapedText}')" style="background: var(--accent-soft); border: 1px solid var(--accent-blue); color: var(--accent-blue); width: 24px; height: 24px; border-radius: 6px; font-size: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;" title="Salin Token">
+              <button type="button" onclick="salinPayloadById('${escapeHtml(payloadId)}')" style="background: var(--accent-soft); border: 1px solid var(--accent-blue); color: var(--accent-blue); width: 24px; height: 24px; border-radius: 6px; font-size: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;" title="Salin Token">
                 <i class="fa-solid fa-copy"></i>
               </button>
             </div>
@@ -2523,16 +2608,19 @@
           ? `<span style="color: ${m.read ? 'var(--accent-blue)' : '#94a3b8'}; font-size: 11px; margin-left: 4px;">✓✓</span>`
           : "";
 
+        const senderLabel = escapeHtml(m.sender === 'owner' ? 'SYSTEM' : String(m.sender || 'STAFF').toUpperCase());
+        const jamStr = escapeHtml(new Date(Number(m.time || Date.now())).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+
         html += `
           <div class="chat-bubble ${bubbleClass}">
             <div style="font-size: 9.5px; opacity: 0.7; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
-              <span>${m.sender === 'owner' ? 'SYSTEM' : m.sender.toUpperCase()}</span>
+              <span>${senderLabel}</span>
               ${deleteBtn}
             </div>
-            <div>${m.text}</div>
+            <div>${escapeHtml(rawText)}</div>
             ${copyBtnHtml}
             <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
-              ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${tickMark}
+              ${jamStr} ${tickMark}
             </div>
           </div>
         `;
@@ -2552,7 +2640,7 @@
       const text = inputEl.value.trim();
       if (!text) return;
       try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/messages.json`, {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/messages.json`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sender: 'owner', text, time: Date.now(), read: false })
         });
         inputEl.value = "";
@@ -2563,12 +2651,13 @@
     async function handleOwnerTyping() {
       if (!activeStaffRoom) return;
       try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/typingOwner.json`, {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/typingOwner.json`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(true)
         });
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(async () => {
-          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${activeStaffRoom}/typingOwner.json`, {
+          if (!activeStaffRoom) return;
+          await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${encodeURIComponent(activeStaffRoom)}/typingOwner.json`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(false)
           });
         }, 1500);
@@ -2593,7 +2682,7 @@
       const deviceType = deteksiTipePerangkatStaf();
 
       try {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`, {
+        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${encodeURIComponent(safeKey)}.json`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: staffName, modul: modulName, device: deviceType, loginTime: currentTime, time: currentTime })
         });
@@ -2659,9 +2748,9 @@
         `;
 
         Object.keys(data).forEach(id => {
-          const item = data[id];
+          const item = data[id] || {};
           const lastHeartbeat = Number(item.time || item.loginTime || 0);
-          if (item.modul !== "Offline" && (now - lastHeartbeat < 10000)) {
+          if (item.modul !== "Offline" && (now - lastHeartbeat < 12000)) {
             activeCount++;
             const loginTimestamp = Number(item.loginTime || item.time || now);
             const diffMs = Math.max(0, now - loginTimestamp);
@@ -2680,11 +2769,11 @@
 
             htmlContent += `
               <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                <td style="padding: 8px; color: #fff; font-weight: bold;">🟢 ${item.name || id}</td>
-                <td style="padding: 8px; color: var(--accent-blue);">${item.modul}</td>
-                <td style="padding: 8px; color: #cbd5e1;">${deviceIcon} ${deviceLabel}</td>
-                <td style="padding: 8px; color: #cbd5e1;">${jamMasukStr} WIB</td>
-                <td style="padding: 8px; color: #34d399; font-family: monospace; font-weight: bold;">${durasiStr}</td>
+                <td style="padding: 8px; color: #fff; font-weight: bold;">🟢 ${escapeHtml(item.name || id)}</td>
+                <td style="padding: 8px; color: var(--accent-blue);">${escapeHtml(item.modul)}</td>
+                <td style="padding: 8px; color: #cbd5e1;">${deviceIcon} ${escapeHtml(deviceLabel)}</td>
+                <td style="padding: 8px; color: #cbd5e1;">${escapeHtml(jamMasukStr)} WIB</td>
+                <td style="padding: 8px; color: #34d399; font-family: monospace; font-weight: bold;">${escapeHtml(durasiStr)}</td>
                 <td style="padding: 8px;">${activityBadge}</td>
               </tr>
             `;
@@ -2727,23 +2816,28 @@
       updateTemplateCounterBadge();
 
       container.innerHTML = all.map((tpl) => {
-        const escapedText = String(tpl.text || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        const payloadId = registerCopyPayload(tpl.text || "");
         const badgeText = tpl.isCustom ? `KUSTOM #${tpl.customIndex + 1}` : `#${tpl.number}`;
         const removeBtn = tpl.isCustom
           ? `<button type="button" onclick="event.stopPropagation(); hapusTemplateKustom(${tpl.customIndex})" title="Hapus Template Kustom" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; border-radius: 6px; padding: 3px 7px; font-size: 10px; cursor: pointer; font-family: monospace;"><i class="fa-solid fa-trash"></i></button>`
           : "";
 
         return `
-          <div onclick="pilihTemplateDanTutup('${escapedText}')" style="background: rgba(30,41,59,0.72); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
+          <div onclick="pilihTemplateByPayloadId('${escapeHtml(payloadId)}')" style="background: rgba(30,41,59,0.72); border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; color: #f8fafc;">
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 3px;">
-              <b style="color: var(--accent-blue);">${badgeText}. ${tpl.title}</b>
+              <b style="color: var(--accent-blue);">${escapeHtml(badgeText)}. ${escapeHtml(tpl.title)}</b>
               ${removeBtn}
             </div>
-            <div style="color: #cbd5e1; font-size: 10.5px; line-height: 1.4;">${tpl.text}</div>
+            <div style="color: #cbd5e1; font-size: 10.5px; line-height: 1.4;">${escapeHtml(tpl.text)}</div>
           </div>
         `;
       }).join('');
     }
+
+    window.pilihTemplateByPayloadId = function(id) {
+      const teks = copyPayloadRegistry.get(id);
+      if (typeof teks === "string") pilihTemplateDanTutup(teks);
+    };
 
     window.tambahTemplateKustom = function() {
       const titleEl = document.getElementById('customTemplateTitle');
@@ -2923,8 +3017,8 @@
 
       container.innerHTML = filtered.length > 0 ? filtered.map((l, idx) => {
         const isUnread = !query && idx === 0 && Date.now() - lastReadTime < 86400000;
-        return `<div style="${isUnread ? 'color: var(--accent-blue); font-weight: bold;' : ''}">&bull; ${l.text}</div>`;
-      }).join('') : `<div>${query ? "Tidak ada log yang cocok dengan pencarian." : "Belum ada aktivitas."}</div>`;
+        return `<div style="${isUnread ? 'color: var(--accent-blue); font-weight: bold;' : ''}">&bull; ${escapeHtml(l.text)}</div>`;
+      }).join('') : `<div>${escapeHtml(query ? "Tidak ada log yang cocok dengan pencarian." : "Belum ada aktivitas.")}</div>`;
     };
 
     function tandaiSemuaDibaca() { localStorage.setItem('gudang_last_read_audit', String(Date.now())); muatAuditLogs(); showDashboardToast("Ditandai dibaca!", true); }
@@ -2953,6 +3047,7 @@
         statusText.style.color = isLocked ? "#ef4444" : "#22c55e";
         syncDroneHealthVisor(isLocked);
         globalExpiryDate = data && data.expiry ? new Date(data.expiry) : null;
+        updateRealtimeCountdown();
         updateCloudConnectionStatus(true);
       } catch (e) {
         pingEl.innerText = "Offline";
@@ -2982,7 +3077,7 @@
       let t = document.getElementById('dashboard-cyber-toast'); if (t) t.remove();
       t = document.createElement('div'); t.id = 'dashboard-cyber-toast';
       t.style.cssText = `position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; border: 1.5px solid ${success ? 'var(--accent-blue)' : '#ef4444'}; color: #f8fafc; padding: 10px 18px; border-radius: 12px; font-family: monospace; font-size: 11px; z-index: 2147483647; box-shadow: 0 12px 28px rgba(0,0,0,0.85);`;
-      t.innerHTML = `${success ? '✅' : '⚠️'} ${msg}`;
+      t.textContent = `${success ? '✅' : '⚠️'} ${msg}`;
       document.body.appendChild(t);
       setTimeout(() => t.remove(), 3500);
     }
