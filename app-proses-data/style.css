@@ -787,6 +787,20 @@ textarea:focus {
   100% { width: 100% !important; }
 }
 
+@keyframes bootBarShimmer {
+  0% { background-position: -150% 0; }
+  100% { background-position: 150% 0; }
+}
+
+@keyframes bootBarGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.7), 0 0 22px rgba(45, 212, 191, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(56, 189, 248, 1), 0 0 32px rgba(125, 211, 252, 0.75);
+  }
+}
+
 @keyframes bootProgressSpin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -795,16 +809,28 @@ textarea:focus {
 #boot-progress-fill {
   height: 100% !important;
   width: 0%;
-  background: linear-gradient(90deg, #0284c7 0%, #38bdf8 70%, #2dd4bf 100%) !important;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.75) !important;
+  background: linear-gradient(
+    90deg,
+    #0284c7 0%,
+    #38bdf8 30%,
+    #e0f2fe 48%,
+    #ffffff 50%,
+    #e0f2fe 52%,
+    #2dd4bf 72%,
+    #0284c7 100%
+  ) !important;
+  background-size: 220% 100% !important;
   border-radius: 999px !important;
+  animation: bootBarShimmer 1.35s linear infinite, bootBarGlowPulse 1.8s ease-in-out infinite !important;
 }
 
 #boot-progress-fill.running {
-  animation: continuousFlow 29s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  animation: bootBarShimmer 1.35s linear infinite, bootBarGlowPulse 1.8s ease-in-out infinite !important;
 }
 
 #boot-step-spinner {
+  border-top-color: #38bdf8 !important;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8) !important;
   animation: bootProgressSpin 0.85s linear infinite !important;
 }
 
