@@ -22,70 +22,12 @@
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
       }
-      .absensi-quick-btn {
-          padding: 6px 10px;
-          border-radius: 7px;
-          border: 1px solid rgba(56, 189, 248, 0.35);
-          background: rgba(15, 23, 42, 0.9);
-          color: #e2e8f0;
-          font-family: monospace;
-          font-size: 11px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.15s ease;
-      }
-      .absensi-quick-btn:hover,
-      .absensi-quick-btn.active {
-          background: #0284c7;
-          border-color: #38bdf8;
-          color: #ffffff;
-      }
   </style>
 </head>
 <body>
   <!-- 🐾 MASKOT GAMBAR STITCH (MUNCUL OTOMATIS SAAT TEMA STITCH AKTIF) -->
   <div id="stitchMascotFloat" class="stitch-mascot-card" aria-hidden="true">
     <img src="stitch.png" alt="Stitch Ohana" class="stitch-mascot-img">
-  </div>
-
-  <!-- MODAL ABSENSI MASUK PROSES DATA (MUNCUL PALING AWAL) -->
-  <div id="absensiModal" style="display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.94); backdrop-filter: blur(12px); z-index: 2147483647; justify-content: center; align-items: center; padding: 16px; box-sizing: border-box; font-family: monospace;">
-    <div style="background: #0f172a; border: 1.5px solid #38bdf8; padding: 26px 22px; border-radius: 18px; width: 100%; max-width: 390px; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(56, 189, 248, 0.25); box-sizing: border-box;">
-      <div style="text-align: center; margin-bottom: 14px;">
-        <div style="width: 48px; height: 48px; margin: 0 auto 10px auto; border-radius: 12px; background: rgba(56, 189, 248, 0.14); border: 1px solid rgba(56, 189, 248, 0.45); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 20px;">
-          <i class="fa-solid fa-clipboard-user"></i>
-        </div>
-        <h3 style="color: #f8fafc; margin: 0 0 4px 0; font-size: 16px; font-weight: 700;">Absensi Masuk - Proses Data</h3>
-        <p style="color: #94a3b8; font-size: 11px; margin: 0; line-height: 1.4;">Isi absensi dulu agar status aktif tampil di dashboard & tercatat di riwayat.</p>
-      </div>
-
-      <div style="margin-bottom: 12px;">
-        <label style="display: block; color: #94a3b8; font-size: 10.5px; margin-bottom: 6px;">Pilih Cepat Staf:</label>
-        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-          <button type="button" class="absensi-quick-btn" onclick="pilihCepatAbsensi('DWI', this)">DWI</button>
-          <button type="button" class="absensi-quick-btn" onclick="pilihCepatAbsensi('ERIKA', this)">ERIKA</button>
-          <button type="button" class="absensi-quick-btn" onclick="pilihCepatAbsensi('IRGI', this)">IRGI</button>
-        </div>
-      </div>
-
-      <div style="margin-bottom: 12px;">
-        <label for="inputAbsensiNama" style="display: block; color: #cbd5e1; font-size: 11px; margin-bottom: 5px; font-weight: 600;">Nama Staf / Operator *</label>
-        <input type="text" id="inputAbsensiNama" placeholder="Contoh: DWI / ERIKA / IRGI" style="width: 100%; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: #f8fafc; border-radius: 9px; font-size: 12.5px; font-family: monospace; box-sizing: border-box; outline: none;" />
-      </div>
-
-      <div style="margin-bottom: 16px;">
-        <label for="inputAbsensiKeterangan" style="display: block; color: #cbd5e1; font-size: 11px; margin-bottom: 5px; font-weight: 600;">Shift / Keterangan (Opsional)</label>
-        <input type="text" id="inputAbsensiKeterangan" placeholder="Contoh: Shift Pagi / Rekapan Shopee & TikTok" style="width: 100%; padding: 9px 12px; background: #020617; border: 1px solid #334155; color: #e2e8f0; border-radius: 9px; font-size: 12px; font-family: monospace; box-sizing: border-box; outline: none;" />
-      </div>
-
-      <div id="absensiErrorMsg" style="display: none; color: #f87171; font-size: 11px; margin-bottom: 10px; text-align: center;">
-        <i class="fa-solid fa-circle-exclamation"></i> Nama staf wajib diisi sebelum masuk.
-      </div>
-
-      <button type="button" id="btnSubmitAbsensi" onclick="submitAbsensiMasuk()" style="width: 100%; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border: 1px solid #4ade80; color: #ffffff; padding: 11px 16px; border-radius: 10px; font-weight: 700; font-family: monospace; font-size: 12.5px; cursor: pointer; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.35); display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <i class="fa-solid fa-check-circle"></i> SIMPAN ABSENSI & MASUK
-      </button>
-    </div>
   </div>
 
   <!-- MODAL SETTINGS LINK GAS -->
@@ -105,8 +47,8 @@
     </div>
   </div>
 
-  <!-- LAYAR BLUR TAP TO ENTER (MUNCUL SETELAH ABSENSI) -->
-  <div id="tap-to-enter-gate" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 11, 20, 0.94); backdrop-filter: blur(16px); z-index: 9999999; display: none; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; cursor: pointer;">
+  <!-- LAYAR BLUR TAP TO ENTER -->
+  <div id="tap-to-enter-gate" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 11, 20, 0.94); backdrop-filter: blur(16px); z-index: 9999999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; cursor: pointer;">
     <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.4); padding: 40px; border-radius: 24px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(56, 189, 248, 0.2); max-width: 420px; width: 85%;">
       <div style="font-size: 52px; margin-bottom: 14px;">🔐</div>
       <h3 style="color: #38bdf8; margin: 0 0 8px 0; font-size: 18px; font-weight: 700; letter-spacing: 1px;">GUDANG NUHSANTARA</h3>
@@ -249,7 +191,7 @@
       </div>
 
       <!-- MODAL LOGIN OPERATOR -->
-      <div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.3s ease;">
+      <div id="loginModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.3s ease;">
         <div style="background: #1e293b; border: 1px solid rgba(56, 189, 248, 0.3); padding: 30px 25px; border-radius: 12px; width: 100%; max-width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; position: relative; overflow: hidden;">
           <div id="loginAlertBox" style="position: absolute; top: -50px; left: 0; width: 100%; background: #22c55e; color: #fff; padding: 12px; font-size: 13px; font-weight: 600; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; justify-content: center; gap: 8px; z-index: 10;">
             <i class="fa-solid fa-circle-check"></i> <span id="alertSuccessText">Verifikasi Berhasil, Selamat Bertugas!</span>
@@ -323,7 +265,7 @@
               const session = JSON.parse(savedSession);
               if (session.name !== currentOperator) {
                 localStorage.removeItem('gudang_active_operator');
-              } else if (typeof setOperatorProfile === 'function') {
+              } else {
                 setOperatorProfile(session.name);
                 return;
               }
@@ -348,6 +290,7 @@
           { text: "Mengamankan enkripsi token API...", duration: 4000 },
           { text: "Sistem Aktif & Terverifikasi", duration: 3000 },
           { text: "Memuat Sistem. . .", duration: 6000 }
+          
         ];
 
         function setBootProgressBar(percent) {
@@ -505,9 +448,6 @@
             initBtn.style.pointerEvents = "none";
             initBtn.innerText = "INITIALIZING KERNEL...";
           }
-          if (typeof window.catatAktivitasProsesData === "function") {
-            window.catatAktivitasProsesData("Inisialisasi Sistem", "Mulai menjalankan proses booting kernel");
-          }
           if ('speechSynthesis' in window) {
             window.speechSynthesis.getVoices();
             const warmUp = new SpeechSynthesisUtterance('');
@@ -614,10 +554,6 @@
               if (typeof speakSystemReady === 'function') speakSystemReady();
               bootScreenEl.style.opacity = "0";
               bootScreenEl.style.visibility = "hidden";
-              setTimeout(() => {
-                if (bootScreenEl.style.visibility === "hidden") bootScreenEl.style.display = "none";
-              }, 250);
-
               const mainContainer = document.querySelector('.container');
               if (mainContainer) mainContainer.classList.add('run-animation');
               if (typeof showNxToast === 'function') showNxToast("Sistem siap beroperasi secara maksimal!", "🟢");
@@ -628,10 +564,6 @@
                 initBtn.innerText = "⚡ [ CLICK TO INITIALIZE SYSTEM ]";
               }
               if (typeof initTextFadeRotator === 'function') initTextFadeRotator();
-
-              if (typeof window.catatAktivitasProsesData === "function") {
-                window.catatAktivitasProsesData("Booting Selesai", "Sistem Proses Data siap digunakan");
-              }
               return;
             }
 
@@ -974,9 +906,6 @@
             body: JSON.stringify(payload)
           });
           localStorage.setItem(SUBMITTED_KEY, "true");
-          if (typeof window.catatAktivitasProsesData === "function") {
-            window.catatAktivitasProsesData("Kirim Ulasan Modul", `Rating ${ratingDipilih}★ oleh ${staffName}`);
-          }
           wrap.remove();
         } catch (e) {
           console.error("Gagal mengirim ulasan:", e);
@@ -990,27 +919,12 @@
   })();
   </script>
 
-  <!-- ABSENSI MASUK (SEBELUM TAP TO ENTER) + PRESENCE REAL-TIME + RIWAYAT AKTIVITAS FULL -->
+  <!-- PRESENCE REAL-TIME + INSTANT CLEANUP SAAT KELUAR (MODUL: PROSES DATA) -->
   <script>
-  (function initProsesDataAbsensiPresenceDanRiwayat() {
-    const DB_ROOT = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app/gudang_nuhsantara";
-    const PRESENCE_BASE = `${DB_ROOT}/presence`;
-    const HISTORY_DB_URL = `${DB_ROOT}/activity_logs.json`;
-    const LOGIN_HISTORY_DB_URL = `${DB_ROOT}/login_history.json`;
+  (function initProsesDataPresenceRealtime() {
+    const PRESENCE_BASE = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app/gudang_nuhsantara/presence";
     const NAMA_MODUL = "Proses Data";
-
     const LAST_KEY_STORAGE = "gudang_last_presence_key";
-    const ABSENSI_SESSION_KEY = "gudang_proses_data_absen_session";
-    const ABSENSI_KETERANGAN_KEY = "gudang_proses_data_absen_ket";
-    const LAST_LOGIN_RECORD_KEY = "gudang_proses_data_last_login_ts";
-
-    let sudahCatatTapToEnter = false;
-    let isUnloading = false;
-
-    function getTodayKey() {
-      const now = new Date();
-      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-    }
 
     function bacaNamaOperatorAktif() {
       const directStaff = (localStorage.getItem("gudang_staff_name") || "").trim();
@@ -1042,73 +956,21 @@
       return "Desktop";
     }
 
-    function catatLoginSesiJikaPerlu(operatorName) {
-      const cleanName = String(operatorName || "").trim();
-      if (!cleanName) return;
-      const now = Date.now();
-      const lastTs = Number(localStorage.getItem(LAST_LOGIN_RECORD_KEY) || 0);
-      if (now - lastTs < 15000) return;
-      localStorage.setItem(LAST_LOGIN_RECORD_KEY, String(now));
-
-      fetch(LOGIN_HISTORY_DB_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: cleanName,
-          modul: NAMA_MODUL,
-          device: getDeviceLabel(),
-          timestamp: now
-        }),
-        keepalive: true
-      }).catch(() => {});
-    }
-
-    function catatRiwayatProsesData(aksi, detail = "", customOperator = "") {
-      const operator = String(customOperator || bacaNamaOperatorAktif() || "Belum Absen").trim();
-      const now = new Date();
-      const payload = {
-        modul: NAMA_MODUL,
-        operator,
-        aksi,
-        detail,
-        device: getDeviceLabel(),
-        timestamp: Date.now(),
-        waktuIso: now.toISOString(),
-        waktuWib: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")} WIB`
-      };
-
-      try {
-        fetch(HISTORY_DB_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          keepalive: true
-        }).catch(() => {});
-      } catch (e) {}
-    }
-
     function pushPresence(customName) {
-      if (isUnloading || document.hidden) return;
       const name = String(customName || bacaNamaOperatorAktif() || "").trim();
       if (!name) return;
 
       const key = getStaffKey(name);
       localStorage.setItem(LAST_KEY_STORAGE, key);
-      const keterangan = (localStorage.getItem(ABSENSI_KETERANGAN_KEY) || "").trim();
-      const now = Date.now();
 
       fetch(`${PRESENCE_BASE}/${encodeURIComponent(key)}.json`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          staffName: name,
           modul: NAMA_MODUL,
-          keterangan: keterangan || "Aktif di Proses Data",
           device: getDeviceLabel(),
-          status: "ONLINE",
-          lastSeen: now,
-          timestamp: now
+          lastSeen: Date.now()
         }),
         keepalive: true
       }).catch(() => {});
@@ -1133,272 +995,39 @@
       }).catch(() => {});
     }
 
-    function terapkanNamaKeUi(nama) {
-      localStorage.setItem("gudang_staff_name", nama);
-      localStorage.setItem("gudang_active_operator", JSON.stringify({
-        name: nama,
-        loginAt: Date.now(),
-        modul: NAMA_MODUL
-      }));
-
-      const opNameEl = document.getElementById("operatorName");
-      const opIdEl = document.getElementById("operatorId");
-      const avatarBox = document.getElementById("operatorAvatarBox");
-
-      if (opNameEl) {
-        opNameEl.textContent = nama;
-        opNameEl.style.color = "#4ade80";
-      }
-      if (opIdEl) {
-        opIdEl.textContent = `ABSEN-${getStaffKey(nama).toUpperCase().slice(0, 8)}`;
-      }
-      if (avatarBox) {
-        avatarBox.style.background = "rgba(34, 197, 94, 0.2)";
-        avatarBox.style.color = "#4ade80";
-        avatarBox.innerHTML = nama.charAt(0).toUpperCase() || "S";
-      }
-    }
-
-    function tampilkanTapToEnterGate() {
-      const tapGate = document.getElementById("tap-to-enter-gate");
-      if (!tapGate) return;
-      tapGate.style.display = "flex";
-      tapGate.style.opacity = "1";
-    }
-
-    function bukaModalAbsensiJikaPerlu() {
-      const modal = document.getElementById("absensiModal");
-      const tapGate = document.getElementById("tap-to-enter-gate");
-      if (!modal) return;
-
-      const existingName = bacaNamaOperatorAktif();
-      const savedSession = localStorage.getItem(ABSENSI_SESSION_KEY);
-      const todayKey = getTodayKey();
-
-      let sudahAbsenHariIni = false;
-      if (savedSession && existingName) {
-        try {
-          const parsed = JSON.parse(savedSession);
-          if (parsed && parsed.day === todayKey && parsed.name === existingName) {
-            sudahAbsenHariIni = true;
-          }
-        } catch (e) {}
-      }
-
-      if (sudahAbsenHariIni && existingName) {
-        terapkanNamaKeUi(existingName);
-        pushPresence(existingName);
-        catatLoginSesiJikaPerlu(existingName);
-        modal.style.display = "none";
-        tampilkanTapToEnterGate();
-        return;
-      }
-
-      if (tapGate) tapGate.style.display = "none";
-      const inputNama = document.getElementById("inputAbsensiNama");
-      if (inputNama && existingName && !inputNama.value) {
-        inputNama.value = existingName;
-      }
-      modal.style.display = "flex";
-      setTimeout(() => inputNama && inputNama.focus(), 100);
-    }
-
-    window.pilihCepatAbsensi = function(nama, btnEl) {
-      const inputNama = document.getElementById("inputAbsensiNama");
-      if (inputNama) inputNama.value = nama;
-
-      document.querySelectorAll(".absensi-quick-btn").forEach(b => b.classList.remove("active"));
-      if (btnEl) btnEl.classList.add("active");
-
-      const errEl = document.getElementById("absensiErrorMsg");
-      if (errEl) errEl.style.display = "none";
-    };
-
-    window.submitAbsensiMasuk = function() {
-      const inputNama = document.getElementById("inputAbsensiNama");
-      const inputKet = document.getElementById("inputAbsensiKeterangan");
-      const errEl = document.getElementById("absensiErrorMsg");
-      const modal = document.getElementById("absensiModal");
-
-      const nama = (inputNama?.value || "").trim().toUpperCase();
-      const keterangan = (inputKet?.value || "").trim() || "Masuk Shift Proses Data";
-
-      if (!nama) {
-        if (errEl) errEl.style.display = "block";
-        inputNama?.focus();
-        return;
-      }
-
-      if (errEl) errEl.style.display = "none";
-      localStorage.setItem(ABSENSI_KETERANGAN_KEY, keterangan);
-      localStorage.setItem(ABSENSI_SESSION_KEY, JSON.stringify({
-        name: nama,
-        day: getTodayKey(),
-        time: Date.now()
-      }));
-
-      terapkanNamaKeUi(nama);
-      pushPresence(nama);
-      catatLoginSesiJikaPerlu(nama);
-      catatRiwayatProsesData("Absensi Masuk", `${nama} (${keterangan})`, nama);
-
-      if (modal) modal.style.display = "none";
-      tampilkanTapToEnterGate();
-      if (typeof showNxToast === "function") {
-        showNxToast(`Absensi ${nama} tercatat & aktif di dashboard`, "🟢");
-      }
-    };
-
-    function handleTapToEnterTrigger() {
-      const tapGate = document.getElementById("tap-to-enter-gate");
-      if (tapGate) {
-        tapGate.style.opacity = "0";
-        setTimeout(() => {
-          tapGate.style.display = "none";
-        }, 300);
-      }
-
-      if (!sudahCatatTapToEnter) {
-        sudahCatatTapToEnter = true;
-        catatRiwayatProsesData("Tap To Enter", "Masuk ke gerbang awal aplikasi Proses Data");
-      }
-
-      if (typeof startSystemInitialization === "function") {
-        startSystemInitialization();
-      }
-    }
-
-    function pasangHookAktivitasLengkap() {
-      const tapGate = document.getElementById("tap-to-enter-gate");
-      if (tapGate) {
-        tapGate.addEventListener("click", handleTapToEnterTrigger, { once: true });
-      }
-
-      const btnSync = document.querySelector('button[onclick*="ambilDanPasteRekapan"]');
-      if (btnSync) {
-        btnSync.addEventListener("click", () => {
-          catatRiwayatProsesData("Sync Rekapan", "Mengambil/sinkronisasi data rekapan Shopee & TikTok Shop");
-        });
-      }
-
-      const btnSetting = document.getElementById("settingBtn");
-      if (btnSetting) {
-        btnSetting.addEventListener("click", () => {
-          catatRiwayatProsesData("Buka Pengaturan GAS", "Membuka modal pengaturan URL Web App GAS");
-        });
-      }
-      const btnSimpanGas = document.querySelector('#modal-gas-config button[onclick*="simpanGasUrl"]');
-      if (btnSimpanGas) {
-        btnSimpanGas.addEventListener("click", () => {
-          const gasVal = (document.getElementById("input-gas-url")?.value || "").trim();
-          catatRiwayatProsesData("Simpan Link GAS", gasVal ? "Memperbarui URL Web App GAS" : "Mengosongkan URL Web App GAS");
-        });
-      }
-
-      const btnLoginOp = document.querySelector('#loginModal button[onclick*="verifyOperatorLogin"]');
-      if (btnLoginOp) {
-        btnLoginOp.addEventListener("click", () => {
-          setTimeout(() => {
-            const namaOp = bacaNamaOperatorAktif();
-            if (namaOp) {
-              terapkanNamaKeUi(namaOp);
-              pushPresence(namaOp);
-              catatLoginSesiJikaPerlu(namaOp);
-              catatRiwayatProsesData("Verifikasi Operator Shift", `Operator terverifikasi: ${namaOp}`, namaOp);
-            }
-          }, 600);
-        });
-      }
-
-      const submitBtn = document.getElementById("submitBtn");
-      if (submitBtn) {
-        submitBtn.addEventListener("click", () => {
-          const rawText = (document.getElementById("shopeeData")?.value || "").trim();
-          const lines = rawText ? rawText.split(/\r?\n/).filter(l => l.trim().length > 0).length : 0;
-          catatRiwayatProsesData("Execute Proses Data", `Menjalankan proses data (${lines} baris input)`);
-        });
-      }
-
-      const btnSetPending = document.getElementById("btnSetPending");
-      if (btnSetPending) {
-        btnSetPending.addEventListener("click", () => {
-          const trx = (document.getElementById("inputNoTrx")?.value || "").trim() || "-";
-          catatRiwayatProsesData("Set Pending", `Nota/Resi: ${trx}`);
-        });
-      }
-      const btnSetCancel = document.getElementById("btnSetCancel");
-      if (btnSetCancel) {
-        btnSetCancel.addEventListener("click", () => {
-          const trx = (document.getElementById("inputNoTrx")?.value || "").trim() || "-";
-          catatRiwayatProsesData("Set Cancel", `Nota/Resi: ${trx}`);
-        });
-      }
-      const btnSelesaiPending = document.querySelector('#modalInputPending button[onclick*="selesaiDanDownload"]');
-      if (btnSelesaiPending) {
-        btnSelesaiPending.addEventListener("click", () => {
-          catatRiwayatProsesData("Selesai Pending/Cancel", "Menyelesaikan input pending/cancel & lanjut download");
-        });
-      }
-
-      const downloadBtn = document.getElementById("downloadBtn");
-      if (downloadBtn) {
-        downloadBtn.addEventListener("click", () => {
-          catatRiwayatProsesData("Download Laporan Excel", "Mengunduh file laporan hasil proses data");
-        });
-      }
-    }
-
     window.addEventListener("load", () => {
-      pasangHookAktivitasLengkap();
-      bukaModalAbsensiJikaPerlu();
-
-      const nama = bacaNamaOperatorAktif();
-      if (nama && !document.hidden) {
-        pushPresence(nama);
-      }
-      setTimeout(() => {
-        if (nama && !document.hidden) pushPresence(nama);
-      }, 1500);
+      pushPresence();
+      setTimeout(pushPresence, 1500);
     });
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
-        const nama = bacaNamaOperatorAktif();
-        if (nama) {
-          catatRiwayatProsesData("Pindah Tab / Keluar Fokus", `${nama} keluar dari tab/layar Proses Data`, nama);
-        }
         removePresence();
-      } else if (!isUnloading) {
-        const nama = bacaNamaOperatorAktif();
-        if (nama) {
-          pushPresence(nama);
-          catatRiwayatProsesData("Kembali Ke Tab Proses Data", `${nama} kembali aktif di Proses Data`, nama);
-        }
+      } else {
+        pushPresence();
       }
     });
 
-    setInterval(() => {
-      if (!document.hidden && !isUnloading) {
-        const nama = bacaNamaOperatorAktif();
-        if (nama) pushPresence(nama);
-      }
-    }, 8000);
-
-    function handleAppExit() {
-      if (isUnloading) return;
-      isUnloading = true;
-      const nama = bacaNamaOperatorAktif();
-      if (nama) {
-        catatRiwayatProsesData("Tutup Aplikasi Proses Data", `${nama} menutup aplikasi/halaman Proses Data`, nama);
-      }
-      removePresence();
+    const btnLoginOp = document.querySelector('#loginModal button[onclick*="verifyOperatorLogin"]');
+    if (btnLoginOp) {
+      btnLoginOp.addEventListener("click", () => {
+        setTimeout(pushPresence, 400);
+        setTimeout(pushPresence, 1500);
+      });
     }
 
-    window.addEventListener("pagehide", handleAppExit);
-    window.addEventListener("beforeunload", handleAppExit);
+    setInterval(() => {
+      if (!document.hidden) pushPresence();
+    }, 8000);
 
-    window.catatAktivitasProsesData = catatRiwayatProsesData;
-    window.bukaModalAbsensiJikaPerlu = bukaModalAbsensiJikaPerlu;
+    window.addEventListener("pagehide", () => {
+      removePresence();
+    });
+
+    window.addEventListener("beforeunload", () => {
+      removePresence();
+    });
+
     window.syncProsesDataPresence = pushPresence;
     window.clearProsesDataPresence = removePresence;
   })();
