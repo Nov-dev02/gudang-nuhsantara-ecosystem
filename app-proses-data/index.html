@@ -614,6 +614,13 @@
               if (typeof speakSystemReady === 'function') speakSystemReady();
               bootScreenEl.style.opacity = "0";
               bootScreenEl.style.visibility = "hidden";
+              setTimeout(() => {
+                if (bootScreenEl.style.visibility === "hidden") bootScreenEl.style.display = "none";
+                if (typeof window.bukaModalAbsensiJikaPerlu === "function") {
+                  window.bukaModalAbsensiJikaPerlu();
+                }
+              }, 250);
+
               const mainContainer = document.querySelector('.container');
               if (mainContainer) mainContainer.classList.add('run-animation');
               if (typeof showNxToast === 'function') showNxToast("Sistem siap beroperasi secara maksimal!", "🟢");
@@ -627,9 +634,6 @@
 
               if (typeof window.catatAktivitasProsesData === "function") {
                 window.catatAktivitasProsesData("Booting Selesai", "Sistem Proses Data siap digunakan");
-              }
-              if (typeof window.bukaModalAbsensiJikaPerlu === "function") {
-                window.bukaModalAbsensiJikaPerlu();
               }
               return;
             }
@@ -992,13 +996,16 @@
   <!-- ABSENSI MASUK + PRESENCE REAL-TIME (STAF AKTIF) + RIWAYAT AKTIVITAS FULL (MODUL: PROSES DATA) -->
   <script>
   (function initProsesDataAbsensiPresenceDanRiwayat() {
-    const PRESENCE_BASE = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app/gudang_nuhsantara/presence";
-    const HISTORY_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app/gudang_nuhsantara/activity_logs.json";
+    const DB_ROOT = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app/gudang_nuhsantara";
+    const PRESENCE_BASE = `${DB_ROOT}/presence`;
+    const HISTORY_DB_URL = `${DB_ROOT}/activity_logs.json`;
+    const LOGIN_HISTORY_DB_URL = `${DB_ROOT}/login_history.json`;
     const NAMA_MODUL = "Proses Data";
 
     const LAST_KEY_STORAGE = "gudang_last_presence_key";
     const ABSENSI_SESSION_KEY = "gudang_proses_data_absen_session";
     const ABSENSI_KETERANGAN_KEY = "gudang_proses_data_absen_ket";
+    const LAST_LOGIN_RECORD_KEY = "gudang_proses_data_last_login_ts";
 
     let sudahTapToEnter = false;
     let sudahCatatTapToEnter = false;
@@ -1039,6 +1046,27 @@
       return "Desktop";
     }
 
+    function catatLoginSesiJikaPerlu(operatorName) {
+      const cleanName = String(operatorName || "").trim();
+      if (!cleanName) return;
+      const now = Date.now();
+      const lastTs = Number(localStorage.getItem(LAST_LOGIN_RECORD_KEY) || 0);
+      if (now - lastTs < 15000) return;
+      localStorage.setItem(LAST_LOGIN_RECORD_KEY, String(now));
+
+      fetch(LOGIN_HISTORY_DB_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: cleanName,
+          modul: NAMA_MODUL,
+          device: getDeviceLabel(),
+          timestamp: now
+        }),
+        keepalive: true
+      }).catch(() => {});
+    }
+
     function catatRiwayatProsesData(aksi, detail = "", customOperator = "") {
       const operator = String(customOperator || bacaNamaOperatorAktif() || "Belum Absen").trim();
       const now = new Date();
@@ -1071,17 +1099,20 @@
       const key = getStaffKey(name);
       localStorage.setItem(LAST_KEY_STORAGE, key);
       const keterangan = (localStorage.getItem(ABSENSI_KETERANGAN_KEY) || "").trim();
+      const now = Date.now();
 
       fetch(`${PRESENCE_BASE}/${encodeURIComponent(key)}.json`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          staffName: name,
           modul: NAMA_MODUL,
           keterangan: keterangan || "Aktif di Proses Data",
           device: getDeviceLabel(),
-          status: "active",
-          lastSeen: Date.now()
+          status: "ONLINE",
+          lastSeen: now,
+          timestamp: now
         }),
         keepalive: true
       }).catch(() => {});
@@ -1132,7 +1163,20 @@
       }
     }
 
+    function isGateOrBootBlocking() {
+      const tapGate = document.getElementById("tap-to-enter-gate");
+      if (tapGate && getComputedStyle(tapGate).display !== "none" && parseFloat(getComputedStyle(tapGate).opacity || "1") > 0.1) {
+        return true;
+      }
+      const bootScreen = document.getElementById("boot-screen");
+      if (bootScreen && getComputedStyle(bootScreen).display !== "none" && getComputedStyle(bootScreen).visibility !== "hidden") {
+        return true;
+      }
+      return false;
+    }
+
     function bukaModalAbsensiJikaPerlu() {
+      if (isGateOrBootBlocking()) return;
       const modal = document.getElementById("absensiModal");
       if (!modal) return;
 
@@ -1153,6 +1197,7 @@
       if (sudahAbsenHariIni && existingName) {
         terapkanNamaKeUi(existingName);
         pushPresence(existingName);
+        catatLoginSesiJikaPerlu(existingName);
         return;
       }
 
@@ -1199,9 +1244,8 @@
       }));
 
       terapkanNamaKeUi(nama);
-
-      // Langsung tampilkan di Staf Aktif & simpan ke Riwayat saat itu juga
       pushPresence(nama);
+      catatLoginSesiJikaPerlu(nama);
       catatRiwayatProsesData("Absensi Masuk", `${nama} (${keterangan})`, nama);
 
       if (modal) modal.style.display = "none";
@@ -1215,6 +1259,7 @@
       sudahTapToEnter = true;
       sudahCatatTapToEnter = true;
       catatRiwayatProsesData("Tap To Enter", "Masuk ke gerbang awal aplikasi Proses Data");
+      setTimeout(() => bukaModalAbsensiJikaPerlu(), 350);
     }
 
     function pasangHookAktivitasLengkap() {
@@ -1223,18 +1268,13 @@
         tapGate.addEventListener("click", handleTapToEnterTrigger, { once: true });
       }
 
-      // Jika tap-to-enter sudah tidak terlihat saat halaman dimuat
       setTimeout(() => {
-        if (!tapGate || getComputedStyle(tapGate).display === "none" || tapGate.style.opacity === "0") {
+        if (!isGateOrBootBlocking()) {
           handleTapToEnterTrigger();
-        }
-        const bootScreen = document.getElementById("boot-screen");
-        if (bootScreen && (getComputedStyle(bootScreen).display === "none" || bootScreen.style.visibility === "hidden")) {
           bukaModalAbsensiJikaPerlu();
         }
-      }, 600);
+      }, 700);
 
-      // Tombol Sync rekapan
       const btnSync = document.querySelector('button[onclick*="ambilDanPasteRekapan"]');
       if (btnSync) {
         btnSync.addEventListener("click", () => {
@@ -1242,7 +1282,6 @@
         });
       }
 
-      // Tombol Setting GAS & Simpan Link
       const btnSetting = document.getElementById("settingBtn");
       if (btnSetting) {
         btnSetting.addEventListener("click", () => {
@@ -1257,21 +1296,21 @@
         });
       }
 
-      // Login Operator Shift
       const btnLoginOp = document.querySelector('#loginModal button[onclick*="verifyOperatorLogin"]');
       if (btnLoginOp) {
         btnLoginOp.addEventListener("click", () => {
           setTimeout(() => {
             const namaOp = bacaNamaOperatorAktif();
             if (namaOp) {
+              terapkanNamaKeUi(namaOp);
               pushPresence(namaOp);
+              catatLoginSesiJikaPerlu(namaOp);
               catatRiwayatProsesData("Verifikasi Operator Shift", `Operator terverifikasi: ${namaOp}`, namaOp);
             }
           }, 600);
         });
       }
 
-      // Klik EXECUTE
       const submitBtn = document.getElementById("submitBtn");
       if (submitBtn) {
         submitBtn.addEventListener("click", () => {
@@ -1281,7 +1320,6 @@
         });
       }
 
-      // Modal Pending / Cancel
       const btnSetPending = document.getElementById("btnSetPending");
       if (btnSetPending) {
         btnSetPending.addEventListener("click", () => {
@@ -1303,7 +1341,6 @@
         });
       }
 
-      // Tombol Download Laporan Excel
       const downloadBtn = document.getElementById("downloadBtn");
       if (downloadBtn) {
         downloadBtn.addEventListener("click", () => {
@@ -1323,7 +1360,6 @@
       }, 1500);
     });
 
-    // Pindah tab / minimize / tutup aplikasi -> Staf Aktif langsung hilang (0), Riwayat tetap tersimpan
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         const nama = bacaNamaOperatorAktif();
