@@ -372,36 +372,157 @@ async function inisialisasiUniversalChatData() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(botWelcome)
-    }).catch(() => {});
+    });
   }
 }
 
-function toggleUniversalChatWidget() {
-  if (!document.getElementById('universalChatWrapper')) {
-    injectUniversalChatHTML();
-  }
-  const box = document.getElementById('universalChatWidgetBox');
-  if (!box) return;
+function renderProLiveChatWidget() {
+  const existing = document.getElementById('nx-pro-live-chat-wrapper');
+  if (existing) existing.remove();
 
-  const isOpen = box.style.getPropertyValue('display') === 'flex';
-  if (isOpen) {
-    box.style.setProperty('display', 'none', 'important');
-    clearInterval(universalChatPollInterval);
-  } else {
-    box.style.setProperty('display', 'flex', 'important');
-    inisialisasiUniversalChatData().then(() => {
-      muatPesanUniversalChat();
-      clearInterval(universalChatPollInterval);
-      universalChatPollInterval = setInterval(muatPesanUniversalChat, 3000);
-    });
+  const wrapper = document.createElement('div');
+  wrapper.id = 'nx-pro-live-chat-wrapper';
+  wrapper.style.cssText = `
+    position: fixed; bottom: 20px; right: 20px; z-index: 2147483640; font-family: monospace;
+  `;
+
+  wrapper.innerHTML = `
+    <div id="nxProChatDrawer" style="display: none; width: 325px; height: 440px; background: #0f172a; border: 1.5px solid #38bdf8; border-radius: 16px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); flex-direction: column; overflow: hidden; margin-bottom: 12px; color: #f8fafc;">
+      <div style="background: #1e293b; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div>
+          <b style="color: #38bdf8; font-size: 12px; display: block;">💬 LIVE CHAT BANTUAN CS</b>
+          <span id="nxTypingIndicatorStaff" style="color: #fbbf24; font-size: 9.5px; display: none;">Admin mengetik...</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" onclick="mintaPerpanjanganTokenStaff()" title="Minta Perpanjangan Masa Aktif" style="background: rgba(56,189,248,0.18); border: 1px solid #38bdf8; color: #7dd3fc; padding: 4px 8px; border-radius: 6px; font-size: 9.5px; font-weight: bold; cursor: pointer;">🔑 Minta Token</button>
+          <button type="button" onclick="hapusRiwayatChatStaff()" title="Hapus Riwayat Chat" style="background: none; border: none; color: #ef4444; font-size: 13px; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
+          <button type="button" onclick="toggleProChatDrawer()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
+        </div>
+      </div>
+
+      <div id="nxProChatMessagesContainer" style="flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; font-size: 11px;">
+        <div style="color: #64748b; text-align: center; margin: auto;">Memuat riwayat percakapan...</div>
+      </div>
+
+      <div style="padding: 10px; background: #1e293b; border-top: 1px solid rgba(255,255,255,0.08); display: flex; gap: 6px;">
+        <input type="text" id="nxInputStaffChat" placeholder="Ketik pesan bantuan..." oninput="handleStaffTypingIndicator()" onkeypress="if(event.key==='Enter') kirimPesanStaffPro()" style="flex: 1; padding: 8px 10px; background: #020617; border: 1px solid #334155; color: #fff; border-radius: 8px; font-size: 11px; outline: none; font-family: monospace;" />
+        <button type="button" onclick="kirimPesanStaffPro()" style="background: #38bdf8; border: none; color: #020617; padding: 0 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px;">Kirim</button>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end;">
+      <button type="button" id="nxFabChatBtn" onclick="toggleProChatDrawer()" style="background: #38bdf8; color: #020617; border: none; padding: 12px 18px; border-radius: 999px; font-weight: bold; font-family: monospace; font-size: 12px; cursor: pointer; box-shadow: 0 10px 25px rgba(56, 189, 248, 0.4); display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-headset"></i> Chat CS
+        <span id="nxChatUnreadBadge" style="background: #ef4444; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; display: none;">0</span>
+      </button>
+    </div>
+  `;
+
+  const parentTarget = document.body || document.documentElement;
+  parentTarget.appendChild(wrapper);
+
+  inisialisasiUniversalChatData().then(() => {
+    sinkronisasiChatStaffRealtime();
+  });
+
+  if (universalChatPollInterval) clearInterval(universalChatPollInterval);
+  universalChatPollInterval = setInterval(sinkronisasiChatStaffRealtime, 3500);
+}
+
+function toggleProChatDrawer() {
+  const drawer = document.getElementById('nxProChatDrawer');
+  if (!drawer) return;
+  const isOpen = drawer.style.display === 'flex';
+  drawer.style.display = isOpen ? 'none' : 'flex';
+  if (!isOpen) {
+    sinkronisasiChatStaffRealtime();
     setTimeout(() => {
-      const inputEl = document.getElementById('universalInputChat');
-      if (inputEl) inputEl.focus();
+      const box = document.getElementById('nxProChatMessagesContainer');
+      if (box) box.scrollTop = box.scrollHeight;
+      document.getElementById('nxInputStaffChat')?.focus();
     }, 100);
   }
 }
 
-async function tarikPesanUniversal(messageKey) {
+async function handleStaffTypingIndicator() {
+  const safeStaffKey = getSafeStaffKeyForChat();
+  clearTimeout(staffTypingTimeout);
+  await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typing_staff.json`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'true'
+  }).catch(() => {});
+
+  staffTypingTimeout = setTimeout(async () => {
+    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typing_staff.json`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'false'
+    }).catch(() => {});
+  }, 2000);
+}
+
+async function kirimPesanStaffPro() {
+  const input = document.getElementById('nxInputStaffChat');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const staffName = localStorage.getItem('gudang_staff_name') || "Staf_General";
+  const safeStaffKey = getSafeStaffKeyForChat();
+  input.value = "";
+
+  await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/staffName.json`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(staffName)
+  }).catch(() => {});
+
+  await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sender: 'staff', senderName: staffName, text, time: Date.now(), read: false })
+  });
+
+  if (/token|expired|masa aktif|perpanjang/i.test(text)) {
+    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: 'bot', text: "🤖 [AUTO-PILOT] Permintaan terkait token terdeteksi. Sistem memproses otomatis perpanjangan masa aktif (maksimal 1 minggu).", time: Date.now(), read: true })
+    });
+  }
+
+  sinkronisasiChatStaffRealtime();
+}
+
+async function mintaPerpanjanganTokenStaff() {
+  const staffName = localStorage.getItem('gudang_staff_name') || "Staf_General";
+  const safeStaffKey = getSafeStaffKeyForChat();
+
+  const yakin = await tampilkanGuardConfirm({
+    title: "MINTA PERPANJANGAN TOKEN",
+    message: "Ajukan perpanjangan masa aktif aplikasi otomatis (maksimal 1 minggu) ke sistem?",
+    confirmText: "Ajukan Sekarang",
+    cancelText: "Batal",
+    danger: false
+  });
+  if (!yakin) return;
+
+  await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/staffName.json`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(staffName)
+  }).catch(() => {});
+
+  await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: 'pending', requested_by: staffName, requested_at: Date.now() })
+  });
+
+  await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sender: 'staff', senderName: staffName, text: "🔑 Meminta perpanjangan masa aktif / token baru.", time: Date.now(), read: false })
+  });
+
+  await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sender: 'bot', text: "🤖 [AUTO-PILOT] Permintaan perpanjangan (batas 1 minggu) dikirim. Token otomatis akan muncul di chat dalam beberapa detik.", time: Date.now(), read: true })
+  });
+
+  tampilkanGuardToast("Permintaan dikirim! Auto-Pilot sedang memproses token 1 minggu.", "info");
+  sinkronisasiChatStaffRealtime();
+}
+
+async function tarikPesanStaff(msgKey) {
   const safeStaffKey = getSafeStaffKeyForChat();
   const yakin = await tampilkanGuardConfirm({
     title: "TARIK PESAN",
@@ -412,585 +533,344 @@ async function tarikPesanUniversal(messageKey) {
   });
   if (!yakin) return;
 
-  try {
-    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages/${messageKey}.json`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: "🚫 Pesan ini telah ditarik" })
-    });
-    tampilkanGuardToast("Pesan berhasil ditarik.", "info", 2000);
-    muatPesanUniversalChat();
-  } catch (e) {
-    console.error(e);
-    tampilkanGuardToast("Gagal menarik pesan.", "error");
-  }
+  await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages/${msgKey}.json`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: "🚫 Pesan ini telah ditarik" })
+  });
+  sinkronisasiChatStaffRealtime();
 }
 
-async function hapusSemuaChatUniversal() {
+async function hapusRiwayatChatStaff() {
   const safeStaffKey = getSafeStaffKeyForChat();
   const yakin = await tampilkanGuardConfirm({
     title: "HAPUS RIWAYAT CHAT",
-    message: "Hapus semua riwayat percakapan ini?",
-    confirmText: "Hapus Semua",
+    message: "Hapus seluruh riwayat chat kamu di room ini?",
+    confirmText: "Hapus Riwayat",
     cancelText: "Batal",
     danger: true
   });
   if (!yakin) return;
 
+  await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, { method: 'DELETE' });
+  const staffName = localStorage.getItem('gudang_staff_name') || "Staf_General";
+  await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sender: 'bot', text: `Riwayat chat dibersihkan oleh ${staffName}.`, time: Date.now(), read: true })
+  });
+  sinkronisasiChatStaffRealtime();
+  tampilkanGuardToast("Riwayat chat berhasil dibersihkan!", "success");
+}
+
+function salinTokenKeInputLisensi(rawText) {
+  const tokenMurni = extractPureToken(rawText);
+  if (!tokenMurni) {
+    tampilkanGuardToast("Format token NX tidak ditemukan pada pesan ini!", "error");
+    return;
+  }
+
+  navigator.clipboard.writeText(tokenMurni).catch(() => {});
+
+  const inputToken = document.getElementById('nxNewTokenInput');
+  if (inputToken) {
+    inputToken.value = tokenMurni;
+    inputToken.focus();
+  }
+
+  tampilkanGuardToast(
+    `Token disalin ke clipboard & diisikan ke kolom:<br><code style="color:#38bdf8;font-size:10px;word-break:break-all;">${escapeGuardHtml(tokenMurni)}</code>`,
+    "success",
+    3600
+  );
+}
+
+window.salinTokenDariChat = function(btnEl) {
+  if (!btnEl) return;
+  const encodedB64 = btnEl.getAttribute('data-payload-b64') || '';
+  if (!encodedB64) return;
   try {
-    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-      method: 'DELETE'
-    });
-    const botWelcome = {
-      sender: 'bot',
-      text: `Riwayat dibersihkan. Halo, ada yang bisa dibantu?`,
-      time: Date.now(),
-      read: true
-    };
-    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(botWelcome)
-    });
-    tampilkanGuardToast("Semua riwayat percakapan berhasil dihapus.", "success", 2200);
-    muatPesanUniversalChat();
+    const binStr = atob(encodedB64);
+    const bytes = new Uint8Array(binStr.length);
+    for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+    const rawText = new TextDecoder().decode(bytes);
+    salinTokenKeInputLisensi(rawText);
   } catch (e) {
-    console.error(e);
-    tampilkanGuardToast("Gagal menghapus riwayat percakapan.", "error");
+    tampilkanGuardToast("Gagal membaca data token!", "error");
+  }
+};
+
+function encodeBase64Utf8(str) {
+  try {
+    const bytes = new TextEncoder().encode(String(str || ''));
+    let binStr = '';
+    for (let i = 0; i < bytes.length; i++) binStr += String.fromCharCode(bytes[i]);
+    return btoa(binStr);
+  } catch (e) {
+    return '';
   }
 }
 
-async function muatPesanUniversalChat() {
+async function sinkronisasiChatStaffRealtime() {
   const safeStaffKey = getSafeStaffKeyForChat();
   try {
     const res = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}.json?t=` + Date.now());
-    const data = await res.json();
-    if (!data) return;
+    const room = await res.json();
+    if (!room) return;
 
-    const messages = data.messages || {};
-    const isSystemTyping = data.typingSystem || data.typingAdmin || false;
-    const container = document.getElementById('universalChatMessagesContainer');
-    const typingEl = document.getElementById('typingIndicatorUniversal');
-    const badge = document.getElementById('universalChatBadge');
-    const box = document.getElementById('universalChatWidgetBox');
-    if (!container) return;
+    const typingOwnerEl = document.getElementById('nxTypingIndicatorStaff');
+    if (typingOwnerEl) typingOwnerEl.style.display = room.typing_owner ? 'block' : 'none';
 
-    const isWidgetOpen = Boolean(box && box.style.getPropertyValue('display') === 'flex');
-
-    if (typingEl) typingEl.style.display = isSystemTyping ? 'block' : 'none';
-
+    const messages = room.messages || {};
+    let unreadAdmin = 0;
     let html = "";
-    let unreadFromSystem = 0;
-    let systemUpdates = {};
 
-    Object.keys(messages).forEach(k => {
-      const m = messages[k];
-      let bubbleStyle = "";
-      let deleteBtn = "";
-      let chatContentHtml = "";
+    Object.keys(messages).forEach(msgKey => {
+      const m = messages[msgKey];
+      if (!m) return;
+      if ((m.sender === 'owner' || m.sender === 'bot') && !m.read) unreadAdmin++;
 
-      const rawText = m.text || "";
-      const extractedToken = (m.sender !== 'staff') ? extractPureToken(rawText) : null;
-      const isTokenMessage = Boolean(extractedToken);
+      const timeStr = m.time ? new Date(m.time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : "";
+      const rawText = String(m.text || "");
+      const payloadB64 = encodeBase64Utf8(rawText);
+      const formattedText = formatChatTextHtml(rawText).replace(/\n/g, "<br>");
+      const hasToken = Boolean(extractPureToken(rawText));
 
       if (m.sender === 'staff') {
-        bubbleStyle = "background: #0284c7 !important; color: #fff !important; align-self: flex-end !important; border-bottom-right-radius: 2px !important;";
-        if (m.text !== "🚫 Pesan ini telah ditarik") {
-          deleteBtn = `<i class="fa-solid fa-trash-can" onclick="tarikPesanUniversal('${escapeGuardHtml(k)}')" style="cursor: pointer; font-size: 10px; margin-left: 6px; opacity: 0.7;" title="Tarik Pesan"></i>`;
-        }
+        html += `
+          <div style="background: #2563eb; color: #fff; padding: 8px 11px; border-radius: 12px 12px 2px 12px; align-self: flex-end; max-width: 82%; position: relative; padding-right: 26px; word-break: break-word;">
+            <div>${formattedText}</div>
+            <button type="button" onclick="tarikPesanStaff('${escapeGuardHtml(msgKey)}')" title="Tarik Pesan" style="position: absolute; top: 6px; right: 6px; background: none; border: none; color: #fecaca; cursor: pointer; font-size: 10px;"><i class="fa-solid fa-trash"></i></button>
+            <div style="font-size: 8.5px; opacity: 0.8; margin-top: 3px; text-align: right;">${escapeGuardHtml(m.senderName || 'Staf')} • ${escapeGuardHtml(timeStr)}</div>
+          </div>
+        `;
       } else if (m.sender === 'bot') {
-        bubbleStyle = "background: rgba(168, 85, 247, 0.15) !important; border: 1px solid rgba(168, 85, 247, 0.3) !important; color: #d8b4fe !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important;";
-      } else {
-        bubbleStyle = "background: #1e293b !important; color: #f8fafc !important; align-self: flex-start !important; border-bottom-left-radius: 2px !important;";
-        if (!m.read) {
-          unreadFromSystem++;
-          systemUpdates[`${k}/read`] = true;
-        }
-      }
-
-      if (isTokenMessage) {
-        const escapedToken = extractedToken.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const formattedMessage = formatChatTextHtml(rawText);
-
-        chatContentHtml = `
-          <div style="font-weight: 600; margin-bottom: 4px; color: #38bdf8;"><i class="fa-solid fa-key"></i> Akses Token Resmi</div>
-          <div style="font-size: 11px; margin-bottom: 8px; opacity: 0.9; word-break: break-word;">${formattedMessage}</div>
-          <div style="font-family: monospace; width: 100%; background: #020617; border: 1px solid #38bdf8; border-radius: 8px; padding: 8px; box-sizing: border-box;">
-            <div style="color: #38bdf8; font-size: 11.5px; font-family: monospace; word-break: break-all; margin-bottom: 8px; user-select: all; background: rgba(56, 189, 248, 0.08); padding: 6px; border-radius: 6px;">
-              ${escapeGuardHtml(extractedToken)}
+        html += `
+          <div style="background: rgba(56,189,248,0.14); border: 1px solid rgba(56,189,248,0.4); color: #7dd3fc; padding: 8px 11px; border-radius: 12px 12px 12px 2px; align-self: flex-start; max-width: 86%; word-break: break-word;">
+            <div>${formattedText}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 5px;">
+              <span style="font-size: 8.5px; opacity: 0.75;">Auto-Pilot • ${escapeGuardHtml(timeStr)}</span>
+              <button type="button" data-payload-b64="${escapeGuardHtml(payloadB64)}" onclick="salinTokenDariChat(this)" style="background: ${hasToken ? "#22c55e" : "rgba(56,189,248,0.22)"}; border: 1px solid ${hasToken ? "#4ade80" : "#38bdf8"}; color: ${hasToken ? "#052e16" : "#7dd3fc"}; padding: 3px 7px; border-radius: 5px; font-size: 9px; font-weight: bold; cursor: pointer; font-family: monospace;">
+                <i class="fa-solid fa-copy"></i> ${hasToken ? "Salin Token" : "Salin"}
+              </button>
             </div>
-            <button type="button" onclick="salinTokenUniversalChat('${escapedToken}')" style="width: 100%; background: #38bdf8; border: none; color: #070b14; padding: 7px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;" title="Salin Token">
-              <i class="fa-solid fa-copy"></i> Salin Token Sekarang
-            </button>
           </div>
         `;
       } else {
-        chatContentHtml = `<div>${formatChatTextHtml(rawText)}</div>`;
-      }
-
-      let tickMark = "";
-      if (m.sender === 'staff') {
-        if (m.read) {
-          tickMark = `<span style="color: #38bdf8; font-size: 11px; margin-left: 4px;" title="Dibaca System">✓✓</span>`;
-        } else {
-          tickMark = `<span style="color: #94a3b8; font-size: 11px; margin-left: 4px;" title="Terkirim">✓✓</span>`;
-        }
-      }
-
-      html += `
-        <div style="max-width: 85% !important; padding: 8px 11px !important; border-radius: 10px !important; ${bubbleStyle} word-break: break-word !important; box-sizing: border-box !important;">
-          <div style="font-size: 9px; opacity: 0.7; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
-            <span>${escapeGuardHtml((m.sender || '').toUpperCase())}</span>
-            ${deleteBtn}
+        html += `
+          <div style="background: #1e293b; border: 1px solid #334155; color: #f8fafc; padding: 8px 11px; border-radius: 12px 12px 12px 2px; align-self: flex-start; max-width: 84%; word-break: break-word;">
+            <div>${formattedText}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 5px;">
+              <span style="font-size: 8.5px; color: #94a3b8;">System • ${escapeGuardHtml(timeStr)}</span>
+              ${hasToken ? `<button type="button" data-payload-b64="${escapeGuardHtml(payloadB64)}" onclick="salinTokenDariChat(this)" style="background: #22c55e; border: 1px solid #4ade80; color: #052e16; padding: 3px 7px; border-radius: 5px; font-size: 9px; font-weight: bold; cursor: pointer; font-family: monospace;"><i class="fa-solid fa-copy"></i> Salin Token</button>` : ""}
+            </div>
           </div>
-          ${chatContentHtml}
-          <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.6;">
-            ${new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${tickMark}
-          </div>
-        </div>
-      `;
+        `;
+      }
     });
 
-    container.innerHTML = html || `<div style="color: #94a3b8; text-align: center; margin: auto;">Mulai percakapan...</div>`;
-    container.scrollTop = container.scrollHeight;
+    const msgContainer = document.getElementById('nxProChatMessagesContainer');
+    if (msgContainer) {
+      const wasAtBottom = msgContainer.scrollHeight - msgContainer.scrollTop <= msgContainer.clientHeight + 50;
+      msgContainer.innerHTML = html || `<div style="color: #64748b; text-align: center; margin: auto;">Belum ada pesan.</div>`;
+      if (wasAtBottom) msgContainer.scrollTop = msgContainer.scrollHeight;
+    }
 
+    const badge = document.getElementById('nxChatUnreadBadge');
     if (badge) {
-      if (unreadFromSystem > 0 && !isWidgetOpen) {
-        badge.innerText = unreadFromSystem;
+      if (unreadAdmin > 0) {
+        badge.innerText = unreadAdmin;
         badge.style.display = 'inline-block';
       } else {
         badge.style.display = 'none';
       }
     }
-
-    if (isWidgetOpen && Object.keys(systemUpdates).length > 0) {
-      await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(systemUpdates)
-      });
-    }
-  } catch (e) { console.error(e); }
-}
-
-window.salinTokenUniversalChat = function(kodeToken) {
-  const tokenBersih = extractPureToken(kodeToken);
-  if (!tokenBersih) {
-    tampilkanGuardToast("Token tidak ditemukan untuk disalin.", "error");
-    return;
-  }
-
-  const beriNotifSukses = () => {
-    tampilkanGuardToast(
-      `<b style="color:#38bdf8;">Token berhasil disalin</b><div style="margin-top:3px; font-size:10.5px; color:#cbd5e1; word-break:break-all;">${escapeGuardHtml(tokenBersih)}</div>`,
-      "info",
-      2800
-    );
-  };
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(tokenBersih).then(beriNotifSukses).catch(() => {
-      const tempInput = document.createElement("textarea");
-      tempInput.value = tokenBersih;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      document.execCommand("copy");
-      tempInput.remove();
-      beriNotifSukses();
-    });
-  } else {
-    const tempInput = document.createElement("textarea");
-    tempInput.value = tokenBersih;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand("copy");
-    tempInput.remove();
-    beriNotifSukses();
-  }
-};
-
-async function kirimPesanUniversalChatBotLogic(textPesan, currentStaffName) {
-  const textLower = textPesan.toLowerCase();
-  const isKeywordKendala =
-    textLower.includes("token") ||
-    textLower.includes("expired") ||
-    textLower.includes("habis") ||
-    textLower.includes("terkunci") ||
-    textLower.includes("mati");
-  const safeStaffKey = getSafeStaffKeyForChat();
-
-  try {
-    const reqRes = await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`);
-    const currentReq = await reqRes.json();
-
-    if (isKeywordKendala) {
-      setTimeout(async () => {
-        const botReply = {
-          sender: 'bot',
-          text: `Halo ${currentStaffName}, terdeteksi kendala token/aplikasi terkunci. Butuh perpanjangan masa aktif berapa lama? (Contoh: 1 Minggu, 1 Bulan, atau 1 Tahun)`,
-          time: Date.now(),
-          read: true
-        };
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(botReply)
-        });
-
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: "waiting_duration", timestamp: Date.now() })
-        });
-        muatPesanUniversalChat();
-      }, 800);
-    } else if (currentReq && currentReq.status === "waiting_duration") {
-      const durasiDiminta = textPesan;
-      setTimeout(async () => {
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: "pending", requested_duration: durasiDiminta, timestamp: Date.now() })
-        });
-
-        const botConfirm = {
-          sender: 'bot',
-          text: `Permintaan durasi **${durasiDiminta}** sudah dikirim ke System. Mohon tunggu sebentar, System sedang meninjau dan memproses persetujuannya ya...`,
-          time: Date.now(),
-          read: true
-        };
-        await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(botConfirm)
-        });
-        muatPesanUniversalChat();
-      }, 800);
-    }
-  } catch (err) {}
-}
-
-async function kirimPesanUniversalChat() {
-  const input = document.getElementById('universalInputChat');
-  if (!input) return;
-  const text = input.value.trim();
-  if (!text) return;
-  const safeStaffKey = getSafeStaffKeyForChat();
-  const staffName = localStorage.getItem('gudang_staff_name') || "Staf_General";
-
-  const newMsg = {
-    sender: 'staff',
-    text: text,
-    time: Date.now(),
-    read: false
-  };
-
-  try {
-    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newMsg)
-    });
-    input.value = "";
-    muatPesanUniversalChat();
-    kirimPesanUniversalChatBotLogic(text, staffName);
-  } catch (e) {
-    tampilkanGuardToast("Gagal mengirim pesan!", "error");
-  }
-}
-
-async function handleStaffTypingUniversal() {
-  const safeStaffKey = getSafeStaffKeyForChat();
-  try {
-    await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typingStaff.json`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(true)
-    });
-    clearTimeout(staffTypingTimeout);
-    staffTypingTimeout = setTimeout(async () => {
-      await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/typingStaff.json`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(false)
-      });
-    }, 1500);
   } catch (e) {}
 }
 
-function injectUniversalChatHTML() {
-  if (document.getElementById('universalChatWrapper')) return;
+// =========================================================================
+// 🔒 LAYAR KUNCI MANDIRI & MAINTENANCE SYSTEM
+// =========================================================================
+function tampilkanLayarKunciMandiri() {
+  if (document.getElementById('nx-global-lock-screen')) return;
 
-  const wrapper = document.createElement('div');
-  wrapper.id = 'universalChatWrapper';
-  wrapper.style.cssText = "position: relative; z-index: 2147483647 !important;";
-  wrapper.innerHTML = `
-    <!-- FLOATING CHAT BUTTON UNIVERSAL -->
-    <div id="universalFloatingChatBtn" style="position: fixed !important; bottom: 20px !important; right: 16px !important; width: 54px !important; height: 54px !important; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important; border: 1.5px solid #38bdf8 !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; color: #fff !important; font-size: 22px !important; cursor: pointer !important; z-index: 2147483647 !important; box-shadow: 0 8px 22px rgba(2, 132, 199, 0.45) !important;" onclick="toggleUniversalChatWidget()">
-      <i class="fa-solid fa-headset"></i>
-      <span id="universalChatBadge" style="position: absolute !important; top: -2px !important; right: -2px !important; background: #ef4444 !important; color: #fff !important; font-size: 10px !important; font-weight: bold !important; padding: 2px 6px !important; border-radius: 10px !important; display: none; font-family: monospace !important; border: 1px solid #0f172a !important;">0</span>
-    </div>
+  const lockScreen = document.createElement('div');
+  lockScreen.id = 'nx-global-lock-screen';
+  lockScreen.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.99); backdrop-filter: blur(18px);
+    z-index: 2147483640; display: flex; justify-content: center; align-items: center;
+    padding: 20px; font-family: monospace; color: #f8fafc;
+  `;
 
-    <!-- KOTAK WIDGET CHAT UNIVERSAL (PRO VERSION) -->
-    <div id="universalChatWidgetBox" style="position: fixed !important; bottom: 84px !important; right: 16px !important; width: 350px !important; max-width: calc(100vw - 32px) !important; height: min(400px, calc(100vh - 120px)) !important; background: #0f172a !important; border: 1px solid rgba(56, 189, 248, 0.4) !important; border-radius: 16px !important; box-shadow: 0 25px 50px rgba(0,0,0,0.9) !important; z-index: 2147483648 !important; display: none !important; flex-direction: column !important; overflow: hidden !important; font-family: monospace !important; box-sizing: border-box !important;">
-      <div style="background: rgba(15, 23, 42, 0.95) !important; padding: 10px 14px !important; border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important; display: flex !important; justify-content: space-between !important; align-items: center !important; box-sizing: border-box !important; flex-shrink: 0 !important;">
-        <div>
-          <b style="color: #fff; font-size: 12px;"><i class="fa-solid fa-robot" style="color: #38bdf8;"></i> CS Asisten Nuhsantara</b>
-          <div style="font-size: 9.5px; color: #94a3b8;">Live Chat Staf & System</div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <button type="button" onclick="hapusSemuaChatUniversal()" title="Hapus Semua Percakapan" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
-          <button type="button" onclick="toggleUniversalChatWidget()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
-        </div>
+  lockScreen.innerHTML = `
+    <div style="max-width: 400px; width: 100%; background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 16px; padding: 26px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.8);">
+      <div style="width: 50px; height: 50px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; font-size: 20px; color: #ef4444;">
+        <i class="fa-solid fa-lock"></i>
       </div>
+      <h2 style="margin: 0 0 6px 0; font-size: 16px; color: #fff;">MASA AKTIF BERAKHIR</h2>
+      <p style="font-size: 11px; color: #94a3b8; margin-bottom: 18px; line-height: 1.5;">
+        Masukkan Token NX baru atau ajukan perpanjangan masa aktif otomatis (maksimal 1 minggu) melalui tombol <b>🔑 Minta Token</b> di widget Chat CS.
+      </p>
 
-      <div id="universalChatMessagesContainer" style="flex: 1 1 auto !important; padding: 12px !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 8px !important; font-size: 11.5px !important; background: #070b14; box-sizing: border-box !important; min-height: 0 !important;">
-        <div style="color: #94a3b8; text-align: center; margin: auto;">Memuat pesan...</div>
-      </div>
+      <input type="text" id="nxNewTokenInput" placeholder="Tempel Token NX Baru di sini..." style="width: 100%; padding: 11px; background: #020617; border: 1px solid #334155; border-radius: 8px; color: #38bdf8; font-size: 12px; outline: none; margin-bottom: 10px; text-align: center; box-sizing: border-box;" />
+      <div id="nxLockErrorMsg" style="color: #ef4444; font-size: 10.5px; margin-bottom: 10px; display: none;"></div>
 
-      <div style="padding: 4px 12px; background: rgba(15, 23, 42, 0.95); flex-shrink: 0;">
-        <span id="typingIndicatorUniversal" style="color: #38bdf8; font-size: 10px; font-style: italic; display: none;">System sedang mengetik...</span>
-      </div>
-
-      <div style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; padding: 10px !important; background: rgba(15, 23, 42, 0.95) !important; border-top: 1px solid rgba(56, 189, 248, 0.2) !important; box-sizing: border-box !important; width: 100% !important; flex-shrink: 0 !important;">
-        <input type="text" id="universalInputChat" placeholder="Ketik pesan atau kendala..." style="flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; padding: 9px 10px !important; background: #020617 !important; border: 1px solid #334155 !important; color: #fff !important; border-radius: 7px !important; font-size: 11.5px !important; outline: none !important; font-family: monospace !important; box-sizing: border-box !important;" oninput="handleStaffTypingUniversal()" onkeypress="if(event.key === 'Enter') kirimPesanUniversalChat()" />
-        <button type="button" onclick="kirimPesanUniversalChat()" style="flex: 0 0 auto !important; width: auto !important; min-width: 65px !important; padding: 9px 12px !important; background: #0284c7 !important; border: 1px solid #38bdf8 !important; color: white !important; border-radius: 7px !important; cursor: pointer !important; font-family: monospace !important; font-weight: bold !important; font-size: 11.5px !important; box-sizing: border-box !important;">Kirim</button>
-      </div>
+      <button type="button" id="btnActivateNxToken" onclick="prosesAktivasiTokenMandiri()" style="width: 100%; background: #38bdf8; color: #020617; border: none; padding: 11px; border-radius: 8px; font-weight: bold; font-family: monospace; font-size: 12px; cursor: pointer;">
+        Aktivasi Lisensi Sekarang
+      </button>
     </div>
   `;
-  document.body.appendChild(wrapper);
+
+  const parentTarget = document.body || document.documentElement;
+  parentTarget.appendChild(lockScreen);
+  renderProLiveChatWidget();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  injectMaintenanceAnimationStyle();
-  injectUniversalChatHTML();
-});
+async function prosesAktivasiTokenMandiri() {
+  const inputEl = document.getElementById('nxNewTokenInput');
+  const errEl = document.getElementById('nxLockErrorMsg');
+  const btnEl = document.getElementById('btnActivateNxToken');
 
-// --- TAMPILKAN LAYAR SYSTEM MAINTENANCE (IKON MAINTENANCE SYSTEM BERPUTAR + TEKS + KETERANGAN + CODE ERROR + MENGAMBANG & BERDENYUT PELAN) ---
-function tampilkanSystemMaintenance(keteranganText = "", errorCodeText = "") {
-  injectMaintenanceAnimationStyle();
-
-  const finalErrorCode = String(errorCodeText || "").trim() || "ERR_SYSTEM_MAINTENANCE [ID: 503-MNT]";
-  const finalKeterangan = String(keteranganText || "").trim() ||
-    "Sistem Gudang Nuhsantara sedang dalam tahap pemeliharaan rutin, pembaruan modul, atau sinkronisasi database. Mohon tunggu beberapa saat hingga layanan kembali normal.";
-
-  const existing = document.getElementById('nx-global-lock-screen');
-  if (existing && existing.dataset.mode === 'maintenance') {
-    const descEl = document.getElementById('nxMaintenanceDescText');
-    if (descEl && descEl.textContent !== finalKeterangan) {
-      descEl.textContent = finalKeterangan;
-    }
-    const codeEl = document.getElementById('nxMaintenanceErrorCode');
-    if (codeEl && codeEl.textContent !== finalErrorCode) {
-      codeEl.textContent = finalErrorCode;
-    }
+  const rawVal = inputEl ? inputEl.value : "";
+  const token = extractPureToken(rawVal) || String(rawVal || "").trim();
+  if (!token) {
+    errEl.innerText = "Silakan masukkan Token NX terlebih dahulu!";
+    errEl.style.display = "block";
     return;
   }
-  if (existing) existing.remove();
 
-  document.title = "503 Service Maintenance - Gudang Nuhsantara";
+  const decodedDate = decodeTokenToDate(token);
+  if (!decodedDate) {
+    errEl.innerText = "Format Token NX tidak valid! Pastikan token disalin dengan utuh.";
+    errEl.style.display = "block";
+    return;
+  }
 
-  const lockScreen = document.createElement('div');
-  lockScreen.id = 'nx-global-lock-screen';
-  lockScreen.dataset.mode = 'maintenance';
-  lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.78); backdrop-filter: blur(12px); z-index: 2147483640; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
+  const now = new Date();
+  if (now > decodedDate) {
+    errEl.innerText = "Token ini sudah kedaluwarsa!";
+    errEl.style.display = "block";
+    return;
+  }
 
-  const box = document.createElement('div');
-  box.className = 'nx-maintenance-float-pulse';
-  box.style.cssText = "position: relative; background: #0f172a; border: 1.5px solid rgba(245, 158, 11, 0.5); padding: 32px 24px; border-radius: 20px; width: 100%; max-width: 410px; text-align: center; font-family: monospace;";
+  btnEl.disabled = true;
+  btnEl.innerText = "Menyimpan ke Cloud...";
+  errEl.style.display = "none";
 
-  box.innerHTML = `
-    <div style="position: absolute; top: 16px; left: 18px; display: flex; align-items: center; gap: 6px; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.35); padding: 3px 8px; border-radius: 20px;">
-      <span style="width: 6px; height: 6px; background: #f59e0b; border-radius: 50%; display: inline-block;"></span>
-      <span style="font-size: 9.5px; color: #fbbf24; font-weight: bold; letter-spacing: 0.5px;">SYSTEM_MAINTENANCE</span>
-    </div>
+  try {
+    await fetch(CLOUD_LICENSE_ENDPOINT, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: token,
+        locked: false,
+        permanent: false,
+        maintenance: false,
+        status: "ACTIVE",
+        expiry: decodedDate.toISOString(),
+        activated_at: Date.now()
+      })
+    });
 
-    <div style="width: 60px; height: 60px; background: rgba(245, 158, 11, 0.14); border: 1.5px solid rgba(245, 158, 11, 0.55); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 12px auto 14px auto; box-shadow: 0 0 22px rgba(245, 158, 11, 0.25);">
-      <svg class="nx-gear-spin" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="9" stroke-dasharray="4 2.5"></circle>
-        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-      </svg>
-    </div>
-
-    <h3 style="color: #fbbf24; margin: 0 0 8px 0; font-size: 16px; font-weight: 700; letter-spacing: 1.2px;">MAINTENANCE SYSTEM</h3>
-
-    <div id="nxMaintenanceErrorCode" style="font-size: 10.5px; color: #fcd34d; margin-bottom: 14px; background: rgba(245, 158, 11, 0.1); padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.3);">${escapeGuardHtml(finalErrorCode)}</div>
-
-    <p id="nxMaintenanceDescText" style="color: #cbd5e1; font-size: 12px; margin-bottom: 8px; line-height: 1.5; text-align: left; background: rgba(2, 6, 23, 0.55); border: 1px solid rgba(148, 163, 184, 0.16); padding: 11px 12px; border-radius: 10px;">${escapeGuardHtml(finalKeterangan)}</p>
-
-    <div style="font-size: 9.5px; color: #64748b; margin-top: 14px;">Gudang Nuhsantara Cloud Core</div>
-  `;
-
-  lockScreen.appendChild(box);
-  if (document.body) {
-    document.body.appendChild(lockScreen);
-  } else {
-    document.addEventListener("DOMContentLoaded", () => document.body.appendChild(lockScreen));
+    const lockScreen = document.getElementById('nx-global-lock-screen');
+    if (lockScreen) lockScreen.remove();
+    tampilkanGuardToast("Lisensi NX berhasil diaktifkan!", "success");
+    setTimeout(() => location.reload(), 600);
+  } catch (e) {
+    errEl.innerText = "Gagal menyinkronkan ke server cloud!";
+    errEl.style.display = "block";
+    btnEl.disabled = false;
+    btnEl.innerText = "Aktivasi Lisensi Sekarang";
   }
 }
 
-// --- TAMPILKAN LAYAR KUNCI PERMANEN (KILL SWITCH) ---
+function tampilkanSystemMaintenance(keterangan = "", kodeError = "ERR_SYSTEM_MAINTENANCE [ID: 503-MNT]") {
+  injectMaintenanceAnimationStyle();
+
+  const existing = document.getElementById('nx-global-lock-screen');
+  const safeKet = keterangan && String(keterangan).trim()
+    ? String(keterangan).trim()
+    : "Sistem Gudang Nuhsantara sedang dalam tahap pemeliharaan rutin, pembaruan modul, atau sinkronisasi database. Mohon tunggu beberapa saat hingga layanan kembali normal.";
+  const safeCode = kodeError && String(kodeError).trim()
+    ? String(kodeError).trim()
+    : "ERR_SYSTEM_MAINTENANCE [ID: 503-MNT]";
+
+  if (existing) {
+    const ketEl = existing.querySelector('#nxMaintenanceReasonText');
+    const codeEl = existing.querySelector('#nxMaintenanceCodeText');
+    if (ketEl) ketEl.textContent = safeKet;
+    if (codeEl) codeEl.textContent = safeCode;
+    return;
+  }
+
+  const lockScreen = document.createElement('div');
+  lockScreen.id = 'nx-global-lock-screen';
+  lockScreen.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(9, 13, 22, 0.99); backdrop-filter: blur(18px);
+    z-index: 2147483640; display: flex; justify-content: center; align-items: center;
+    padding: 20px; font-family: monospace; color: #f8fafc;
+  `;
+
+  lockScreen.innerHTML = `
+    <div class="nx-maintenance-float-pulse" style="max-width: 420px; width: 100%; background: rgba(30, 41, 59, 0.96); border: 1.5px solid rgba(245, 158, 11, 0.55); border-radius: 18px; padding: 28px 24px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
+      <div style="width: 56px; height: 56px; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.45); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; font-size: 24px; color: #f59e0b;">
+        <i class="fa-solid fa-gear nx-gear-spin"></i>
+      </div>
+      <div style="display: inline-block; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; font-size: 10px; font-weight: bold; padding: 3px 10px; border-radius: 999px; margin-bottom: 10px; letter-spacing: 0.6px;">
+        SYSTEM MAINTENANCE
+      </div>
+      <h2 style="margin: 0 0 8px 0; font-size: 16.5px; color: #fff;">SISTEM SEDANG DALAM PERBAIKAN</h2>
+      <div id="nxMaintenanceCodeText" style="display: inline-block; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5; font-size: 10px; font-weight: bold; padding: 3px 9px; border-radius: 6px; margin-bottom: 12px; letter-spacing: 0.4px;">
+        ${escapeGuardHtml(safeCode)}
+      </div>
+      <p id="nxMaintenanceReasonText" style="font-size: 11.5px; color: #cbd5e1; margin: 0 0 18px 0; line-height: 1.6; background: rgba(2, 6, 23, 0.55); border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 10px; padding: 11px 12px; text-align: left;">
+        ${escapeGuardHtml(safeKet)}
+      </p>
+      <div style="font-size: 10px; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
+        Halaman otomatis terbuka kembali setelah status maintenance dinonaktifkan dari Dashboard.
+      </div>
+      <button type="button" onclick="location.reload()" style="background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.5); color: #fbbf24; padding: 9px 16px; border-radius: 8px; font-family: monospace; font-size: 11px; font-weight: bold; cursor: pointer;">
+        <i class="fa-solid fa-rotate-right"></i> Cek Status Sekarang
+      </button>
+    </div>
+  `;
+
+  const parentTarget = document.body || document.documentElement;
+  parentTarget.appendChild(lockScreen);
+}
+
 function tampilkanLayarKunciPermanen() {
-  const existing = document.getElementById('nx-global-lock-screen');
-  if (existing && existing.dataset.mode === 'permanent') return;
-  if (existing) existing.remove();
-
-  document.title = "403 Access Forbidden - Permanent Revocation";
+  if (document.getElementById('nx-global-lock-screen')) return;
 
   const lockScreen = document.createElement('div');
   lockScreen.id = 'nx-global-lock-screen';
-  lockScreen.dataset.mode = 'permanent';
-  lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.75); backdrop-filter: blur(12px); z-index: 2147483640; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
-
-  const box = document.createElement('div');
-  box.style.cssText = "position: relative; background: #1a0f0f; border: 2px solid rgba(239, 68, 68, 0.6); padding: 32px 24px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(239, 68, 68, 0.3); font-family: monospace;";
-
-  box.innerHTML = `
-    <div style="position: absolute; top: 16px; left: 18px; display: flex; align-items: center; gap: 6px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); padding: 3px 8px; border-radius: 20px;">
-      <span style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%; display: inline-block;"></span>
-      <span style="font-size: 9.5px; color: #ef4444; font-weight: bold; letter-spacing: 0.5px;">PERMANENT_REVOCATION</span>
-    </div>
-    <div style="width: 50px; height: 50px; background: rgba(239, 68, 68, 0.2); border: 1.5px solid #ef4444; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 12px auto; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-    </div>
-    <h3 style="color: #ef4444; margin: 0 0 6px 0; font-size: 15px; font-weight: 700; letter-spacing: 1px;">AKSES DICABUT PERMANEN</h3>
-    <div style="font-size: 10.5px; color: #f87171; margin-bottom: 12px; background: rgba(239, 68, 68, 0.1); padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3);">ERR_LICENSE_REVOKED [ID: 403-REV]</div>
-    <p style="color: #cbd5e1; font-size: 12px; margin-bottom: 20px; line-height: 1.4; text-align: left;">Lisensi ekosistem Gudang Nuhsantara pada modul ini telah dinonaktifkan secara permanen oleh Administrator Pusat. Form input token dinonaktifkan.</p>
-    
-    <button type="button" id="btnHubungiAdminPerm" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace; margin-bottom: 8px;">💬 HUBUNGI ADMINISTRATOR</button>
-    
-    <div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core</div>
+  lockScreen.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.99); backdrop-filter: blur(18px);
+    z-index: 2147483640; display: flex; justify-content: center; align-items: center;
+    padding: 20px; font-family: monospace; color: #f8fafc;
   `;
 
-  lockScreen.appendChild(box);
-  if (document.body) {
-    document.body.appendChild(lockScreen);
-  } else {
-    document.addEventListener("DOMContentLoaded", () => document.body.appendChild(lockScreen));
-  }
-
-  setTimeout(() => {
-    const btnAdmin = document.getElementById('btnHubungiAdminPerm');
-    if (btnAdmin) {
-      btnAdmin.onclick = function() {
-        toggleUniversalChatWidget();
-      };
-    }
-  }, 100);
-}
-
-// --- TAMPILKAN MODAL LAYAR KUNCI SEMENTARA ---
-function tampilkanLayarKunciMandiri() {
-  const existing = document.getElementById('nx-global-lock-screen');
-  if (existing && existing.dataset.mode === 'temporary') return;
-  if (existing) existing.remove();
-
-  document.title = "503 Service Unavailable - Gateway Timeout";
-
-  const lockScreen = document.createElement('div');
-  lockScreen.id = 'nx-global-lock-screen';
-  lockScreen.dataset.mode = 'temporary';
-  lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.75); backdrop-filter: blur(12px); z-index: 2147483640; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
-
-  const box = document.createElement('div');
-  box.style.cssText = "position: relative; background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.4); padding: 32px 24px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(239, 68, 68, 0.15); font-family: monospace;";
-
-  box.innerHTML = `
-    <div style="position: absolute; top: 16px; left: 18px; display: flex; align-items: center; gap: 6px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 3px 8px; border-radius: 20px;">
-      <span style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%; display: inline-block;"></span>
-      <span style="font-size: 9.5px; color: #ef4444; font-weight: bold; letter-spacing: 0.5px;">PURE_CLOUD_LOCKED</span>
+  lockScreen.innerHTML = `
+    <div style="max-width: 380px; width: 100%; background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 26px; text-align: center;">
+      <div style="width: 50px; height: 50px; background: rgba(239, 68, 68, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; font-size: 20px; color: #ef4444;">
+        <i class="fa-solid fa-ban"></i>
+      </div>
+      <h2 style="margin: 0 0 6px 0; font-size: 16px; color: #fff;">AKSES DICABUT PERMANEN</h2>
+      <p style="font-size: 11px; color: #94a3b8; margin-bottom: 18px; line-height: 1.5;">
+        Lisensi perangkat telah dikunci permanen oleh System.<br>Hubungi administrator untuk aktivasi ulang.
+      </p>
+      <div style="font-size: 10px; color: #64748b;">ID Sistem: GN-PERM-LOCKED</div>
     </div>
-    <div style="width: 50px; height: 50px; background: rgba(239, 68, 68, 0.12); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 12px auto; box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-    </div>
-    <h3 style="color: #ef4444; margin: 0 0 6px 0; font-size: 15px; font-weight: 700; letter-spacing: 1px;">GATEWAY TOKEN EXPIRED</h3>
-    <div style="font-size: 10.5px; color: #94a3b8; margin-bottom: 12px; background: rgba(239, 68, 68, 0.08); padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2);">ERR_CLOUD_AUTH_LOCKED [ID: 503-GW]</div>
-    <p style="color: #cbd5e1; font-size: 12px; margin-bottom: 16px; line-height: 1.4; text-align: left;">Sesi token otorisasi cloud telah berakhir atau sistem dikunci oleh pusat. Masukkan token valid untuk membuka akses.</p>
-    <div style="margin-bottom: 12px;">
-      <input type="text" id="inputTokenLisensi" placeholder="Masukkan token lisensi..." style="width: 100%; padding: 10px 12px; background: #020617; border: 1px solid #334155; color: #38bdf8; font-size: 11.5px; border-radius: 8px; outline: none; font-family: monospace; text-align: center; box-sizing: border-box;" />
-      <div id="tokenErrorMsg" style="color: #ef4444; font-size: 10px; margin-top: 4px; display: none;">Token tidak valid atau format salah!</div>
-    </div>
-    <button id="btnRedeemToken" type="button" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border: 1px solid #38bdf8; padding: 10px 16px; font-size: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3); font-family: monospace; letter-spacing: 0.5px; margin-bottom: 8px; z-index: 2147483648;">AKTIFKAN TOKEN</button>
-    
-    <button type="button" id="btnHubungiAdminTemp" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace; margin-bottom: 8px;">💬 HUBUNGI ADMINISTRATOR</button>
-    
-    <div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core</div>
   `;
 
-  lockScreen.appendChild(box);
-  if (document.body) {
-    document.body.appendChild(lockScreen);
-  } else {
-    document.addEventListener("DOMContentLoaded", () => document.body.appendChild(lockScreen));
-  }
-
-  setTimeout(() => {
-    const btnAdminTemp = document.getElementById('btnHubungiAdminTemp');
-    if (btnAdminTemp) {
-      btnAdminTemp.onclick = function() {
-        toggleUniversalChatWidget();
-      };
-    }
-
-    const btnRedeem = document.getElementById('btnRedeemToken');
-    if (btnRedeem) {
-      btnRedeem.onclick = async function() {
-        const valToken = document.getElementById('inputTokenLisensi').value;
-        const decodedDate = decodeTokenToDate(valToken);
-        const errorMsg = document.getElementById('tokenErrorMsg');
-
-        if (decodedDate && decodedDate > new Date()) {
-          this.style.opacity = "0.8";
-          this.style.pointerEvents = "none";
-
-          let dotCount = 0;
-          let loadingInterval = setInterval(() => {
-            dotCount = (dotCount + 1) % 4;
-            this.innerText = "MENYINKRONKAN CLOUD" + ".".repeat(dotCount);
-          }, 300);
-
-          try {
-            await fetch(CLOUD_LICENSE_ENDPOINT, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                locked: false,
-                permanent: false,
-                expiry: decodedDate.toISOString(),
-                updatedAt: new Date().toISOString()
-              })
-            });
-
-            clearInterval(loadingInterval);
-            this.innerText = "TERAKTIVASI";
-            tampilkanGuardToast(
-              `<b style="color:#4ade80;">Aktivasi Berhasil!</b><div style="margin-top:2px; font-size:10.5px; color:#cbd5e1;">Masa aktif lisensi telah diperbarui. Memuat ulang...</div>`,
-              "success",
-              1200
-            );
-            setTimeout(() => {
-              location.reload(true);
-            }, 900);
-          } catch (e) {
-            clearInterval(loadingInterval);
-            tampilkanGuardToast("Gagal terhubung ke Cloud. Periksa koneksi internet.", "error");
-            this.style.opacity = "1";
-            this.style.pointerEvents = "auto";
-            this.innerText = "AKTIFKAN TOKEN";
-          }
-        } else {
-          errorMsg.style.display = 'block';
-          document.getElementById('inputTokenLisensi').style.border = "1px solid #ef4444";
-
-          this.style.transform = "translateX(5px)";
-          setTimeout(() => this.style.transform = "translateX(-5px)", 100);
-          setTimeout(() => this.style.transform = "translateX(0)", 200);
-        }
-      };
-    }
-  }, 100);
+  const parentTarget = document.body || document.documentElement;
+  parentTarget.appendChild(lockScreen);
 }
 
-// --- EKSEKUSI CEK CLOUD PERTAMA & POLLING TIAP 2 DETIK ---
-cekStatusCloud();
-setInterval(cekStatusCloud, 2000);
+// --- INISIALISASI SAAT HALAMAN DIMUAT ---
+window.addEventListener('DOMContentLoaded', () => {
+  cekStatusCloud();
+  renderProLiveChatWidget();
+  setInterval(cekStatusCloud, 2000);
+});
