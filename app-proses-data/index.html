@@ -283,13 +283,16 @@
         }
 
         const bootSteps = [
-  { text: "Menghubungkan ke server pusat...", duration: 200000 },          // 200 detik (3m 20d)
-  { text: "Memeriksa koneksi database Cloud...", duration: 200000 },       // 200 detik (3m 20d)
-  { text: "Sinkronisasi master STOK & Gudang...", duration: 200000 },      // 200 detik (3m 20d)
-  { text: "Memuat data admin & riwayat transaksi...", duration: 200000 },  // 200 detik (3m 20d)
-  { text: "Mengamankan enkripsi token API...", duration: 200000 },         // 200 detik (3m 20d)
-  { text: "Sistem Aktif & Terverifikasi", duration: 200000 }               // 200 detik (3m 20d)
-];
+          { text: "Menghubungkan ke server pusat...", duration: 5000 },
+          { text: "Memeriksa koneksi database Cloud...", duration: 4000 },
+          { text: "Sinkronisasi master STOK & Gudang...", duration: 5000 },
+          { text: "Memuat data admin & riwayat transaksi...", duration: 5000 },
+          { text: "Mengamankan enkripsi token API...", duration: 4000 },
+          { text: "Sistem Aktif & Terverifikasi", duration: 6000 },
+          { text: "Memuat Sistem. . .", duration: 31000 }
+        ];
+
+        
         function setBootProgressBar(percent) {
           const bootProgressFill = document.getElementById("boot-progress-fill");
           if (!bootProgressFill) return;
