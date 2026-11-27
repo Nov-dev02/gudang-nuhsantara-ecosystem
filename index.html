@@ -2450,9 +2450,20 @@
     };
 
     function generateAutomaticOneWeekToken() {
-      const targetDate = new Date();
-      targetDate.setDate(targetDate.getDate() + 7);
-      targetDate.setHours(23, 59, 59, 999);
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
+      const daysUntilSunday = (7 - dayOfWeek) % 7;
+
+      const targetDate = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + daysUntilSunday,
+        23,
+        59,
+        59,
+        999
+      );
+
       const timeHex = targetDate.getTime().toString(16);
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let randomPrefix = '';
