@@ -19,6 +19,8 @@ let isScannerActive = false;
 let stitchAudioCtx = null;
 let currentEditRowIndex = null;
 let currentAuthMode = "login";
+let googleGsiInitialized = false;
+let googleTokenClient = null;
 
 // ==========================================
 // 🐾 THEME SWITCHER & KARAKTER (DARK -> STITCH -> CAT)
@@ -498,6 +500,7 @@ window.onload = function() {
     initPoThemeSystem();
     cekPembaruanAplikasi();
     switchAuthMode("login");
+    initGoogleIdentityProvider();
 
     const today = getLocalDateString();
     const poTanggal = document.getElementById('poTanggal');
@@ -533,6 +536,7 @@ function tampilkanLogin() {
     if (loginSec) loginSec.classList.remove('hidden');
     if (poSec) poSec.classList.add('hidden');
     switchAuthMode("login");
+    initGoogleIdentityProvider();
 
     let savedTheme = 'dark';
     try {
@@ -560,7 +564,7 @@ function tampilkanFormPO(username) {
 }
 
 // ==========================================
-// 🔐 FIREBASE AUTH (REGISTER & LOGIN MANDIRI)
+// 🔐 FIREBASE AUTH (REGISTER, LOGIN & GOOGLE)
 // ==========================================
 function switchAuthMode(mode) {
     currentAuthMode = mode === "register" ? "register" : "login";
@@ -668,6 +672,33 @@ async function signInWithFirebaseEmailPassword(email, password) {
     if (!res.ok || data.error) {
         const errCode = data?.error?.message || "INVALID_LOGIN_CREDENTIALS";
         throw new Error(mapFirebaseAuthError(errCode));
+    }
+    return data;
+}
+
+async function signInWithFirebaseGoogleCredential({ idToken = null, accessToken = null }) {
+    if (!FIREBASE_AUTH_CONFIG.apiKey || FIREBASE_AUTH_CONFIG.apiKey.startsWith("ISI_")) {
+        throw new Error("API Key Firebase Auth belum diisi di FIREBASE_AUTH_CONFIG.");
+    }
+    const postBody = `id_token=${encodeURIComponent(idToken || "")}&access_token=${encodeURIComponent(accessToken || "")}&providerId=google.com`;
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${encodeURIComponent(FIREBASE_AUTH_CONFIG.apiKey)}`;
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            postBody: postBody,
+            requestUri: window.location.href,
+            returnIdpCredential: true,
+            returnSecureToken: true
+        })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+        const rawErr = data?.error?.message || "GOOGLE_AUTH_FAILED";
+        if (rawErr.includes("CONFIGURATION_NOT_FOUND") || rawErr.includes("OPERATION_NOT_ALLOWED")) {
+            throw new Error("Provider Google belum diaktifkan di Firebase Console -> Authentication -> Sign-in method.");
+        }
+        throw new Error("Gagal menghubungkan akun Google ke Firebase Auth (" + rawErr + ").");
     }
     return data;
 }
@@ -889,29 +920,186 @@ async function handleLogin() {
     }
 }
 
-function handleGoogleLogin(response) {
-    const responsePayload = parseJwt(response.credential);
-    const operatorName = responsePayload.name;
-    const operatorEmail = responsePayload.email;
+function getGoogleClientId() {
+    const onloadEl = document.getElementById('g_id_onload');
+    const attrClientId = onloadEl ? onloadEl.getAttribute('data-client_id') : '';
+    return (attrClientId || "95796216574-oh3m6ch1vhqo7r1necjbntvs33p2p0sp.apps.googleusercontent.com").trim();
+}
 
+function initGoogleIdentityProvider() {
+    if (typeof google === 'undefined' || !google.accounts) return;
+
+    const clientId = getGoogleClientId();
+    if (!clientId) return;
+
+    if (!googleGsiInitialized && google.accounts.id) {
+        google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleGoogleLogin,
+            auto_select: false,
+            cancel_on_tap_outside: true
+        });
+        googleGsiInitialized = true;
+    }
+
+    if (!googleTokenClient && google.accounts.oauth2 && google.accounts.oauth2.initTokenClient) {
+        googleTokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: 'openid email profile',
+            callback: async (tokenResponse) => {
+                if (!tokenResponse || tokenResponse.error || !tokenResponse.access_token) {
+                    setGoogleButtonLoading(false);
+                    if (tokenResponse && tokenResponse.error && tokenResponse.error !== 'popup_closed_by_user') {
+                        const errDiv = document.getElementById('loginError');
+                        if (errDiv) {
+                            errDiv.style.color = "#ef4444";
+                            errDiv.innerText = "Login Google dibatalkan atau gagal: " + tokenResponse.error;
+                        }
+                    }
+                    return;
+                }
+
+                try {
+                    let googleProfile = { name: "Pengguna Google", email: "" };
+                    try {
+                        const infoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                            headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                        });
+                        if (infoRes.ok) {
+                            const infoJson = await infoRes.json();
+                            googleProfile = {
+                                name: infoJson.name || infoJson.email || "Pengguna Google",
+                                email: infoJson.email || ""
+                            };
+                        }
+                    } catch (e) {}
+
+                    await completeGoogleFirebaseLogin({
+                        accessToken: tokenResponse.access_token,
+                        fallbackName: googleProfile.name,
+                        fallbackEmail: googleProfile.email
+                    });
+                } catch (err) {
+                    setGoogleButtonLoading(false);
+                    const errDiv = document.getElementById('loginError');
+                    if (errDiv) {
+                        errDiv.style.color = "#ef4444";
+                        errDiv.innerText = err.message || "Gagal login dengan Google.";
+                    }
+                }
+            }
+        });
+    }
+}
+
+function setGoogleButtonLoading(loading) {
+    const btnGoogle = document.getElementById('btnGoogleLogin');
+    if (!btnGoogle) return;
+    btnGoogle.disabled = !!loading;
+    btnGoogle.style.opacity = loading ? "0.7" : "1";
+    btnGoogle.innerHTML = loading
+        ? `<span class="modern-spinner"></span><span>Menghubungkan Google...</span>`
+        : `<i class="fab fa-google" style="font-size: 16px;"></i><span>Lanjutkan dengan Google</span>`;
+}
+
+async function completeGoogleFirebaseLogin({ idToken = null, accessToken = null, fallbackName = "", fallbackEmail = "" }) {
     const errDiv = document.getElementById('loginError');
+    if (errDiv) {
+        errDiv.style.color = "#38bdf8";
+        errDiv.innerText = "Menyinkronkan akun Google dengan Firebase Auth...";
+    }
+
+    const firebaseAuthData = await signInWithFirebaseGoogleCredential({ idToken, accessToken });
+    const uid = firebaseAuthData.localId;
+    const operatorName = (firebaseAuthData.displayName || fallbackName || firebaseAuthData.email || "Staf Gudang").trim();
+    const operatorEmail = (firebaseAuthData.email || fallbackEmail || "").trim().toLowerCase();
+
+    try {
+        await fetch(`${FIREBASE_RTDB_URL}/gudang_nuhsantara/users_auth/${encodeURIComponent(uid)}.json`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                uid: uid,
+                nama: operatorName,
+                email: operatorEmail,
+                provider: "google.com",
+                lastLoginAt: Date.now()
+            })
+        });
+    } catch (e) {}
+
     if (errDiv) {
         errDiv.style.color = "#10b981";
         errDiv.innerText = `Selamat datang, ${operatorName}! Membuka sistem...`;
     }
 
-    setTimeout(() => {
-        const today = getLocalDateString();
-        localStorage.setItem('po_user', operatorName);
-        localStorage.setItem('po_email', operatorEmail);
-        localStorage.setItem('po_login_date', today);
-        if (!localStorage.getItem('gudang_staff_name')) {
-            localStorage.setItem('gudang_staff_name', operatorName);
-        }
+    await new Promise(resolveDelay => setTimeout(resolveDelay, 500));
 
-        if (errDiv) errDiv.innerText = "";
-        tampilkanFormPO(operatorName);
-    }, 600);
+    const today = getLocalDateString();
+    localStorage.setItem('po_user', operatorName);
+    localStorage.setItem('po_email', operatorEmail);
+    localStorage.setItem('po_login_date', today);
+    if (!localStorage.getItem('gudang_staff_name')) {
+        localStorage.setItem('gudang_staff_name', operatorName);
+    }
+
+    if (errDiv) errDiv.innerText = "";
+    setGoogleButtonLoading(false);
+    tampilkanFormPO(operatorName);
+}
+
+async function handleGoogleLogin(response) {
+    setGoogleButtonLoading(true);
+    try {
+        const responsePayload = parseJwt(response.credential);
+        const operatorName = responsePayload.name || responsePayload.email || "Staf Gudang";
+        const operatorEmail = responsePayload.email || "";
+
+        await completeGoogleFirebaseLogin({
+            idToken: response.credential,
+            fallbackName: operatorName,
+            fallbackEmail: operatorEmail
+        });
+    } catch (err) {
+        setGoogleButtonLoading(false);
+        const errDiv = document.getElementById('loginError');
+        if (errDiv) {
+            errDiv.style.color = "#ef4444";
+            errDiv.innerText = err.message || "Gagal login menggunakan akun Google.";
+        }
+    }
+}
+
+function triggerGoogleLogin() {
+    initGoogleIdentityProvider();
+
+    if (typeof google === 'undefined' || !google.accounts) {
+        showCustomModal({
+            title: "Google Login",
+            message: "Layanan Google belum termuat. Pastikan koneksi internet aktif lalu coba lagi.",
+            type: "warning"
+        });
+        return;
+    }
+
+    const errDiv = document.getElementById('loginError');
+    if (errDiv) errDiv.innerText = "";
+
+    if (googleTokenClient && typeof googleTokenClient.requestAccessToken === 'function') {
+        setGoogleButtonLoading(true);
+        googleTokenClient.requestAccessToken({ prompt: 'select_account' });
+        return;
+    }
+
+    if (google.accounts.id && typeof google.accounts.id.prompt === 'function') {
+        google.accounts.id.prompt();
+    } else {
+        showCustomModal({
+            title: "Google Login",
+            message: "Layanan Google sedang diinisialisasi, silakan coba klik sekali lagi.",
+            type: "info"
+        });
+    }
 }
 
 function parseJwt(token) {
@@ -1602,26 +1790,6 @@ function tambahJumlah(angka) {
     inputJumlah.value = nilaiSekarang + Number(angka || 0);
     if (isLightMascotThemeActive()) window.playStitchSound("tap");
     checkFormValidity();
-}
-
-function triggerGoogleLogin() {
-    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-        google.accounts.id.prompt((notification) => {
-            if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                showCustomModal({
-                    title: "Google Login",
-                    message: "Silakan pastikan browser mengizinkan pop-up untuk melanjutkan login Google.",
-                    type: "warning"
-                });
-            }
-        });
-    } else {
-        showCustomModal({
-            title: "Google Login",
-            message: "Google API belum dimuat sepenuhnya. Pastikan terhubung ke internet.",
-            type: "warning"
-        });
-    }
 }
 
 // =========================================================================
