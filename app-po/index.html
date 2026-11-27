@@ -340,7 +340,8 @@
             color: #0284c7 !important;
         }
 
-        html[data-theme="stitch"] #loginSection #btnLogin {
+        html[data-theme="stitch"] #loginSection #btnLogin,
+        html[data-theme="stitch"] #loginSection #btnRegister {
             background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
             border: 1px solid #38bdf8 !important;
             color: #ffffff !important;
@@ -415,7 +416,8 @@
             color: #ea580c !important;
         }
 
-        html[data-theme="cat"] #loginSection #btnLogin {
+        html[data-theme="cat"] #loginSection #btnLogin,
+        html[data-theme="cat"] #loginSection #btnRegister {
             background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
             border: 1px solid #fb923c !important;
             color: #ffffff !important;
@@ -1009,7 +1011,6 @@
     <script>
         (function() {
             const PO_THEME_KEY = "gudang_po_theme";
-            // Ubah nama karakter kucing di sini sesuai selera bro
             const NAMA_KARAKTER_KUCING = "Mochi";
 
             function normalisasiTema(themeName) {
@@ -1153,7 +1154,7 @@
     </div>
 
     <div class="container">
-        <!-- Login Section -->
+        <!-- Login & Register Section -->
         <div id="loginSection" class="login-box hidden po-skel-wrapper">
             <div class="po-skel-layer" aria-hidden="true">
                 <div class="po-skel-bar" style="width: 52%; height: 22px; margin: 4px auto;"></div>
@@ -1177,7 +1178,7 @@
                 </div>
 
                 <div class="header-login">
-                    <h2>Login Gudang</h2>
+                    <h2 id="authHeadingTitle">Login Gudang</h2>
                     <div style="display: inline-flex; align-items: center; gap: 6px;">
                         <button type="button" id="btnLoginThemeNormal" class="po-login-theme-chip" onclick="terapkanTemaGlobalPo('dark')" title="Kembali ke tema gelap">
                             🌙 Gelap
@@ -1185,14 +1186,25 @@
                         <div class="real-time-clock clock">00:00:00</div>
                     </div>
                 </div>
-                <p class="subtitle">Silakan masuk menggunakan akun Anda</p>
+                <p id="authSubtitle" class="subtitle">Silakan masuk menggunakan username/email dan password</p>
 
+                <!-- Switch Tab Login / Register -->
+                <div id="authModeSwitch" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; margin-bottom: 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(148, 163, 184, 0.22);">
+                    <button type="button" id="tabBtnLogin" onclick="switchAuthMode('login')" style="padding: 8px 10px; border-radius: 8px; border: none; font-weight: 700; font-size: 12.5px; cursor: pointer; background: #3b82f6; color: #ffffff; transition: all 0.2s;">
+                        Masuk
+                    </button>
+                    <button type="button" id="tabBtnRegister" onclick="switchAuthMode('register')" style="padding: 8px 10px; border-radius: 8px; border: none; font-weight: 700; font-size: 12.5px; cursor: pointer; background: transparent; color: #94a3b8; transition: all 0.2s;">
+                        Daftar Akun
+                    </button>
+                </div>
+
+                <!-- Form Login -->
                 <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
                     <div class="form-group">
-                        <label for="username">Username</label>
+                        <label for="username">Username atau Email</label>
                         <div class="input-with-icon">
                             <span class="input-icon"><i class="fa-solid fa-user"></i></span>
-                            <input type="text" id="username" placeholder="Masukkan username" required autocomplete="off">
+                            <input type="text" id="username" placeholder="Masukkan username atau email" required autocomplete="username">
                         </div>
                     </div>
 
@@ -1200,8 +1212,8 @@
                         <label for="password">Password</label>
                         <div class="input-with-icon">
                             <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
-                            <input type="password" id="password" placeholder="Masukkan password" required>
-                            <span id="togglePassword" class="eye-icon" onclick="togglePasswordVisibility()">
+                            <input type="password" id="password" placeholder="Masukkan password" required autocomplete="current-password">
+                            <span id="togglePassword" class="eye-icon" onclick="togglePasswordVisibility('password', 'eyeIconToggle')">
                                 <i class="fa-solid fa-eye-slash" id="eyeIconToggle"></i>
                             </span>
                         </div>
@@ -1209,6 +1221,47 @@
 
                     <button type="submit" id="btnLogin">Login</button>
                     <div id="loginError" class="error-msg"></div>
+                </form>
+
+                <!-- Form Register -->
+                <form id="registerForm" class="hidden" onsubmit="event.preventDefault(); handleRegister();" style="display: none;">
+                    <div class="form-group">
+                        <label for="regNama">Nama Lengkap</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon"><i class="fa-solid fa-id-card"></i></span>
+                            <input type="text" id="regNama" placeholder="Masukkan nama lengkap" required autocomplete="name">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regUsername">Username</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon"><i class="fa-solid fa-at"></i></span>
+                            <input type="text" id="regUsername" placeholder="Pilih username unik (tanpa spasi)" required autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regEmail">Email</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon"><i class="fa-solid fa-envelope"></i></span>
+                            <input type="email" id="regEmail" placeholder="nama@email.com" required autocomplete="email">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regPassword">Password</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="regPassword" placeholder="Minimal 6 karakter" minlength="6" required autocomplete="new-password">
+                            <span id="toggleRegPassword" class="eye-icon" onclick="togglePasswordVisibility('regPassword', 'eyeIconRegToggle')">
+                                <i class="fa-solid fa-eye-slash" id="eyeIconRegToggle"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnRegister">Daftar Sekarang</button>
+                    <div id="registerError" class="error-msg"></div>
                 </form>
 
                 <div style="display: flex; align-items: center; margin: 16px 0; color: #64748b; font-size: 12px;">
@@ -1489,7 +1542,6 @@
 
     <script src="script.js"></script>
     <script>
-        // Pastikan tema tetap konsisten saat halaman siap atau logout
         window.addEventListener("DOMContentLoaded", function() {
             const PO_THEME_KEY = "gudang_po_theme";
             let temaTersimpan = "dark";
@@ -2168,7 +2220,6 @@
 
     async function inisialisasiLiveChatStaf(name) {
       safeStaffKey = name.replace(/[^a-zA-Z0-9_-]/g, '_');
-      // Tombol live chat bulat sengaja tidak dimunculkan; gunakan Chat CS
       const oldBtn = document.getElementById('floatingChatBtn');
       if (oldBtn) oldBtn.style.display = 'none';
 
