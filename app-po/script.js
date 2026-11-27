@@ -3,11 +3,22 @@ const FIREBASE_RTDB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-sout
 const CURRENT_APP_VERSION = "v1.2.3";
 const PO_THEME_STORAGE_KEY = "gudang_po_theme";
 
+// ==========================================
+// 🔐 FIREBASE AUTH CONFIG (REGISTER & LOGIN MANDIRI)
+// Isi apiKey dari Firebase Console -> Project Settings -> General -> Your apps
+// ==========================================
+const FIREBASE_AUTH_CONFIG = {
+    apiKey: "ISI_API_KEY_FIREBASE_KAMU",
+    authDomain: "gudang-nuhsantara-auth.firebaseapp.com",
+    databaseURL: FIREBASE_RTDB_URL
+};
+
 let masterBarang = [];
 let html5QrCode = null;
 let isScannerActive = false;
 let stitchAudioCtx = null;
 let currentEditRowIndex = null;
+let currentAuthMode = "login";
 
 // ==========================================
 // 🐾 THEME SWITCHER & KARAKTER (DARK -> STITCH -> CAT)
@@ -168,9 +179,6 @@ function initPoThemeSystem() {
         savedTheme = normalizeThemeValue(localStorage.getItem(PO_THEME_STORAGE_KEY) || 'dark');
     } catch (e) {}
     applyPoTheme(savedTheme, false);
-
-    // Sengaja tidak memasang addEventListener('click') di #btnSwitchPoTheme
-    // karena di index.html sudah memakai onclick="toggleTemaStitchGlobal()" (mencegah double toggle).
 
     const stitchAvatar = document.getElementById('poStitchAvatar');
     if (stitchAvatar && !stitchAvatar.dataset.boundAvatar) {
@@ -389,7 +397,7 @@ function injectModernStyles() {
     const style = document.createElement('style');
     style.id = 'modernCustomStyles';
     style.innerHTML = `
-        #btnLogin, #btnSubmit {
+        #btnLogin, #btnRegister, #btnSubmit {
             background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
             color: #ffffff !important;
             border: none !important;
@@ -399,12 +407,12 @@ function injectModernStyles() {
             transition: all 0.3s ease !important;
             box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
         }
-        #btnLogin:hover:not(:disabled), #btnSubmit:hover:not(:disabled) {
+        #btnLogin:hover:not(:disabled), #btnRegister:hover:not(:disabled), #btnSubmit:hover:not(:disabled) {
             background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
             transform: translateY(-2px) !important;
             box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
         }
-        #btnLogin:active:not(:disabled), #btnSubmit:active:not(:disabled) {
+        #btnLogin:active:not(:disabled), #btnRegister:active:not(:disabled), #btnSubmit:active:not(:disabled) {
             transform: translateY(0) !important;
         }
         .modern-spinner {
@@ -489,6 +497,7 @@ window.onload = function() {
     injectModernStyles();
     initPoThemeSystem();
     cekPembaruanAplikasi();
+    switchAuthMode("login");
 
     const today = getLocalDateString();
     const poTanggal = document.getElementById('poTanggal');
@@ -523,6 +532,7 @@ function tampilkanLogin() {
     const poSec = document.getElementById('poSection');
     if (loginSec) loginSec.classList.remove('hidden');
     if (poSec) poSec.classList.add('hidden');
+    switchAuthMode("login");
 
     let savedTheme = 'dark';
     try {
@@ -549,19 +559,276 @@ function tampilkanFormPO(username) {
     setTimeout(checkAndForceNotification, 1500);
 }
 
+// ==========================================
+// 🔐 FIREBASE AUTH (REGISTER & LOGIN MANDIRI)
+// ==========================================
+function switchAuthMode(mode) {
+    currentAuthMode = mode === "register" ? "register" : "login";
+    const isReg = currentAuthMode === "register";
+
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const tabLogin = document.getElementById("tabBtnLogin");
+    const tabRegister = document.getElementById("tabBtnRegister");
+    const headingTitle = document.getElementById("authHeadingTitle");
+    const subtitle = document.getElementById("authSubtitle");
+    const loginErr = document.getElementById("loginError");
+    const regErr = document.getElementById("registerError");
+
+    if (loginForm) {
+        loginForm.classList.toggle("hidden", isReg);
+        loginForm.style.display = isReg ? "none" : "block";
+    }
+    if (registerForm) {
+        registerForm.classList.toggle("hidden", !isReg);
+        registerForm.style.display = isReg ? "block" : "none";
+    }
+
+    if (tabLogin) {
+        tabLogin.style.background = !isReg ? "#3b82f6" : "transparent";
+        tabLogin.style.color = !isReg ? "#ffffff" : "#94a3b8";
+    }
+    if (tabRegister) {
+        tabRegister.style.background = isReg ? "#3b82f6" : "transparent";
+        tabRegister.style.color = isReg ? "#ffffff" : "#94a3b8";
+    }
+
+    if (headingTitle) headingTitle.textContent = isReg ? "Daftar Akun Gudang" : "Login Gudang";
+    if (subtitle) {
+        subtitle.textContent = isReg
+            ? "Buat akun baru dengan nama, username, email, dan password"
+            : "Silakan masuk menggunakan username/email dan password";
+    }
+    if (loginErr) loginErr.textContent = "";
+    if (regErr) regErr.textContent = "";
+}
+
+function normalizeUsernameKey(rawUser) {
+    return String(rawUser || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
+}
+
+function mapFirebaseAuthError(code) {
+    switch (code) {
+        case "EMAIL_EXISTS":
+            return "Email ini sudah terdaftar. Silakan login atau pakai email lain.";
+        case "INVALID_EMAIL":
+            return "Format email tidak valid.";
+        case "WEAK_PASSWORD : Password should be at least 6 characters":
+        case "WEAK_PASSWORD":
+            return "Password minimal 6 karakter.";
+        case "EMAIL_NOT_FOUND":
+        case "INVALID_LOGIN_CREDENTIALS":
+            return "Username/email atau password salah!";
+        case "USER_DISABLED":
+            return "Akun ini telah dinonaktifkan.";
+        case "TOO_MANY_ATTEMPTS_TRY_LATER":
+            return "Terlalu banyak percobaan gagal. Coba lagi beberapa saat.";
+        default:
+            return "Terjadi kendala autentikasi. Periksa kembali data Anda.";
+    }
+}
+
+async function signUpWithFirebaseEmailPassword(email, password) {
+    if (!FIREBASE_AUTH_CONFIG.apiKey || FIREBASE_AUTH_CONFIG.apiKey.startsWith("ISI_")) {
+        throw new Error("API Key Firebase Auth belum diisi di FIREBASE_AUTH_CONFIG.");
+    }
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${encodeURIComponent(FIREBASE_AUTH_CONFIG.apiKey)}`;
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            email: email,
+            password: password,
+            returnSecureToken: true
+        })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+        const errCode = data?.error?.message || "AUTH_ERROR";
+        throw new Error(mapFirebaseAuthError(errCode));
+    }
+    return data;
+}
+
+async function signInWithFirebaseEmailPassword(email, password) {
+    if (!FIREBASE_AUTH_CONFIG.apiKey || FIREBASE_AUTH_CONFIG.apiKey.startsWith("ISI_")) {
+        throw new Error("API Key Firebase Auth belum diisi di FIREBASE_AUTH_CONFIG.");
+    }
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${encodeURIComponent(FIREBASE_AUTH_CONFIG.apiKey)}`;
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            email: email,
+            password: password,
+            returnSecureToken: true
+        })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+        const errCode = data?.error?.message || "INVALID_LOGIN_CREDENTIALS";
+        throw new Error(mapFirebaseAuthError(errCode));
+    }
+    return data;
+}
+
+async function resolveIdentifierToEmail(identifier) {
+    const trimmed = String(identifier || "").trim();
+    if (trimmed.includes("@")) {
+        return { email: trimmed.toLowerCase(), username: trimmed.split("@")[0] };
+    }
+
+    const unameKey = normalizeUsernameKey(trimmed);
+    if (!unameKey) {
+        throw new Error("Username atau email tidak valid.");
+    }
+
+    const res = await fetch(`${FIREBASE_RTDB_URL}/gudang_nuhsantara/usernames/${encodeURIComponent(unameKey)}.json`);
+    const record = await res.json();
+    if (!record || !record.email) {
+        throw new Error("Username tidak ditemukan atau belum terdaftar.");
+    }
+    return {
+        email: String(record.email).trim().toLowerCase(),
+        username: record.username || trimmed
+    };
+}
+
+async function handleRegister() {
+    const namaInput = document.getElementById("regNama");
+    const userInput = document.getElementById("regUsername");
+    const emailInput = document.getElementById("regEmail");
+    const passInput = document.getElementById("regPassword");
+    const errDiv = document.getElementById("registerError");
+    const btnReg = document.getElementById("btnRegister");
+
+    const nama = namaInput ? namaInput.value.trim() : "";
+    const usernameRaw = userInput ? userInput.value.trim() : "";
+    const usernameKey = normalizeUsernameKey(usernameRaw);
+    const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
+    const pass = passInput ? passInput.value : "";
+
+    if (!nama || !usernameRaw || !email || !pass) {
+        if (errDiv) {
+            errDiv.style.color = "#ef4444";
+            errDiv.textContent = "Nama, username, email, dan password wajib diisi!";
+        }
+        return;
+    }
+
+    if (!usernameKey || usernameKey.length < 3) {
+        if (errDiv) {
+            errDiv.style.color = "#ef4444";
+            errDiv.textContent = "Username minimal 3 karakter huruf/angka.";
+        }
+        return;
+    }
+
+    if (pass.length < 6) {
+        if (errDiv) {
+            errDiv.style.color = "#ef4444";
+            errDiv.textContent = "Password minimal 6 karakter.";
+        }
+        return;
+    }
+
+    if (errDiv) errDiv.textContent = "";
+    if (btnReg) {
+        btnReg.disabled = true;
+        btnReg.style.opacity = "0.7";
+        btnReg.innerHTML = `<span class="modern-spinner"></span>Mendaftarkan...`;
+    }
+
+    try {
+        if (errDiv) {
+            errDiv.style.color = "#38bdf8";
+            errDiv.textContent = "Memeriksa ketersediaan username...";
+        }
+
+        const checkRes = await fetch(`${FIREBASE_RTDB_URL}/gudang_nuhsantara/usernames/${encodeURIComponent(usernameKey)}.json`);
+        const existingUser = await checkRes.json();
+        if (existingUser && existingUser.email) {
+            throw new Error("Username sudah digunakan. Silakan pilih username lain.");
+        }
+
+        if (errDiv) {
+            errDiv.style.color = "#38bdf8";
+            errDiv.textContent = "Membuat akun di Firebase Auth...";
+        }
+
+        const authData = await signUpWithFirebaseEmailPassword(email, pass);
+        const uid = authData.localId;
+
+        await Promise.all([
+            fetch(`${FIREBASE_RTDB_URL}/gudang_nuhsantara/usernames/${encodeURIComponent(usernameKey)}.json`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    uid: uid,
+                    email: email,
+                    username: usernameRaw,
+                    nama: nama,
+                    createdAt: Date.now()
+                })
+            }),
+            fetch(`${FIREBASE_RTDB_URL}/gudang_nuhsantara/users_auth/${encodeURIComponent(uid)}.json`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    uid: uid,
+                    nama: nama,
+                    username: usernameRaw,
+                    email: email,
+                    createdAt: Date.now()
+                })
+            })
+        ]);
+
+        if (errDiv) {
+            errDiv.style.color = "#10b981";
+            errDiv.textContent = "Pendaftaran berhasil! Silakan login dengan akun Anda.";
+        }
+
+        const loginUserField = document.getElementById("username");
+        const loginPassField = document.getElementById("password");
+        if (loginUserField) loginUserField.value = usernameRaw;
+        if (loginPassField) loginPassField.value = "";
+
+        if (document.getElementById("registerForm")) {
+            document.getElementById("registerForm").reset();
+        }
+
+        setTimeout(() => {
+            switchAuthMode("login");
+            if (loginPassField) loginPassField.focus();
+        }, 700);
+    } catch (err) {
+        if (errDiv) {
+            errDiv.style.color = "#ef4444";
+            errDiv.textContent = err.message || "Gagal mendaftarkan akun.";
+        }
+    } finally {
+        if (btnReg) {
+            btnReg.innerHTML = "Daftar Sekarang";
+            btnReg.disabled = false;
+            btnReg.style.opacity = "1";
+        }
+    }
+}
+
 async function handleLogin() {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const errDiv = document.getElementById('loginError');
     const btnLogin = document.getElementById('btnLogin');
 
-    const user = usernameInput ? usernameInput.value.trim() : '';
-    const pass = passwordInput ? passwordInput.value.trim() : '';
+    const identifier = usernameInput ? usernameInput.value.trim() : '';
+    const pass = passwordInput ? passwordInput.value : '';
 
-    if (!user || !pass) {
+    if (!identifier || !pass) {
         if (errDiv) {
             errDiv.style.color = "#ef4444";
-            errDiv.innerText = "Username dan password wajib diisi!";
+            errDiv.innerText = "Username/email dan password wajib diisi!";
         }
         return;
     }
@@ -576,52 +843,48 @@ async function handleLogin() {
     try {
         if (errDiv) {
             errDiv.style.color = "#38bdf8";
-            errDiv.innerText = "Menghubungkan ke server...";
+            errDiv.innerText = "Memverifikasi akun...";
         }
 
-        const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'login', username: user, password: pass })
-        });
-        const result = await response.json();
+        const resolved = await resolveIdentifierToEmail(identifier);
+        const authData = await signInWithFirebaseEmailPassword(resolved.email, pass);
+        const uid = authData.localId;
 
-        if (btnLogin) {
-            btnLogin.innerHTML = "Login";
-            btnLogin.disabled = false;
-            btnLogin.style.opacity = "1";
+        let displayName = resolved.username || identifier;
+        try {
+            const profRes = await fetch(`${FIREBASE_RTDB_URL}/gudang_nuhsantara/users_auth/${encodeURIComponent(uid)}.json`);
+            const profData = await profRes.json();
+            if (profData && (profData.nama || profData.username)) {
+                displayName = profData.nama || profData.username;
+            }
+        } catch (e) {}
+
+        if (errDiv) {
+            errDiv.style.color = "#10b981";
+            errDiv.innerText = "Akses diterima! Membuka sistem...";
+        }
+        await new Promise(resolveDelay => setTimeout(resolveDelay, 400));
+
+        const today = getLocalDateString();
+        localStorage.setItem('po_user', displayName);
+        localStorage.setItem('po_email', resolved.email);
+        localStorage.setItem('po_login_date', today);
+        if (!localStorage.getItem('gudang_staff_name')) {
+            localStorage.setItem('gudang_staff_name', displayName);
         }
 
-        if (result.status === 'success') {
-            if (errDiv) {
-                errDiv.style.color = "#10b981";
-                errDiv.innerText = "Akses diterima! Membuka sistem...";
-            }
-            await new Promise(resolve => setTimeout(resolve, 400));
-
-            const today = getLocalDateString();
-            localStorage.setItem('po_user', user);
-            localStorage.setItem('po_login_date', today);
-            if (!localStorage.getItem('gudang_staff_name')) {
-                localStorage.setItem('gudang_staff_name', user);
-            }
-
-            if (errDiv) errDiv.innerText = "";
-            tampilkanFormPO(user);
-        } else {
-            if (errDiv) {
-                errDiv.style.color = "#ef4444";
-                errDiv.innerText = result.message || "Username atau password salah!";
-            }
-        }
+        if (errDiv) errDiv.innerText = "";
+        tampilkanFormPO(displayName);
     } catch (err) {
-        if (btnLogin) {
-            btnLogin.innerHTML = "Login";
-            btnLogin.disabled = false;
-            btnLogin.style.opacity = "1";
-        }
         if (errDiv) {
             errDiv.style.color = "#ef4444";
-            errDiv.innerText = "Gagal terhubung ke server Apps Script!";
+            errDiv.innerText = err.message || "Username/email atau password salah!";
+        }
+    } finally {
+        if (btnLogin) {
+            btnLogin.innerHTML = "Login";
+            btnLogin.disabled = false;
+            btnLogin.style.opacity = "1";
         }
     }
 }
@@ -1281,21 +1544,23 @@ async function submitPO(e) {
 
 function initRobotAnimation() {
     const usernameInput = document.getElementById('username');
+    const regUsernameInput = document.getElementById('regUsername');
     const passwordInput = document.getElementById('password');
+    const regPasswordInput = document.getElementById('regPassword');
     const robotContainer = document.getElementById('robotContainer');
     const robotBubble = document.getElementById('robotBubble');
 
-    if (!usernameInput || !passwordInput || !robotContainer || !robotBubble) return;
+    if (!robotContainer || !robotBubble) return;
 
     function updateRobotState() {
         setTimeout(() => {
             const activeEl = document.activeElement;
-            if (activeEl === usernameInput) {
-                robotContainer.classList.remove('password-active');
-                robotBubble.textContent = "Halo! Masukkan username kamu ya 👤";
-            } else if (activeEl === passwordInput) {
+            if (activeEl === passwordInput || activeEl === regPasswordInput) {
                 robotContainer.classList.add('password-active');
                 robotBubble.textContent = "Waduh, password rahasia! Aku tutup mata ya 🙈";
+            } else if (activeEl === usernameInput || activeEl === regUsernameInput) {
+                robotContainer.classList.remove('password-active');
+                robotBubble.textContent = "Halo! Masukkan username atau email kamu ya 👤";
             } else {
                 robotContainer.classList.remove('password-active');
                 robotBubble.textContent = isCatThemeActive()
@@ -1307,15 +1572,16 @@ function initRobotAnimation() {
         }, 50);
     }
 
-    usernameInput.addEventListener('focus', updateRobotState);
-    usernameInput.addEventListener('blur', updateRobotState);
-    passwordInput.addEventListener('focus', updateRobotState);
-    passwordInput.addEventListener('blur', updateRobotState);
+    [usernameInput, regUsernameInput, passwordInput, regPasswordInput].forEach(el => {
+        if (!el) return;
+        el.addEventListener('focus', updateRobotState);
+        el.addEventListener('blur', updateRobotState);
+    });
 }
 
-function togglePasswordVisibility() {
-    const passwordInput = document.getElementById('password');
-    const eyeIconToggle = document.getElementById('eyeIconToggle');
+function togglePasswordVisibility(inputId = 'password', iconId = 'eyeIconToggle') {
+    const passwordInput = document.getElementById(inputId);
+    const eyeIconToggle = document.getElementById(iconId);
     if (!passwordInput || !eyeIconToggle) return;
 
     const isPassword = passwordInput.getAttribute('type') === 'password';
