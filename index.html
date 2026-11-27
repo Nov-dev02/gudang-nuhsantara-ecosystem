@@ -655,6 +655,7 @@
       opacity: 0;
       width: 0;
       height: 0;
+      pointer-events: none;
     }
     .gn-toggle-track {
       width: 54px;
@@ -675,12 +676,12 @@
       transform: translateX(0px);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
     }
-    .gn-toggle-switch input:checked + .gn-toggle-track {
+    .gn-toggle-switch.is-active .gn-toggle-track {
       background: rgba(245, 158, 11, 0.26);
       border-color: #f59e0b;
       box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
     }
-    .gn-toggle-switch input:checked + .gn-toggle-track .gn-toggle-thumb {
+    .gn-toggle-switch.is-active .gn-toggle-thumb {
       background: #fbbf24;
       transform: translateX(24px);
     }
@@ -1257,13 +1258,22 @@
               </div>
             </div>
 
-            <label class="gn-toggle-switch" title="Switch Maintenance ON / OFF">
-              <input type="checkbox" id="toggleMaintenanceSwitch" onchange="onMaintenanceSwitchChange(this)" />
+            <div
+              id="maintenanceSwitchControl"
+              class="gn-toggle-switch"
+              role="switch"
+              aria-checked="false"
+              tabindex="0"
+              onclick="handleMaintenanceSwitchClick(event)"
+              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleMaintenanceSwitchClick(event);}"
+              title="Switch Maintenance ON / OFF"
+            >
+              <input type="checkbox" id="toggleMaintenanceSwitch" />
               <span class="gn-toggle-track">
                 <span class="gn-toggle-thumb"></span>
               </span>
               <span id="maintenanceSwitchLabel" style="font-size: 11px; font-weight: bold; color: #94a3b8; min-width: 32px;">OFF</span>
-            </label>
+            </div>
           </div>
 
           <div class="autolock-setting-box">
@@ -1459,6 +1469,7 @@
     // --- SWITCH 2 FUNGSI: MODE MAINTENANCE SYSTEM (ON / OFF) ---
     function renderMaintenanceSwitchUI(isActive) {
       globalMaintenanceActive = Boolean(isActive);
+      const controlEl = document.getElementById("maintenanceSwitchControl");
       const chk = document.getElementById("toggleMaintenanceSwitch");
       const card = document.getElementById("maintenanceSwitchCard");
       const badge = document.getElementById("maintenanceSwitchBadge");
@@ -1466,6 +1477,10 @@
       const desc = document.getElementById("maintenanceSwitchDesc");
 
       if (chk) chk.checked = globalMaintenanceActive;
+      if (controlEl) {
+        controlEl.classList.toggle("is-active", globalMaintenanceActive);
+        controlEl.setAttribute("aria-checked", String(globalMaintenanceActive));
+      }
       if (card) card.classList.toggle("is-active", globalMaintenanceActive);
 
       if (badge) {
@@ -1494,10 +1509,19 @@
       }
     }
 
+    window.handleMaintenanceSwitchClick = function(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      const desiredState = !Boolean(globalMaintenanceActive);
+      pendingMaintenanceTargetState = desiredState;
+      bukaModalAdmin("toggle_maintenance");
+    };
+
     window.onMaintenanceSwitchChange = function(inputEl) {
       if (!inputEl) return;
-      const desiredState = Boolean(inputEl.checked);
-      // Kembalikan visual dulu sampai lolos verifikasi admin & tersimpan ke cloud
+      const desiredState = !Boolean(globalMaintenanceActive);
       inputEl.checked = globalMaintenanceActive;
       pendingMaintenanceTargetState = desiredState;
       bukaModalAdmin("toggle_maintenance");
@@ -1506,8 +1530,11 @@
     async function prosesToggleMaintenanceCloud(targetState) {
       const aktifkan = Boolean(targetState);
       try {
-        const res = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
-        const current = (await res.json()) || {};
+        let current = {};
+        try {
+          const res = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
+          if (res.ok) current = (await res.json()) || {};
+        } catch (_) {}
 
         const payload = aktifkan
           ? {
@@ -1529,11 +1556,14 @@
               maintenance_resolved_at: Date.now()
             };
 
-        await fetch(CLOUD_LICENSE_ENDPOINT, {
+        const patchRes = await fetch(CLOUD_LICENSE_ENDPOINT, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
+        if (!patchRes.ok) {
+          throw new Error("HTTP " + patchRes.status);
+        }
 
         renderMaintenanceSwitchUI(aktifkan);
         await catatLogAktivitas(
