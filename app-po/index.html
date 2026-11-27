@@ -125,6 +125,9 @@
                 if ((isStitch || isCat) && typeof window.pindahPosisiStitchDiKotak === "function") {
                     setTimeout(() => window.pindahPosisiStitchDiKotak(), 60);
                 }
+                if (typeof window.sinkronkanTemaModalKeamananLogin === "function") {
+                    window.sinkronkanTemaModalKeamananLogin();
+                }
             };
 
             window.switchTemaPo = function(targetTheme) {
@@ -288,7 +291,7 @@
                 </button>
 
                 <div id="g_id_onload" data-client_id="698331638433-4ed4d0okpc28i5na8tvrt18f0ftqs2d1.apps.googleusercontent.com" data-callback="handleGoogleLogin" data-auto_prompt="false" style="display: none;"></div>
-                
+
                 <div class="social-area">
                     <div class="social-label">Sosial Media</div>
                     <ul class="social-list">
@@ -527,6 +530,39 @@
             <div class="riwayat-footer-actions">
                 <button type="button" class="btn-riwayat-close" onclick="closeRiwayatModal()">Tutup</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Pemberitahuan Keamanan Sistem Login -->
+    <div id="modalKeamananLogin" class="modal-overlay" style="display: none; z-index: 2147483640; padding: 18px; box-sizing: border-box;">
+        <div id="modalKeamananLoginCard" class="modal-content" style="max-width: 420px; width: 100%; border-radius: 20px; padding: 24px 20px; background: linear-gradient(145deg, #0f172a, #1e293b); border: 1.5px solid rgba(56, 189, 248, 0.45); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65); color: #f8fafc;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; border-bottom: 1px solid rgba(148, 163, 184, 0.2); padding-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 11px;">
+                    <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.45); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 id="modalKeamananLoginTitle" style="margin: 0; font-size: 15.5px; font-weight: 700; line-height: 1.3;">
+                        Pemberitahuan Keamanan Sistem Login
+                    </h3>
+                </div>
+                <button type="button" onclick="tutupModalKeamananLogin(false)" aria-label="Tutup" style="background: transparent; border: none; color: #94a3b8; font-size: 22px; line-height: 1; cursor: pointer; padding: 2px 6px;">
+                    &times;
+                </button>
+            </div>
+
+            <p id="modalKeamananLoginLead" style="font-size: 13px; color: #e2e8f0; line-height: 1.6; margin: 0 0 12px 0;">
+                Halo tim gudang! Demi keamanan sistem <b>PO Gudang</b>, proses login sekarang <b>tidak lagi mencocokkan data melalui spreadsheet (Sheet Login)</b>.
+            </p>
+
+            <ul id="modalKeamananLoginList" style="font-size: 12.5px; color: #cbd5e1; line-height: 1.65; padding-left: 18px; margin: 0 0 18px 0;">
+                <li style="margin-bottom: 6px;">Akun lama di spreadsheet sudah tidak dipakai lagi untuk masuk ke aplikasi.</li>
+                <li style="margin-bottom: 6px;"><b>Silakan daftar akun terlebih dahulu</b> melalui tab <b>Daftar Akun</b> untuk membuat akun baru di sistem ini.</li>
+                <li>Setelah akun berhasil dibuat, baru gunakan data akun tersebut untuk login atau hubungi admin kalau ada kendala.</li>
+            </ul>
+
+            <button type="button" id="btnKeamananDaftarDulu" onclick="tutupModalKeamananLogin(true)" style="width: 100%; min-height: 44px; border: none; border-radius: 12px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; font-weight: 700; font-size: 13.5px; cursor: pointer; box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);">
+                Mengerti, Daftar Akun Dulu
+            </button>
         </div>
     </div>
 
@@ -915,7 +951,7 @@
             window.addEventListener("scroll", posisikanBubbleDekatStitch, { passive: true });
         })();
     </script>
-    
+
     <script>
   document.addEventListener("DOMContentLoaded", function() {
     const FIREBASE_DB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
@@ -1088,7 +1124,7 @@
     fetchPoLiveWeather();
     setInterval(updatePoWeatherClock, 1000);
     setInterval(fetchPoLiveWeather, 15 * 60 * 1000);
-    
+
     let staffName = localStorage.getItem('gudang_staff_name');
     let safeStaffKey = staffName ? staffName.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
 
@@ -1106,7 +1142,7 @@
       }
       return confirm(options.message || "Apakah Anda yakin?");
     }
-    
+
     function catatSesiMasukOtomatis(namaStaf) {
         const currentTime = Date.now();
         const safeKey = namaStaf.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -1139,17 +1175,17 @@
     function sendHeartbeat(isOffline = false) {
       let currentStaff = localStorage.getItem('gudang_staff_name');
       if (!currentStaff) return;
-      
+
       const safeKey = currentStaff.replace(/[^a-zA-Z0-9_-]/g, '_');
       const endpoint = `${FIREBASE_DB_URL}/gudang_nuhsantara/presence/${safeKey}.json`;
       const deviceType = deteksiTipePerangkatPo();
-      
+
       const payload = isOffline ? {
         name: currentStaff,
         modul: "Offline",
         device: deviceType,
         loginTime: 0,
-        time: Date.now() - 1000000 
+        time: Date.now() - 1000000
       } : {
         name: currentStaff,
         modul: modulName,
@@ -1216,7 +1252,7 @@
         if (!val) { inputEl.style.borderColor = '#ef4444'; return; }
         localStorage.setItem('gudang_staff_name', val);
         modalOverlay.remove();
-        
+
         catatSesiMasukOtomatis(val);
         sendHeartbeat(false);
         setInterval(() => sendHeartbeat(false), 5000);
@@ -1359,9 +1395,9 @@
           let bubbleClass = "left";
           let deleteBtn = "";
           let chatContentHtml = "";
-          
+
           const rawText = m.text || "";
-          const isTokenMessage = (m.sender === 'bot' || m.sender === 'system' || m.sender === 'system_admin') && 
+          const isTokenMessage = (m.sender === 'bot' || m.sender === 'system' || m.sender === 'system_admin') &&
                                  (rawText.includes("NX") || (rawText.length > 25 && (rawText.includes("Token") || rawText.includes("🔑") || rawText.includes("aktif"))));
 
           if (m.sender === 'staff') {
@@ -1469,9 +1505,9 @@
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(botReply)
             });
-            
+
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
-              method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
+              method: 'PUT', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ status: "waiting_duration", timestamp: Date.now() })
             });
             muatPesanChatStaf();
@@ -1481,7 +1517,7 @@
           const durasiDiminta = textPesan;
           setTimeout(async () => {
             await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/token_request.json`, {
-              method: 'PUT', headers: { 'Content-Type': 'application/json' }, 
+              method: 'PUT', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ status: "pending", requested_duration: durasiDiminta, timestamp: Date.now() })
             });
 
@@ -1580,7 +1616,7 @@
             </span>
             <span style="font-size: 10px; color: #94a3b8;">${waktuPesan} WIB</span>
           </div>
-          
+
           <div style="font-size: 13.5px; line-height: 1.6; color: #fff; word-wrap: break-word; margin-bottom: 18px; background: rgba(239, 68, 68, 0.08); padding: 12px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2);">
             ${data.message}
           </div>
