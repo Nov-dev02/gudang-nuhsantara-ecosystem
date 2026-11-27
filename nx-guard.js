@@ -495,6 +495,11 @@ function toggleProChatDrawer() {
   const isOpen = drawer.style.display === 'flex';
   drawer.style.display = isOpen ? 'none' : 'flex';
   if (!isOpen) {
+    const badge = document.getElementById('nxChatUnreadBadge');
+    if (badge) {
+      badge.innerText = '0';
+      badge.style.display = 'none';
+    }
     sinkronisasiChatStaffRealtime();
     setTimeout(() => {
       const box = document.getElementById('nxProChatMessagesContainer');
@@ -537,9 +542,11 @@ async function kirimPesanStaffPro() {
   });
 
   if (/token|expired|masa aktif|perpanjang/i.test(text)) {
+    const drawerEl = document.getElementById('nxProChatDrawer');
+    const isDrawerOpen = drawerEl && drawerEl.style.display === 'flex';
     await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sender: 'bot', text: "🤖 [AUTO-PILOT] Permintaan terkait token terdeteksi. Sistem memproses otomatis perpanjangan masa aktif (maksimal 1 minggu).", time: Date.now(), read: true })
+      body: JSON.stringify({ sender: 'bot', text: "🤖 [AUTO-PILOT] Permintaan terkait token terdeteksi. Sistem memproses otomatis perpanjangan masa aktif (maksimal 1 minggu).", time: Date.now(), read: Boolean(isDrawerOpen) })
     });
   }
 
@@ -573,9 +580,12 @@ async function mintaPerpanjanganTokenStaff() {
     body: JSON.stringify({ sender: 'staff', senderName: staffName, text: "🔑 Meminta perpanjangan masa aktif / token baru.", time: Date.now(), read: false })
   });
 
+  const drawerEl = document.getElementById('nxProChatDrawer');
+  const isDrawerOpen = drawerEl && drawerEl.style.display === 'flex';
+
   await fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sender: 'bot', text: "🤖 [AUTO-PILOT] Permintaan perpanjangan (batas 1 minggu) dikirim. Token otomatis akan muncul di chat dalam beberapa detik.", time: Date.now(), read: true })
+    body: JSON.stringify({ sender: 'bot', text: "🤖 [AUTO-PILOT] Permintaan perpanjangan (batas 1 minggu) dikirim. Token otomatis akan muncul di chat dalam beberapa detik.", time: Date.now(), read: Boolean(isDrawerOpen) })
   });
 
   tampilkanGuardToast("Permintaan dikirim! Auto-Pilot sedang memproses token 1 minggu.", "info");
@@ -679,14 +689,24 @@ async function sinkronisasiChatStaffRealtime() {
     const typingOwnerEl = document.getElementById('nxTypingIndicatorStaff');
     if (typingOwnerEl) typingOwnerEl.style.display = room.typing_owner ? 'block' : 'none';
 
+    const drawerEl = document.getElementById('nxProChatDrawer');
+    const isDrawerOpen = drawerEl && drawerEl.style.display === 'flex';
+
     const messages = room.messages || {};
     let unreadAdmin = 0;
     let html = "";
+    const markReadUpdates = {};
 
     Object.keys(messages).forEach(msgKey => {
       const m = messages[msgKey];
       if (!m) return;
-      if ((m.sender === 'owner' || m.sender === 'bot') && !m.read) unreadAdmin++;
+      if ((m.sender === 'owner' || m.sender === 'bot' || m.sender === 'system' || m.sender === 'system_admin') && !m.read) {
+        if (isDrawerOpen) {
+          markReadUpdates[`${msgKey}/read`] = true;
+        } else {
+          unreadAdmin++;
+        }
+      }
 
       const timeStr = m.time ? new Date(m.time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : "";
       const rawText = String(m.text || "");
@@ -727,6 +747,17 @@ async function sinkronisasiChatStaffRealtime() {
       }
     });
 
+    if (isDrawerOpen) {
+      unreadAdmin = 0;
+      if (Object.keys(markReadUpdates).length > 0) {
+        fetch(`${FIREBASE_DB_URL}/gudang_nuhsantara/chats/${safeStaffKey}/messages.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(markReadUpdates)
+        }).catch(() => {});
+      }
+    }
+
     const msgContainer = document.getElementById('nxProChatMessagesContainer');
     if (msgContainer) {
       const wasAtBottom = msgContainer.scrollHeight - msgContainer.scrollTop <= msgContainer.clientHeight + 50;
@@ -736,10 +767,11 @@ async function sinkronisasiChatStaffRealtime() {
 
     const badge = document.getElementById('nxChatUnreadBadge');
     if (badge) {
-      if (unreadAdmin > 0) {
+      if (!isDrawerOpen && unreadAdmin > 0) {
         badge.innerText = unreadAdmin;
         badge.style.display = 'inline-block';
       } else {
+        badge.innerText = '0';
         badge.style.display = 'none';
       }
     }
