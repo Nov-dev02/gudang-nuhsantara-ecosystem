@@ -101,7 +101,7 @@ function tampilkanGuardToast(pesan, type = "success", duration = 2600) {
   `;
 
   toast.innerHTML = `
-    <div style="width: 28px; height: 28px; border-radius: 8px; background: ${theme.iconBg}; color: ${theme.iconColor}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; margin-top: 1px;">
+    <div style="width: 28px; height: 28px; border-radius: 8px; background: ${theme.iconBg}; color:${theme.iconColor}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; margin-top: 1px;">
       <i class="fa-solid ${theme.icon}"></i>
     </div>
     <div style="flex: 1; min-width: 0; font-size: 11.5px; line-height: 1.45; word-break: break-word;">
@@ -182,7 +182,7 @@ function tampilkanGuardConfirm(options = {}) {
     `;
 
     modalBox.innerHTML = `
-      <div style="width: 44px; height: 44px; border-radius: 50%; background: ${danger ? "rgba(239, 68, 68, 0.14)" : "rgba(56, 189, 248, 0.14)"}; border: 1px solid ${accentColor}; color: ${accentColor}; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; font-size: 18px;">
+      <div style="width: 44px; height: 44px; border-radius: 50%; background: ${danger ? "rgba(239, 68, 68, 0.14)" : "rgba(56, 189, 248, 0.14)"}; border: 1px solid ${accentColor}; color:${accentColor}; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; font-size: 18px;">
         <i class="fa-solid ${danger ? "fa-trash-can" : "fa-circle-question"}"></i>
       </div>
       <div style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; margin-bottom: 8px;">
@@ -195,7 +195,7 @@ function tampilkanGuardConfirm(options = {}) {
         <button type="button" id="nxConfirmCancelBtn" style="flex: 1; padding: 9px 12px; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">
           ${escapeGuardHtml(cancelText)}
         </button>
-        <button type="button" id="nxConfirmOkBtn" style="flex: 1; padding: 9px 12px; background: ${confirmBg}; border: 1px solid ${accentColor}; color: #fff; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);">
+        <button type="button" id="nxConfirmOkBtn" style="flex: 1; padding: 9px 12px; background: ${confirmBg}; border: 1px solid${accentColor}; color: #fff; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);">
           ${escapeGuardHtml(confirmText)}
         </button>
       </div>
@@ -766,7 +766,7 @@ document.addEventListener("DOMContentLoaded", () => {
   injectUniversalChatHTML();
 });
 
-// --- TAMPILKAN LAYAR SYSTEM MAINTENANCE (GEAR BERPUTAR + TEKS + KETERANGAN + CODE ERROR + MENGAMBANG & BERDENYUT PELAN) ---
+// --- TAMPILKAN LAYAR SYSTEM MAINTENANCE (IKON MAINTENANCE SYSTEM BERPUTAR + TEKS + KETERANGAN + CODE ERROR + MENGAMBANG & BERDENYUT PELAN) ---
 function tampilkanSystemMaintenance(keteranganText = "", errorCodeText = "") {
   injectMaintenanceAnimationStyle();
 
@@ -805,10 +805,10 @@ function tampilkanSystemMaintenance(keteranganText = "", errorCodeText = "") {
       <span style="font-size: 9.5px; color: #fbbf24; font-weight: bold; letter-spacing: 0.5px;">SYSTEM_MAINTENANCE</span>
     </div>
 
-    <div style="width: 58px; height: 58px; background: rgba(245, 158, 11, 0.14); border: 1.5px solid rgba(245, 158, 11, 0.55); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 12px auto 14px auto; box-shadow: 0 0 22px rgba(245, 158, 11, 0.25);">
-      <svg class="nx-gear-spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"></circle>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    <div style="width: 60px; height: 60px; background: rgba(245, 158, 11, 0.14); border: 1.5px solid rgba(245, 158, 11, 0.55); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 12px auto 14px auto; box-shadow: 0 0 22px rgba(245, 158, 11, 0.25);">
+      <svg class="nx-gear-spin" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9" stroke-dasharray="4 2.5"></circle>
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
       </svg>
     </div>
 
@@ -816,11 +816,9 @@ function tampilkanSystemMaintenance(keteranganText = "", errorCodeText = "") {
 
     <div id="nxMaintenanceErrorCode" style="font-size: 10.5px; color: #fcd34d; margin-bottom: 14px; background: rgba(245, 158, 11, 0.1); padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.3);">${escapeGuardHtml(finalErrorCode)}</div>
 
-    <p id="nxMaintenanceDescText" style="color: #cbd5e1; font-size: 12px; margin-bottom: 18px; line-height: 1.5; text-align: left; background: rgba(2, 6, 23, 0.55); border: 1px solid rgba(148, 163, 184, 0.16); padding: 11px 12px; border-radius: 10px;">${escapeGuardHtml(finalKeterangan)}</p>
+    <p id="nxMaintenanceDescText" style="color: #cbd5e1; font-size: 12px; margin-bottom: 8px; line-height: 1.5; text-align: left; background: rgba(2, 6, 23, 0.55); border: 1px solid rgba(148, 163, 184, 0.16); padding: 11px 12px; border-radius: 10px;">${escapeGuardHtml(finalKeterangan)}</p>
 
-    <button type="button" id="btnHubungiAdminMaintenance" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace; margin-bottom: 8px;">💬 HUBUNGI ADMINISTRATOR</button>
-
-    <div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core</div>
+    <div style="font-size: 9.5px; color: #64748b; margin-top: 14px;">Gudang Nuhsantara Cloud Core</div>
   `;
 
   lockScreen.appendChild(box);
@@ -829,15 +827,6 @@ function tampilkanSystemMaintenance(keteranganText = "", errorCodeText = "") {
   } else {
     document.addEventListener("DOMContentLoaded", () => document.body.appendChild(lockScreen));
   }
-
-  setTimeout(() => {
-    const btnAdminMaint = document.getElementById('btnHubungiAdminMaintenance');
-    if (btnAdminMaint) {
-      btnAdminMaint.onclick = function() {
-        toggleUniversalChatWidget();
-      };
-    }
-  }, 100);
 }
 
 // --- TAMPILKAN LAYAR KUNCI PERMANEN (KILL SWITCH) ---
@@ -987,21 +976,4 @@ function tampilkanLayarKunciMandiri() {
             tampilkanGuardToast("Gagal terhubung ke Cloud. Periksa koneksi internet.", "error");
             this.style.opacity = "1";
             this.style.pointerEvents = "auto";
-            this.innerText = "AKTIFKAN TOKEN";
-          }
-        } else {
-          errorMsg.style.display = 'block';
-          document.getElementById('inputTokenLisensi').style.border = "1px solid #ef4444";
-
-          this.style.transform = "translateX(5px)";
-          setTimeout(() => this.style.transform = "translateX(-5px)", 100);
-          setTimeout(() => this.style.transform = "translateX(0)", 200);
-        }
-      };
-    }
-  }, 100);
-}
-
-// --- EKSEKUSI CEK CLOUD PERTAMA & POLLING TIAP 2 DETIK ---
-cekStatusCloud();
-setInterval(cekStatusCloud, 2000);
+            this.innerText = "AKT
