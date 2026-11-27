@@ -101,7 +101,7 @@ function tampilkanGuardToast(pesan, type = "success", duration = 2600) {
   `;
 
   toast.innerHTML = `
-    <div style="width: 28px; height: 28px; border-radius: 8px; background: ${theme.iconBg}; color:${theme.iconColor}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; margin-top: 1px;">
+    <div style="width: 28px; height: 28px; border-radius: 8px; background: ${theme.iconBg}; color: ${theme.iconColor}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; margin-top: 1px;">
       <i class="fa-solid ${theme.icon}"></i>
     </div>
     <div style="flex: 1; min-width: 0; font-size: 11.5px; line-height: 1.45; word-break: break-word;">
@@ -182,7 +182,7 @@ function tampilkanGuardConfirm(options = {}) {
     `;
 
     modalBox.innerHTML = `
-      <div style="width: 44px; height: 44px; border-radius: 50%; background: ${danger ? "rgba(239, 68, 68, 0.14)" : "rgba(56, 189, 248, 0.14)"}; border: 1px solid ${accentColor}; color:${accentColor}; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; font-size: 18px;">
+      <div style="width: 44px; height: 44px; border-radius: 50%; background: ${danger ? "rgba(239, 68, 68, 0.14)" : "rgba(56, 189, 248, 0.14)"}; border: 1px solid ${accentColor}; color: ${accentColor}; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; font-size: 18px;">
         <i class="fa-solid ${danger ? "fa-trash-can" : "fa-circle-question"}"></i>
       </div>
       <div style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; margin-bottom: 8px;">
@@ -195,7 +195,7 @@ function tampilkanGuardConfirm(options = {}) {
         <button type="button" id="nxConfirmCancelBtn" style="flex: 1; padding: 9px 12px; background: #1e293b; border: 1px solid #475569; color: #cbd5e1; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold;">
           ${escapeGuardHtml(cancelText)}
         </button>
-        <button type="button" id="nxConfirmOkBtn" style="flex: 1; padding: 9px 12px; background: ${confirmBg}; border: 1px solid${accentColor}; color: #fff; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);">
+        <button type="button" id="nxConfirmOkBtn" style="flex: 1; padding: 9px 12px; background: ${confirmBg}; border: 1px solid ${accentColor}; color: #fff; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 11.5px; font-weight: bold; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);">
           ${escapeGuardHtml(confirmText)}
         </button>
       </div>
@@ -976,4 +976,21 @@ function tampilkanLayarKunciMandiri() {
             tampilkanGuardToast("Gagal terhubung ke Cloud. Periksa koneksi internet.", "error");
             this.style.opacity = "1";
             this.style.pointerEvents = "auto";
-            this.innerText = "AKT
+            this.innerText = "AKTIFKAN TOKEN";
+          }
+        } else {
+          errorMsg.style.display = 'block';
+          document.getElementById('inputTokenLisensi').style.border = "1px solid #ef4444";
+
+          this.style.transform = "translateX(5px)";
+          setTimeout(() => this.style.transform = "translateX(-5px)", 100);
+          setTimeout(() => this.style.transform = "translateX(0)", 200);
+        }
+      };
+    }
+  }, 100);
+}
+
+// --- EKSEKUSI CEK CLOUD PERTAMA & POLLING TIAP 2 DETIK ---
+cekStatusCloud();
+setInterval(cekStatusCloud, 2000);
