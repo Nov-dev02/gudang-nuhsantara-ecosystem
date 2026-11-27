@@ -923,7 +923,7 @@ async function handleLogin() {
 function getGoogleClientId() {
     const onloadEl = document.getElementById('g_id_onload');
     const attrClientId = onloadEl ? onloadEl.getAttribute('data-client_id') : '';
-    return (attrClientId || "95796216574-oh3m6ch1vhqo7r1necjbntvs33p2p0sp.apps.googleusercontent.com").trim();
+    return (attrClientId || "698331638433-4ed4d0okpc28i5na8tvrt18f0ftqs2d1.apps.googleusercontent.com").trim();
 }
 
 function initGoogleIdentityProvider() {
