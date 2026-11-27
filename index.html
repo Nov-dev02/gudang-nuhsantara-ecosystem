@@ -613,7 +613,7 @@
     .theme-swatch-btn:hover { border-color: var(--accent-blue); background: var(--accent-soft); }
     .theme-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-    /* Admin Controls */
+    /* Admin Controls & Maintenance 2-State Switch */
     .admin-controls { display: flex; gap: 10px; flex-wrap: wrap; }
     .btn-admin {
       background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent-darker) 100%);
@@ -623,6 +623,67 @@
       box-shadow: 0 4px 14px var(--accent-soft);
     }
     .btn-admin:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .maintenance-switch-box {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(2, 6, 23, 0.72);
+      border: 1px solid rgba(245, 158, 11, 0.28);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-family: monospace;
+    }
+    .maintenance-switch-box.is-active {
+      border-color: rgba(245, 158, 11, 0.75);
+      background: rgba(245, 158, 11, 0.08);
+      box-shadow: 0 0 22px rgba(245, 158, 11, 0.14);
+    }
+    .gn-toggle-switch {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .gn-toggle-switch input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .gn-toggle-track {
+      width: 54px;
+      height: 28px;
+      border-radius: 999px;
+      background: #1e293b;
+      border: 1.5px solid #475569;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px;
+    }
+    .gn-toggle-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #94a3b8;
+      transform: translateX(0px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    }
+    .gn-toggle-switch input:checked + .gn-toggle-track {
+      background: rgba(245, 158, 11, 0.26);
+      border-color: #f59e0b;
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+    }
+    .gn-toggle-switch input:checked + .gn-toggle-track .gn-toggle-thumb {
+      background: #fbbf24;
+      transform: translateX(24px);
+    }
 
     .autolock-setting-box {
       margin-top: 18px; padding-top: 16px;
@@ -1175,12 +1236,34 @@
       <div id="tab-admin" class="tab-pane">
         <div class="section-box" style="border-color: var(--accent-ring);">
           <div class="section-title"><i class="fa-solid fa-user-gear"></i> SYSTEM / SUPER ADMIN CONTROLS</div>
-          <p style="font-size: 11.5px; color: var(--text-desc); margin: 0 0 16px 0; line-height: 1.4;">Kelola token lisensi NX pusat, ubah PIN akses admin terenkripsi SHA-256, buka halaman web generator, atau paksa pembaruan aplikasi di seluruh perangkat staf.</p>
+          <p style="font-size: 11.5px; color: var(--text-desc); margin: 0 0 16px 0; line-height: 1.4;">Kelola token lisensi NX pusat, ubah PIN akses admin terenkripsi SHA-256, buka halaman web generator, paksa pembaruan aplikasi, atau aktifkan mode maintenance sistem.</p>
           <div class="admin-controls">
             <button class="btn-admin" onclick="bukaModalAdmin('lisensi')"><i class="fa-solid fa-key"></i> Panel Lisensi</button>
             <button class="btn-admin" onclick="bukaModalAdmin('change_pin')"><i class="fa-solid fa-shield-halved"></i> Ganti PIN Admin</button>
             <button class="btn-admin" onclick="bukaModalAdmin('generator')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-color: #34d399; box-shadow: none;"><i class="fa-solid fa-code"></i> Generator</button>
             <button class="btn-admin" onclick="bukaModalAdmin('force_update')" style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); border-color: #f87171; box-shadow: none;"><i class="fa-solid fa-rotate"></i> Paksa Update</button>
+          </div>
+
+          <!-- SWITCH 2 FUNGSI: MAINTENANCE SYSTEM (ON / OFF) -->
+          <div id="maintenanceSwitchCard" class="maintenance-switch-box">
+            <div style="min-width: 220px; flex: 1;">
+              <div style="font-size: 12px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-screwdriver-wrench" style="color: #fbbf24;"></i>
+                <span>MODE MAINTENANCE SYSTEM</span>
+                <span id="maintenanceSwitchBadge" style="font-size: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.45); color: #4ade80;">OFF</span>
+              </div>
+              <div id="maintenanceSwitchDesc" style="font-size: 10.5px; color: var(--text-desc); margin-top: 4px; line-height: 1.45;">
+                OFF: Aplikasi App PO &amp; Proses Data berjalan normal. Aktifkan (ON) untuk mengunci keduanya ke halaman Maintenance.
+              </div>
+            </div>
+
+            <label class="gn-toggle-switch" title="Switch Maintenance ON / OFF">
+              <input type="checkbox" id="toggleMaintenanceSwitch" onchange="onMaintenanceSwitchChange(this)" />
+              <span class="gn-toggle-track">
+                <span class="gn-toggle-thumb"></span>
+              </span>
+              <span id="maintenanceSwitchLabel" style="font-size: 11px; font-weight: bold; color: #94a3b8; min-width: 32px;">OFF</span>
+            </label>
           </div>
 
           <div class="autolock-setting-box">
@@ -1318,6 +1401,8 @@
 
     const notifiedStaffMsgKeys = new Set();
     let isFirstChatLoad = true;
+    let globalMaintenanceActive = false;
+    let pendingMaintenanceTargetState = null;
 
     function escapeHtml(value) {
       return String(value ?? "")
@@ -1370,6 +1455,107 @@
     let cachedAuditLogs = [];
     let cachedReviews = [];
     let droneBubbleTimer = null;
+
+    // --- SWITCH 2 FUNGSI: MODE MAINTENANCE SYSTEM (ON / OFF) ---
+    function renderMaintenanceSwitchUI(isActive) {
+      globalMaintenanceActive = Boolean(isActive);
+      const chk = document.getElementById("toggleMaintenanceSwitch");
+      const card = document.getElementById("maintenanceSwitchCard");
+      const badge = document.getElementById("maintenanceSwitchBadge");
+      const label = document.getElementById("maintenanceSwitchLabel");
+      const desc = document.getElementById("maintenanceSwitchDesc");
+
+      if (chk) chk.checked = globalMaintenanceActive;
+      if (card) card.classList.toggle("is-active", globalMaintenanceActive);
+
+      if (badge) {
+        if (globalMaintenanceActive) {
+          badge.innerText = "ON • TERKUNCI";
+          badge.style.background = "rgba(245, 158, 11, 0.22)";
+          badge.style.borderColor = "rgba(245, 158, 11, 0.65)";
+          badge.style.color = "#fbbf24";
+        } else {
+          badge.innerText = "OFF • NORMAL";
+          badge.style.background = "rgba(34, 197, 94, 0.15)";
+          badge.style.borderColor = "rgba(34, 197, 94, 0.45)";
+          badge.style.color = "#4ade80";
+        }
+      }
+
+      if (label) {
+        label.innerText = globalMaintenanceActive ? "ON" : "OFF";
+        label.style.color = globalMaintenanceActive ? "#fbbf24" : "#94a3b8";
+      }
+
+      if (desc) {
+        desc.innerText = globalMaintenanceActive
+          ? "ON: Aplikasi App PO & Proses Data sedang dikunci ke halaman Maintenance System. Matikan switch (OFF) untuk membuka kembali."
+          : "OFF: Aplikasi App PO & Proses Data berjalan normal. Aktifkan switch (ON) untuk mengunci keduanya ke halaman Maintenance.";
+      }
+    }
+
+    window.onMaintenanceSwitchChange = function(inputEl) {
+      if (!inputEl) return;
+      const desiredState = Boolean(inputEl.checked);
+      // Kembalikan visual dulu sampai lolos verifikasi admin & tersimpan ke cloud
+      inputEl.checked = globalMaintenanceActive;
+      pendingMaintenanceTargetState = desiredState;
+      bukaModalAdmin("toggle_maintenance");
+    };
+
+    async function prosesToggleMaintenanceCloud(targetState) {
+      const aktifkan = Boolean(targetState);
+      try {
+        const res = await fetch(CLOUD_LICENSE_ENDPOINT + "?t=" + Date.now());
+        const current = (await res.json()) || {};
+
+        const payload = aktifkan
+          ? {
+              maintenance: true,
+              locked: false,
+              permanent: false,
+              status: "MAINTENANCE",
+              maintenanceCode: current.maintenanceCode || "ERR_SYSTEM_MAINTENANCE [ID: 503-MNT]",
+              maintenanceMessage:
+                current.maintenanceMessage ||
+                "Sistem Gudang Nuhsantara sedang dalam tahap pemeliharaan rutin, pembaruan modul, atau sinkronisasi database. Mohon tunggu beberapa saat hingga layanan kembali normal.",
+              maintenance_at: Date.now()
+            }
+          : {
+              maintenance: false,
+              locked: false,
+              permanent: false,
+              status: "ACTIVE",
+              maintenance_resolved_at: Date.now()
+            };
+
+        await fetch(CLOUD_LICENSE_ENDPOINT, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        renderMaintenanceSwitchUI(aktifkan);
+        await catatLogAktivitas(
+          aktifkan
+            ? "Mengaktifkan MODE MAINTENANCE SYSTEM (App PO & Proses Data terkunci)"
+            : "Menonaktifkan MODE MAINTENANCE SYSTEM (App PO & Proses Data berjalan normal)"
+        );
+        showDashboardToast(
+          aktifkan
+            ? "Mode Maintenance AKTIF (ON) — App PO & Proses Data dikunci ke halaman Maintenance."
+            : "Mode Maintenance NONAKTIF (OFF) — App PO & Proses Data berjalan lancar.",
+          true
+        );
+        initCommandCenterHUD();
+        muatAuditLogs();
+      } catch (e) {
+        renderMaintenanceSwitchUI(globalMaintenanceActive);
+        showDashboardToast("Gagal mengubah status Maintenance di Cloud!", false);
+      } finally {
+        pendingMaintenanceTargetState = null;
+      }
+    }
 
     // --- KONTROL PAUSE / PLAY BOOT PROSES DATA ---
     function renderDashboardBootSyncUI(payload) {
@@ -2007,6 +2193,7 @@
       initSplashScreenFlow();
       ambilHashPinAktif();
       muatTemaDashboard();
+      renderMaintenanceSwitchUI(false);
       updateAutoLockHintUI();
       initAutoLockMonitor();
       loadSavedWeatherCoords();
@@ -2443,7 +2630,7 @@
       else if (tabId === 'logs') { headerTitle.innerText = "Audit Logs & Broadcast Center"; muatAuditLogs(); }
       else if (tabId === 'reviews') { headerTitle.innerText = "Ulasan Aplikasi dari Staf Gudang"; muatUlasanStaf(); }
       else if (tabId === 'chat') { headerTitle.innerText = "Pusat Live Chat Bantuan Staf"; muatDaftarChatStaf(); }
-      else if (tabId === 'admin') { headerTitle.innerText = "System Admin & License Hub"; updateAutoLockHintUI(); }
+      else if (tabId === 'admin') { headerTitle.innerText = "System Admin & License Hub"; updateAutoLockHintUI(); renderMaintenanceSwitchUI(globalMaintenanceActive); }
     }
 
     // --- RIWAYAT LOGIN HARIAN ---
@@ -2835,11 +3022,16 @@
         }
         const data = await res.json();
         const isPerm = Boolean(data && (data.permanent === true || data.status === "LOCKED_PERM"));
+        const isMaint = Boolean(data && (data.maintenance === true || data.status === "MAINTENANCE"));
         const isTemp = Boolean(data && (data.locked === true || data.status === "LOCKED_TEMP"));
-        globalLicenseLockedTemp = isTemp && !isPerm;
+        globalLicenseLockedTemp = isTemp && !isPerm && !isMaint;
+        renderMaintenanceSwitchUI(isMaint);
 
         if (isPerm) {
           if (statusTextEl) { statusTextEl.innerText = "Kunci Permanen"; statusTextEl.style.color = "#ef4444"; }
+          syncDroneHealthVisor(true);
+        } else if (isMaint) {
+          if (statusTextEl) { statusTextEl.innerText = "Maintenance"; statusTextEl.style.color = "#fbbf24"; }
           syncDroneHealthVisor(true);
         } else if (isTemp) {
           if (statusTextEl) { statusTextEl.innerText = "Kunci Sementara"; statusTextEl.style.color = "#f59e0b"; }
@@ -3302,6 +3494,10 @@
 
     function tutupModalAdmin() {
       document.getElementById('adminModal').style.display = 'none';
+      if (targetAksiAdmin === 'toggle_maintenance') {
+        pendingMaintenanceTargetState = null;
+        renderMaintenanceSwitchUI(globalMaintenanceActive);
+      }
       targetAksiAdmin = "";
     }
 
@@ -3345,7 +3541,9 @@
 
     function eksekusiAksiAdminSetelahLolos() {
       const aksi = targetAksiAdmin;
-      tutupModalAdmin();
+      const nextMaintState = pendingMaintenanceTargetState;
+      targetAksiAdmin = "";
+      document.getElementById('adminModal').style.display = 'none';
       if (aksi === 'lisensi') bukaPanelNx();
       else if (aksi === 'change_pin') prosesUbahPinAdminBaru();
       else if (aksi === 'generator') {
@@ -3357,6 +3555,7 @@
       else if (aksi === 'lock_temp') kunciSistemSementara();
       else if (aksi === 'lock_perm') kunciSistemPermanen();
       else if (aksi === 'save_token') prosesSimpanTokenKeCloud();
+      else if (aksi === 'toggle_maintenance') prosesToggleMaintenanceCloud(nextMaintState);
     }
 
     function triggerSimpanToken() {
@@ -3377,6 +3576,7 @@
             prev_token: null,
             locked: false,
             permanent: false,
+            maintenance: false,
             status: "ACTIVE",
             expiry: decodedDate.toISOString(),
             updated_at: Date.now()
@@ -3384,6 +3584,7 @@
         });
         globalLicenseLockedTemp = false;
         globalExpiryDate = decodedDate;
+        renderMaintenanceSwitchUI(false);
         document.getElementById('inputPanelNxToken').value = "";
         await catatLogAktivitas("Memperbarui & menyimpan token lisensi baru ke Cloud");
         showDashboardToast("Token berhasil disimpan ke Cloud!", true);
@@ -3452,6 +3653,7 @@
           body: JSON.stringify({
             locked: true,
             permanent: false,
+            maintenance: false,
             status: "LOCKED_TEMP",
             prev_token: currentData.prev_token || currentData.token || null,
             token: expiredToken,
@@ -3462,6 +3664,7 @@
 
         globalLicenseLockedTemp = true;
         globalExpiryDate = new Date(Date.now() - 1000);
+        renderMaintenanceSwitchUI(false);
         await catatLogAktivitas("Mengaktifkan Kunci Sementara sistem & menandai token kedaluwarsa");
         showDashboardToast("Sistem dikunci sementara & status masa aktif menjadi KEDALUWARSA!", true);
         tutupPanelNx();
@@ -3476,7 +3679,8 @@
       const yakin = await tampilkanDashboardConfirm({ title: "KUNCI PERMANEN", message: "PERINGATAN: Kunci sistem secara permanen di seluruh aplikasi?", confirmText: "Kunci Permanen", cancelText: "Batal", danger: true });
       if (!yakin) return;
       try {
-        await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permanent: true, locked: true, status: "LOCKED_PERM", locked_at: Date.now() }) });
+        await fetch(CLOUD_LICENSE_ENDPOINT, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permanent: true, locked: true, maintenance: false, status: "LOCKED_PERM", locked_at: Date.now() }) });
+        renderMaintenanceSwitchUI(false);
         await catatLogAktivitas("Mengaktifkan Kunci Permanen sistem");
         showDashboardToast("Sistem dikunci permanen di seluruh aplikasi!", true);
         tutupPanelNx(); initCommandCenterHUD(); muatAuditLogs();
