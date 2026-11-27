@@ -8,7 +8,7 @@ const PO_THEME_STORAGE_KEY = "gudang_po_theme";
 // Isi apiKey dari Firebase Console -> Project Settings -> General -> Your apps
 // ==========================================
 const FIREBASE_AUTH_CONFIG = {
-    apiKey: "ISI_API_KEY_FIREBASE_KAMU",
+    apiKey: "AIzaSyCOT-wtQZozXJXbwiwEVCAHAbsfAleuZzI",
     authDomain: "gudang-nuhsantara-auth.firebaseapp.com",
     databaseURL: FIREBASE_RTDB_URL
 };
