@@ -24,32 +24,37 @@ function escapeGuardHtml(text) {
     .replace(/'/g, "&#39;");
 }
 
-// --- HELPER STYLE ANIMASI MAINTENANCE (GEAR BERPUTAR + MENGAMBANG & BERDENYUT PELAN) ---
+// --- HELPER STYLE ANIMASI MAINTENANCE (MENGAMBANG & BERDENYUT PELAN - TEMA MERAH) ---
 function injectMaintenanceAnimationStyle() {
   if (document.getElementById("nx-maintenance-anim-style")) return;
 
   const style = document.createElement("style");
   style.id = "nx-maintenance-anim-style";
   style.textContent = `
-    @keyframes nxGearSpin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
     @keyframes nxFloatPulse {
       0%, 100% {
         transform: translateY(0px) scale(1);
-        box-shadow: 0 24px 55px rgba(0, 0, 0, 0.85), 0 0 24px rgba(245, 158, 11, 0.16);
+        box-shadow: 0 24px 55px rgba(0, 0, 0, 0.85), 0 0 24px rgba(239, 68, 68, 0.22);
       }
       50% {
         transform: translateY(-7px) scale(1.012);
-        box-shadow: 0 30px 65px rgba(0, 0, 0, 0.92), 0 0 36px rgba(245, 158, 11, 0.28);
+        box-shadow: 0 30px 65px rgba(0, 0, 0, 0.92), 0 0 38px rgba(239, 68, 68, 0.36);
       }
     }
 
-    .nx-gear-spin {
-      animation: nxGearSpin 4.5s linear infinite;
+    @keyframes nxToolPulse {
+      0%, 100% {
+        transform: scale(1) rotate(0deg);
+      }
+      50% {
+        transform: scale(1.07) rotate(-4deg);
+      }
+    }
+
+    .nx-maintenance-tool-anim {
+      animation: nxToolPulse 2.6s ease-in-out infinite;
       transform-origin: center center;
+      display: inline-block;
     }
 
     .nx-maintenance-float-pulse {
@@ -806,30 +811,27 @@ function tampilkanSystemMaintenance(keterangan = "", kodeError = "ERR_SYSTEM_MAI
   lockScreen.id = 'nx-global-lock-screen';
   lockScreen.style.cssText = `
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(9, 13, 22, 0.99); backdrop-filter: blur(18px);
+    background: rgba(14, 7, 10, 0.99); backdrop-filter: blur(18px);
     z-index: 2147483640; display: flex; justify-content: center; align-items: center;
     padding: 20px; font-family: monospace; color: #f8fafc;
   `;
 
   lockScreen.innerHTML = `
-    <div class="nx-maintenance-float-pulse" style="max-width: 420px; width: 100%; background: rgba(30, 41, 59, 0.96); border: 1.5px solid rgba(245, 158, 11, 0.55); border-radius: 18px; padding: 28px 24px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
-      <div style="width: 56px; height: 56px; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.45); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; font-size: 24px; color: #f59e0b;">
-        <i class="fa-solid fa-gear nx-gear-spin"></i>
+    <div class="nx-maintenance-float-pulse" style="max-width: 420px; width: 100%; background: rgba(30, 17, 23, 0.96); border: 1.5px solid rgba(239, 68, 68, 0.65); border-radius: 18px; padding: 28px 24px; text-align: center;">
+      <div style="width: 58px; height: 58px; background: rgba(239, 68, 68, 0.16); border: 1.5px solid rgba(239, 68, 68, 0.55); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; font-size: 24px; color: #ef4444; box-shadow: 0 0 22px rgba(239, 68, 68, 0.25);">
+        <i class="fa-solid fa-screwdriver-wrench nx-maintenance-tool-anim"></i>
       </div>
-      <div style="display: inline-block; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; font-size: 10px; font-weight: bold; padding: 3px 10px; border-radius: 999px; margin-bottom: 10px; letter-spacing: 0.6px;">
+      <div style="display: inline-block; background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; font-size: 10px; font-weight: bold; padding: 3px 10px; border-radius: 999px; margin-bottom: 10px; letter-spacing: 0.6px;">
         SYSTEM MAINTENANCE
       </div>
       <h2 style="margin: 0 0 8px 0; font-size: 16.5px; color: #fff;">SISTEM SEDANG DALAM PERBAIKAN</h2>
-      <div id="nxMaintenanceCodeText" style="display: inline-block; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5; font-size: 10px; font-weight: bold; padding: 3px 9px; border-radius: 6px; margin-bottom: 12px; letter-spacing: 0.4px;">
+      <div id="nxMaintenanceCodeText" style="display: inline-block; background: rgba(220, 38, 38, 0.22); border: 1px solid rgba(248, 113, 113, 0.55); color: #fca5a5; font-size: 10px; font-weight: bold; padding: 3px 9px; border-radius: 6px; margin-bottom: 12px; letter-spacing: 0.4px;">
         ${escapeGuardHtml(safeCode)}
       </div>
-      <p id="nxMaintenanceReasonText" style="font-size: 11.5px; color: #cbd5e1; margin: 0 0 18px 0; line-height: 1.6; background: rgba(2, 6, 23, 0.55); border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 10px; padding: 11px 12px; text-align: left;">
+      <p id="nxMaintenanceReasonText" style="font-size: 11.5px; color: #e2e8f0; margin: 0 0 18px 0; line-height: 1.6; background: rgba(15, 6, 10, 0.72); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 10px; padding: 11px 12px; text-align: left;">
         ${escapeGuardHtml(safeKet)}
       </p>
-      <div style="font-size: 10px; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
-        Halaman otomatis terbuka kembali setelah status maintenance dinonaktifkan dari Dashboard.
-      </div>
-      <button type="button" onclick="location.reload()" style="background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.5); color: #fbbf24; padding: 9px 16px; border-radius: 8px; font-family: monospace; font-size: 11px; font-weight: bold; cursor: pointer;">
+      <button type="button" onclick="location.reload()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(248, 113, 113, 0.6); color: #fca5a5; padding: 9px 16px; border-radius: 8px; font-family: monospace; font-size: 11px; font-weight: bold; cursor: pointer;">
         <i class="fa-solid fa-rotate-right"></i> Cek Status Sekarang
       </button>
     </div>
