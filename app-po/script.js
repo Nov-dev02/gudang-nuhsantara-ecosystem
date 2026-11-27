@@ -2,6 +2,7 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMxaPzNaYATNn-zMyx
 const FIREBASE_RTDB_URL = "https://gudang-nuhsantara-auth-default-rtdb.asia-southeast1.firebasedatabase.app";
 const CURRENT_APP_VERSION = "v1.2.3";
 const PO_THEME_STORAGE_KEY = "gudang_po_theme";
+const KEAMANAN_LOGIN_SEEN_KEY = "gudang_po_keamanan_login_v1";
 
 // ==========================================
 // 🔐 FIREBASE AUTH CONFIG (REGISTER & LOGIN MANDIRI)
@@ -21,6 +22,103 @@ let currentEditRowIndex = null;
 let currentAuthMode = "login";
 let googleGsiInitialized = false;
 let googleTokenClient = null;
+
+// ==========================================
+// 🛡️ MODAL INFO KEAMANAN LOGIN (NON-SPREADSHEET)
+// ==========================================
+window.sinkronkanTemaModalKeamananLogin = function() {
+    const card = document.getElementById("modalKeamananLoginCard");
+    const title = document.getElementById("modalKeamananLoginTitle");
+    const lead = document.getElementById("modalKeamananLoginLead");
+    const list = document.getElementById("modalKeamananLoginList");
+    if (!card) return;
+
+    if (isCatThemeActive()) {
+        card.style.background = "linear-gradient(145deg, #fffdf9, #ffedd5)";
+        card.style.borderColor = "#fdba74";
+        card.style.color = "#431407";
+        if (title) title.style.color = "#c2410c";
+        if (lead) lead.style.color = "#431407";
+        if (list) list.style.color = "#7c2d12";
+    } else if (isStitchThemeActive()) {
+        card.style.background = "linear-gradient(145deg, #ffffff, #e0f2fe)";
+        card.style.borderColor = "#7dd3fc";
+        card.style.color = "#0f172a";
+        if (title) title.style.color = "#0369a1";
+        if (lead) lead.style.color = "#1e293b";
+        if (list) list.style.color = "#334155";
+    } else {
+        card.style.background = "linear-gradient(145deg, #0f172a, #1e293b)";
+        card.style.borderColor = "rgba(56, 189, 248, 0.45)";
+        card.style.color = "#f8fafc";
+        if (title) title.style.color = "#f8fafc";
+        if (lead) lead.style.color = "#e2e8f0";
+        if (list) list.style.color = "#cbd5e1";
+    }
+};
+
+function tampilkanModalKeamananLogin() {
+    try {
+        if (localStorage.getItem(KEAMANAN_LOGIN_SEEN_KEY) === "done") return;
+    } catch (e) {}
+
+    const modal = document.getElementById("modalKeamananLogin");
+    const loginSec = document.getElementById("loginSection");
+    if (!modal || !loginSec || loginSec.classList.contains("hidden")) return;
+
+    window.sinkronkanTemaModalKeamananLogin();
+    modal.style.display = "flex";
+}
+
+function tutupModalKeamananLogin(arahKeDaftar = true) {
+    try {
+        localStorage.setItem(KEAMANAN_LOGIN_SEEN_KEY, "done");
+    } catch (e) {}
+
+    const modal = document.getElementById("modalKeamananLogin");
+    if (modal) modal.style.display = "none";
+
+    if (arahKeDaftar) {
+        if (typeof switchAuthMode === "function") {
+            switchAuthMode("register");
+        }
+        setTimeout(() => {
+            const regNama = document.getElementById("regNama");
+            if (regNama) regNama.focus();
+        }, 120);
+    }
+}
+
+function initKeamananLoginModal() {
+    let sudahTampil = false;
+
+    const cekMuncul = () => {
+        if (sudahTampil) return;
+        try {
+            if (localStorage.getItem(KEAMANAN_LOGIN_SEEN_KEY) === "done") return;
+        } catch (e) {}
+
+        const loginSec = document.getElementById("loginSection");
+        const splash = document.getElementById("appSplashScreen");
+        const skeletonAktif = document.body && document.body.classList.contains("po-skeleton-active");
+        const splashMasihAda = splash && window.getComputedStyle(splash).display !== "none" && parseFloat(window.getComputedStyle(splash).opacity || "1") > 0.05;
+
+        if (loginSec && !loginSec.classList.contains("hidden") && !splashMasihAda && !skeletonAktif) {
+            sudahTampil = true;
+            setTimeout(tampilkanModalKeamananLogin, 250);
+        }
+    };
+
+    const timer = setInterval(() => {
+        cekMuncul();
+        if (sudahTampil) clearInterval(timer);
+    }, 250);
+
+    setTimeout(() => {
+        clearInterval(timer);
+        cekMuncul();
+    }, 4000);
+}
 
 // ==========================================
 // 🐾 THEME SWITCHER & KARAKTER (DARK -> STITCH -> CAT)
@@ -498,6 +596,7 @@ window.onload = function() {
     updateRealTimeClock();
     injectModernStyles();
     initPoThemeSystem();
+    initKeamananLoginModal();
     cekPembaruanAplikasi();
     switchAuthMode("login");
     initGoogleIdentityProvider();
@@ -543,6 +642,8 @@ function tampilkanLogin() {
         savedTheme = normalizeThemeValue(localStorage.getItem(PO_THEME_STORAGE_KEY) || 'dark');
     } catch (e) {}
     applyPoTheme(savedTheme, false);
+
+    setTimeout(tampilkanModalKeamananLogin, 250);
 }
 
 function tampilkanFormPO(username) {
