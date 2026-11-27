@@ -24,9 +24,11 @@ function escapeGuardHtml(text) {
     .replace(/'/g, "&#39;");
 }
 
-// --- HELPER STYLE ANIMASI MAINTENANCE (MENGAMBANG & BERDENYUT PELAN - TEMA MERAH) ---
+// --- HELPER STYLE ANIMASI MAINTENANCE (MENGAMBANG + ICON BERGERAK HIDUP - TEMA MERAH) ---
 function injectMaintenanceAnimationStyle() {
-  if (document.getElementById("nx-maintenance-anim-style")) return;
+  if (document.getElementById("nx-maintenance-anim-style")) {
+    document.getElementById("nx-maintenance-anim-style").remove();
+  }
 
   const style = document.createElement("style");
   style.id = "nx-maintenance-anim-style";
@@ -42,17 +44,70 @@ function injectMaintenanceAnimationStyle() {
       }
     }
 
-    @keyframes nxToolPulse {
-      0%, 100% {
-        transform: scale(1) rotate(0deg);
+    @keyframes nxWrenchWork {
+      0% {
+        transform: rotate(0deg) scale(1);
       }
-      50% {
-        transform: scale(1.07) rotate(-4deg);
+      12% {
+        transform: rotate(-22deg) scale(1.08);
+      }
+      24% {
+        transform: rotate(18deg) scale(1.08);
+      }
+      36% {
+        transform: rotate(-16deg) scale(1.05);
+      }
+      48% {
+        transform: rotate(0deg) scale(1);
+      }
+      100% {
+        transform: rotate(0deg) scale(1);
       }
     }
 
+    @keyframes nxRingRadar {
+      0% {
+        transform: scale(0.95);
+        opacity: 0.75;
+      }
+      70% {
+        transform: scale(1.28);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1.28);
+        opacity: 0;
+      }
+    }
+
+    .nx-maintenance-icon-wrap {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      background: rgba(239, 68, 68, 0.16);
+      border: 1.5px solid rgba(239, 68, 68, 0.55);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px auto;
+      font-size: 24px;
+      color: #ef4444;
+      box-shadow: 0 0 22px rgba(239, 68, 68, 0.25);
+    }
+
+    .nx-maintenance-icon-wrap::after {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(248, 113, 113, 0.7);
+      animation: nxRingRadar 2.4s ease-out infinite;
+      pointer-events: none;
+    }
+
     .nx-maintenance-tool-anim {
-      animation: nxToolPulse 2.6s ease-in-out infinite;
+      animation: nxWrenchWork 2.4s ease-in-out infinite;
       transform-origin: center center;
       display: inline-block;
     }
@@ -818,7 +873,7 @@ function tampilkanSystemMaintenance(keterangan = "", kodeError = "ERR_SYSTEM_MAI
 
   lockScreen.innerHTML = `
     <div class="nx-maintenance-float-pulse" style="max-width: 420px; width: 100%; background: rgba(30, 17, 23, 0.96); border: 1.5px solid rgba(239, 68, 68, 0.65); border-radius: 18px; padding: 28px 24px; text-align: center;">
-      <div style="width: 58px; height: 58px; background: rgba(239, 68, 68, 0.16); border: 1.5px solid rgba(239, 68, 68, 0.55); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; font-size: 24px; color: #ef4444; box-shadow: 0 0 22px rgba(239, 68, 68, 0.25);">
+      <div class="nx-maintenance-icon-wrap">
         <i class="fa-solid fa-screwdriver-wrench nx-maintenance-tool-anim"></i>
       </div>
       <div style="display: inline-block; background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; font-size: 10px; font-weight: bold; padding: 3px 10px; border-radius: 999px; margin-bottom: 10px; letter-spacing: 0.6px;">
