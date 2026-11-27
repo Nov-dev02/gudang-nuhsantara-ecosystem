@@ -24,6 +24,44 @@ function escapeGuardHtml(text) {
     .replace(/'/g, "&#39;");
 }
 
+// --- HELPER STYLE ANIMASI MAINTENANCE (GEAR BERPUTAR + MENGAMBANG & BERDENYUT PELAN) ---
+function injectMaintenanceAnimationStyle() {
+  if (document.getElementById("nx-maintenance-anim-style")) return;
+
+  const style = document.createElement("style");
+  style.id = "nx-maintenance-anim-style";
+  style.textContent = `
+    @keyframes nxGearSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes nxFloatPulse {
+      0%, 100% {
+        transform: translateY(0px) scale(1);
+        box-shadow: 0 24px 55px rgba(0, 0, 0, 0.85), 0 0 24px rgba(245, 158, 11, 0.16);
+      }
+      50% {
+        transform: translateY(-7px) scale(1.012);
+        box-shadow: 0 30px 65px rgba(0, 0, 0, 0.92), 0 0 36px rgba(245, 158, 11, 0.28);
+      }
+    }
+
+    .nx-gear-spin {
+      animation: nxGearSpin 4.5s linear infinite;
+      transform-origin: center center;
+    }
+
+    .nx-maintenance-float-pulse {
+      animation: nxFloatPulse 3.6s ease-in-out infinite;
+      will-change: transform, box-shadow;
+    }
+  `;
+
+  const parentTarget = document.head || document.documentElement;
+  parentTarget.appendChild(style);
+}
+
 // --- HELPER TOAST ESTETIK TEMA GUDANG NUHSANTARA ---
 function tampilkanGuardToast(pesan, type = "success", duration = 2600) {
   const existing = document.getElementById("nx-guard-custom-toast");
@@ -271,10 +309,24 @@ async function cekStatusCloud() {
     const isExpired = typeof expiryMs === "number" && !Number.isNaN(expiryMs) && now > expiryMs;
 
     const isPermanent = data.permanent === true || data.status === "LOCKED_PERM";
+    const isMaintenance = data.maintenance === true || data.status === "MAINTENANCE";
     const isTempLocked = data.locked === true || data.status === "LOCKED_TEMP";
 
     if (isPermanent) {
       tampilkanLayarKunciPermanen();
+    } else if (isMaintenance) {
+      const kodeErrorMaintenance =
+        data.maintenanceCode ||
+        data.errorCode ||
+        data.code ||
+        "ERR_SYSTEM_MAINTENANCE [ID: 503-MNT]";
+      const keteranganMaintenance =
+        data.maintenanceMessage ||
+        data.maintenanceNote ||
+        data.message ||
+        data.reason ||
+        "Sistem Gudang Nuhsantara sedang dalam tahap pemeliharaan rutin, pembaruan modul, atau sinkronisasi database. Mohon tunggu beberapa saat hingga layanan kembali normal.";
+      tampilkanSystemMaintenance(keteranganMaintenance, kodeErrorMaintenance);
     } else if (isTempLocked || isExpired) {
       tampilkanLayarKunciMandiri();
     } else {
@@ -710,8 +762,83 @@ function injectUniversalChatHTML() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  injectMaintenanceAnimationStyle();
   injectUniversalChatHTML();
 });
+
+// --- TAMPILKAN LAYAR SYSTEM MAINTENANCE (GEAR BERPUTAR + TEKS + KETERANGAN + CODE ERROR + MENGAMBANG & BERDENYUT PELAN) ---
+function tampilkanSystemMaintenance(keteranganText = "", errorCodeText = "") {
+  injectMaintenanceAnimationStyle();
+
+  const finalErrorCode = String(errorCodeText || "").trim() || "ERR_SYSTEM_MAINTENANCE [ID: 503-MNT]";
+  const finalKeterangan = String(keteranganText || "").trim() ||
+    "Sistem Gudang Nuhsantara sedang dalam tahap pemeliharaan rutin, pembaruan modul, atau sinkronisasi database. Mohon tunggu beberapa saat hingga layanan kembali normal.";
+
+  const existing = document.getElementById('nx-global-lock-screen');
+  if (existing && existing.dataset.mode === 'maintenance') {
+    const descEl = document.getElementById('nxMaintenanceDescText');
+    if (descEl && descEl.textContent !== finalKeterangan) {
+      descEl.textContent = finalKeterangan;
+    }
+    const codeEl = document.getElementById('nxMaintenanceErrorCode');
+    if (codeEl && codeEl.textContent !== finalErrorCode) {
+      codeEl.textContent = finalErrorCode;
+    }
+    return;
+  }
+  if (existing) existing.remove();
+
+  document.title = "503 Service Maintenance - Gudang Nuhsantara";
+
+  const lockScreen = document.createElement('div');
+  lockScreen.id = 'nx-global-lock-screen';
+  lockScreen.dataset.mode = 'maintenance';
+  lockScreen.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.78); backdrop-filter: blur(12px); z-index: 2147483640; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;";
+
+  const box = document.createElement('div');
+  box.className = 'nx-maintenance-float-pulse';
+  box.style.cssText = "position: relative; background: #0f172a; border: 1.5px solid rgba(245, 158, 11, 0.5); padding: 32px 24px; border-radius: 20px; width: 100%; max-width: 410px; text-align: center; font-family: monospace;";
+
+  box.innerHTML = `
+    <div style="position: absolute; top: 16px; left: 18px; display: flex; align-items: center; gap: 6px; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.35); padding: 3px 8px; border-radius: 20px;">
+      <span style="width: 6px; height: 6px; background: #f59e0b; border-radius: 50%; display: inline-block;"></span>
+      <span style="font-size: 9.5px; color: #fbbf24; font-weight: bold; letter-spacing: 0.5px;">SYSTEM_MAINTENANCE</span>
+    </div>
+
+    <div style="width: 58px; height: 58px; background: rgba(245, 158, 11, 0.14); border: 1.5px solid rgba(245, 158, 11, 0.55); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 12px auto 14px auto; box-shadow: 0 0 22px rgba(245, 158, 11, 0.25);">
+      <svg class="nx-gear-spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </div>
+
+    <h3 style="color: #fbbf24; margin: 0 0 8px 0; font-size: 16px; font-weight: 700; letter-spacing: 1.2px;">MAINTENANCE SYSTEM</h3>
+
+    <div id="nxMaintenanceErrorCode" style="font-size: 10.5px; color: #fcd34d; margin-bottom: 14px; background: rgba(245, 158, 11, 0.1); padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.3);">${escapeGuardHtml(finalErrorCode)}</div>
+
+    <p id="nxMaintenanceDescText" style="color: #cbd5e1; font-size: 12px; margin-bottom: 18px; line-height: 1.5; text-align: left; background: rgba(2, 6, 23, 0.55); border: 1px solid rgba(148, 163, 184, 0.16); padding: 11px 12px; border-radius: 10px;">${escapeGuardHtml(finalKeterangan)}</p>
+
+    <button type="button" id="btnHubungiAdminMaintenance" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 10px 16px; font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace; margin-bottom: 8px;">💬 HUBUNGI ADMINISTRATOR</button>
+
+    <div style="font-size: 9.5px; color: #64748b; margin-top: 10px;">Gudang Nuhsantara Cloud Core</div>
+  `;
+
+  lockScreen.appendChild(box);
+  if (document.body) {
+    document.body.appendChild(lockScreen);
+  } else {
+    document.addEventListener("DOMContentLoaded", () => document.body.appendChild(lockScreen));
+  }
+
+  setTimeout(() => {
+    const btnAdminMaint = document.getElementById('btnHubungiAdminMaintenance');
+    if (btnAdminMaint) {
+      btnAdminMaint.onclick = function() {
+        toggleUniversalChatWidget();
+      };
+    }
+  }, 100);
+}
 
 // --- TAMPILKAN LAYAR KUNCI PERMANEN (KILL SWITCH) ---
 function tampilkanLayarKunciPermanen() {
